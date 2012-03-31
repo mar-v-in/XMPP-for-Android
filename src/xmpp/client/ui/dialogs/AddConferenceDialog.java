@@ -31,7 +31,6 @@ public class AddConferenceDialog implements OnClickListener, OnDismissListener,
 		final View view = layoutInflater.inflate(R.layout.add_conference, null);
 
 		mEditText = (EditText) view.findViewById(R.id.jid_edit);
-		mEditText.setText("sonnenschein@conference.jabber.rootbash.com");
 
 		builder.setView(view);
 		builder.setPositiveButton(mContext.getText(R.string.ok), this);
