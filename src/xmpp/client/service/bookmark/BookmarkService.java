@@ -7,6 +7,9 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bookmark.BookmarkManager;
 import org.jivesoftware.smackx.bookmark.BookmarkedConference;
 
+import xmpp.client.service.chat.multi.MultiUserChatInfo;
+import xmpp.client.service.chat.multi.MultiUserChatInfoList;
+
 public class BookmarkService {
 	private BookmarkManager mBookmarkManager;
 	public BookmarkService(Connection connection) {
@@ -16,17 +19,22 @@ public class BookmarkService {
 			throw new RuntimeException(e);
 		}
 	}
-	public Collection<BookmarkedConference> getConferences() {
+	public MultiUserChatInfoList getConferences() {
 		try {
-			return mBookmarkManager.getBookmarkedConferences();
+			Collection<BookmarkedConference> bcc = mBookmarkManager.getBookmarkedConferences();
+			MultiUserChatInfoList list = new MultiUserChatInfoList();
+			for (BookmarkedConference bc : bcc) {
+				list.add(new MultiUserChatInfo(bc));
+			}
+			return list;
 		} catch (XMPPException e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
-	public void addConference(String name, String jid, boolean isAutoJoin, String nickname, String password) {
+	public void addConference(MultiUserChatInfo mucinfo) {
 		try {
-			mBookmarkManager.addBookmarkedConference(name, jid, isAutoJoin, nickname, password);
+			mBookmarkManager.addBookmarkedConference(mucinfo.getName(), mucinfo.getJid(), mucinfo.isAutoJoin(), mucinfo.getNickname(), mucinfo.getPassword());
 		} catch (XMPPException e) {
 			throw new RuntimeException(e);
 		}

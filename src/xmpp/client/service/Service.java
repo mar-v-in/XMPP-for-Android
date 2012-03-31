@@ -20,6 +20,7 @@ import xmpp.client.service.chat.Chat;
 import xmpp.client.service.chat.ChatMessage;
 import xmpp.client.service.chat.ChatService;
 import xmpp.client.service.chat.ChatSession;
+import xmpp.client.service.chat.multi.MultiUserChatInfo;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
 import xmpp.client.service.user.User;
@@ -165,12 +166,6 @@ public class Service extends android.app.Service implements
 		final ChatSession session = b.getParcelable("session");
 		disableChatSession(session);
 		sendMsg(msg.replyTo, SIG_DISABLE_CHATSESSION);
-		
-		Log.d(TAG, "conferenceMarks");
-		BookmarkService bs = new BookmarkService(mConnection);
-		for (BookmarkedConference c : bs.getConferences()) {
-			Log.d(TAG, c.getJid()+"//"+c.getName()+"//"+c.getNickname()+"//"+c.isAutoJoin());
-		}
 	}
 
 	public Connection getConnection() {
