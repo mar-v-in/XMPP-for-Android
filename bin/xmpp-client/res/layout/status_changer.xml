@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent"
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <Spinner android:id="@id/status_spinner" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="@dimen/simple_row_margin" />
-    <EditText android:id="@id/status_edit" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="@dimen/simple_row_margin" android:hint="@string/custom_status_message" android:singleLine="false">
-        <requestFocus />
-    </EditText>
-</LinearLayout>

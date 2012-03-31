@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector android:exitFadeDuration="@17694721"
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_focused="false" android:state_pressed="false" android:drawable="@color/roster_offline_highlight" android:state_hovered="false" />
-    <item android:drawable="@drawable/list_selector_holo_light" />
-</selector>

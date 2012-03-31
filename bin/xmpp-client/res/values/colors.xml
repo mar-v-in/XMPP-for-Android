@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="roster_offline">#ffe0e0e0</color>
-    <color name="roster_offline_highlight">#ffd0d0d0</color>
-    <color name="actionbar_background">#ff1b1b1b</color>
-</resources>

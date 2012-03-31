@@ -12,14 +12,6 @@ public class MultiUserChatSession extends ChatSession {
 	UserList mUserList;
 	String mSubject;
 
-	public void setSubject(String subject) {
-		mSubject = subject;
-	}
-
-	public String getSubject() {
-		return mSubject;
-	}
-
 	public static final Parcelable.Creator<MultiUserChatSession> CREATOR = new Parcelable.Creator<MultiUserChatSession>() {
 		@Override
 		public MultiUserChatSession createFromParcel(Parcel in) {
@@ -49,8 +41,16 @@ public class MultiUserChatSession extends ChatSession {
 		return getSessionID();
 	}
 
+	public String getSubject() {
+		return mSubject;
+	}
+
 	public UserList getUsers() {
 		return mUserList;
+	}
+
+	public void setSubject(String subject) {
+		mSubject = subject;
 	}
 
 	public void updateUser(User user) {

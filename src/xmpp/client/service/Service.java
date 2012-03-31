@@ -11,16 +11,13 @@ import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
-import org.jivesoftware.smackx.bookmark.BookmarkedConference;
 
 import xmpp.client.R;
 import xmpp.client.service.account.AccountInfo;
-import xmpp.client.service.bookmark.BookmarkService;
 import xmpp.client.service.chat.Chat;
 import xmpp.client.service.chat.ChatMessage;
 import xmpp.client.service.chat.ChatService;
 import xmpp.client.service.chat.ChatSession;
-import xmpp.client.service.chat.multi.MultiUserChatInfo;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
 import xmpp.client.service.user.User;
@@ -306,6 +303,11 @@ public class Service extends android.app.Service implements
 		}
 	}
 
+	@Override
+	public boolean isReady() {
+		return true;
+	}
+
 	private void login(Message msg) {
 		boolean res;
 		res = loginXMPP();
@@ -570,9 +572,11 @@ public class Service extends android.app.Service implements
 
 		final Intent i = new Intent(this, AppActivity.class);
 		if (message.isMUC()) {
-			i.setData(Uri.parse("imto://jabbermuc/"+Uri.encode(message.getUser().getUserLogin())));
+			i.setData(Uri.parse("imto://jabbermuc/"
+					+ Uri.encode(message.getUser().getUserLogin())));
 		} else {
-			i.setData(Uri.parse("imto://jabber/"+Uri.encode(message.getUser().getUserLogin())));
+			i.setData(Uri.parse("imto://jabber/"
+					+ Uri.encode(message.getUser().getUserLogin())));
 		}
 		final PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
 				i, 0);
@@ -666,10 +670,5 @@ public class Service extends android.app.Service implements
 		final User user = b.getParcelable("user");
 		mUserService.updateUser(user);
 		sendMsg(msg.replyTo, SIG_UPDATE_USER);
-	}
-
-	@Override
-	public boolean isReady() {
-		return true;
 	}
 }

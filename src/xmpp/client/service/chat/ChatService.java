@@ -48,7 +48,8 @@ public class ChatService implements ChatListener, ChatCodes {
 	public void chatUpdated(Chat chat) {
 		final ChatSession session = getChatSessionFromIdentifier(chat
 				.getIdentifier());
-		if (chat instanceof MultiUserChat && session instanceof MultiUserChatSession) {
+		if (chat instanceof MultiUserChat
+				&& session instanceof MultiUserChatSession) {
 			((MultiUserChatSession) session).setSubject(chat.getSubject());
 		}
 		mService.sendSessionUpdated(session);

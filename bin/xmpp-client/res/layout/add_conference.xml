@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent"
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <EditText android:id="@id/jid_edit" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="@dimen/simple_row_margin" android:hint="@string/conferencejid" android:singleLine="false" />
-    <EditText android:id="@id/nick_edit" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="@dimen/simple_row_margin" android:hint="@string/conferencename" android:singleLine="true" />
-    <EditText android:id="@id/mynick_edit" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="@dimen/simple_row_margin" android:hint="@string/nickname" android:singleLine="true" />
-    <EditText android:id="@id/pass_edit" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="@dimen/simple_row_margin" android:hint="@string/password" android:singleLine="false" />
-    <CheckBox android:id="@id/checkBox1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_margin="@dimen/simple_row_margin" android:text="@string/auto_login" />
-</LinearLayout>

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content"
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <TextView android:textColor="#ff999999" android:ellipsize="end" android:id="@id/text_devider" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginLeft="@dimen/simple_row_margin" android:layout_marginTop="@dimen/simple_row_margin" android:layout_marginRight="@dimen/simple_row_margin" android:textAllCaps="true" />
-    <View android:background="#ff999999" android:layout_width="fill_parent" android:layout_height="@dimen/border_size" />
-</LinearLayout>

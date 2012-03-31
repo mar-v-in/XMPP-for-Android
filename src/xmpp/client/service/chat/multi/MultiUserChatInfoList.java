@@ -5,7 +5,8 @@ import java.util.ArrayList;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class MultiUserChatInfoList extends ArrayList<MultiUserChatInfo> implements Parcelable {
+public class MultiUserChatInfoList extends ArrayList<MultiUserChatInfo>
+		implements Parcelable {
 
 	/**
 	 * 
@@ -22,16 +23,17 @@ public class MultiUserChatInfoList extends ArrayList<MultiUserChatInfo> implemen
 			return new MultiUserChatInfoList[size];
 		}
 	};
-	
-	public MultiUserChatInfoList(Parcel in) {
-		int n = in.readInt();
-		for(int i=0; i < n; i++) {
-			add((MultiUserChatInfo) in.readParcelable(MultiUserChatInfo.class.getClassLoader()));
-		}
-	}
 
 	public MultiUserChatInfoList() {
 		super();
+	}
+
+	public MultiUserChatInfoList(Parcel in) {
+		final int n = in.readInt();
+		for (int i = 0; i < n; i++) {
+			add((MultiUserChatInfo) in.readParcelable(MultiUserChatInfo.class
+					.getClassLoader()));
+		}
 	}
 
 	@Override
@@ -43,7 +45,7 @@ public class MultiUserChatInfoList extends ArrayList<MultiUserChatInfo> implemen
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(size());
-		for (MultiUserChatInfo i : this) {
+		for (final MultiUserChatInfo i : this) {
 			dest.writeParcelable(i, flags);
 		}
 	}
