@@ -14,7 +14,9 @@ import org.jivesoftware.smack.packet.Presence;
 
 import xmpp.client.R;
 import xmpp.client.service.account.AccountInfo;
+import xmpp.client.service.bookmark.BookmarkService;
 import xmpp.client.service.chat.Chat;
+import xmpp.client.service.chat.ChatListener;
 import xmpp.client.service.chat.ChatMessage;
 import xmpp.client.service.chat.ChatService;
 import xmpp.client.service.chat.ChatSession;
@@ -83,6 +85,8 @@ public class Service extends android.app.Service implements
 	private UserService mUserService;
 
 	private HandlerThread mThread;
+
+	private BookmarkService mBookmarkService;
 
 	private void addUser(Message msg) {
 		Bundle b = msg.getData();
@@ -165,6 +169,14 @@ public class Service extends android.app.Service implements
 		sendMsg(msg.replyTo, SIG_DISABLE_CHATSESSION);
 	}
 
+	public BookmarkService getBookmarkService() {
+		return mBookmarkService;
+	}
+
+	public ChatListener getChatService() {
+		return mChatService;
+	}
+
 	public Connection getConnection() {
 		return mConnection;
 	}
@@ -178,6 +190,17 @@ public class Service extends android.app.Service implements
 		} else {
 			sendMsg(msg.replyTo, SIG_ROSTER_GET_CONTACTS_ERROR);
 		}
+	}
+
+	private void getMUCs(Message msg) {
+		final Bundle b = new Bundle();
+		b.putParcelable("mucs", getBookmarkService().getConferenceHandler()
+				.getMultiUserChatInfoList());
+		sendMsg(msg.replyTo, SIG_GET_MUCS, b);
+	}
+
+	public UserService getUserService() {
+		return mUserService;
 	}
 
 	@Override
@@ -207,6 +230,9 @@ public class Service extends android.app.Service implements
 			connect(msg);
 		case SIG_LOGIN:
 			login(msg);
+			break;
+		case SIG_GET_MUCS:
+			getMUCs(msg);
 			break;
 		case SIG_IS_READY:
 			isOnline(msg);
@@ -328,12 +354,13 @@ public class Service extends android.app.Service implements
 				mConnection.login(mAccountInfo.getUsername(),
 						mAccountInfo.getPassword(),
 						(String) getText(R.string.xmpp_ressource));
-				mUserService = new UserService(mConnection.getRoster(), this,
-						createMeUser());
-				mChatService = new ChatService(mConnection, this, mUserService);
+				mConnection.getRoster();
+				mBookmarkService = new BookmarkService(this);
+				mUserService = new UserService(this, createMeUser());
+				mChatService = new ChatService(this);
 				return true;
 			} catch (final XMPPException e) {
-				Log.i(TAG, "loginXMPP", e);
+				Log.e(TAG, "loginXMPP", e);
 				return false;
 			}
 		}

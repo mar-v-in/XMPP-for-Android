@@ -2,7 +2,6 @@ package xmpp.client.service.chat;
 
 import java.util.HashMap;
 
-import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.util.StringUtils;
 
 import xmpp.client.service.Service;
@@ -11,24 +10,19 @@ import xmpp.client.service.chat.multi.MultiUserChatSession;
 import xmpp.client.service.chat.single.SingleUserChat;
 import xmpp.client.service.chat.single.SingleUserChatSession;
 import xmpp.client.service.user.User;
-import xmpp.client.service.user.UserService;
 import android.util.Log;
 
 public class ChatService implements ChatListener, ChatCodes {
 	private static final String TAG = ChatService.class.getName();
 
-	UserService mUserService;
 	HashMap<Chat, ChatSession> mChats;
 	InternalChatManager mInternalChatManager;
 	Service mService;
 
-	public ChatService(Connection connection, Service service,
-			UserService userService) {
+	public ChatService(Service service) {
 		mService = service;
-		mInternalChatManager = new InternalChatManager(connection, userService,
-				this);
+		mInternalChatManager = new InternalChatManager(mService);
 		mChats = new HashMap<Chat, ChatSession>();
-		mUserService = userService;
 	}
 
 	@Override
@@ -68,7 +62,6 @@ public class ChatService implements ChatListener, ChatCodes {
 		mChats.clear();
 		mChats = null;
 		mInternalChatManager.destroy();
-		mUserService = null;
 	}
 
 	public Chat getChatFromSession(ChatSession session) {
@@ -136,8 +129,8 @@ public class ChatService implements ChatListener, ChatCodes {
 	}
 
 	private ChatSession putChatInMap(SingleUserChat chat) {
-		final ChatSession session = new SingleUserChatSession(
-				mUserService.getUser(chat.getIdentifier(), true),
+		final ChatSession session = new SingleUserChatSession(mService
+				.getUserService().getUser(chat.getIdentifier(), true),
 				chat.getThreadID());
 		mChats.put(chat, session);
 		return session;
@@ -170,8 +163,8 @@ public class ChatService implements ChatListener, ChatCodes {
 			((MultiUserChatSession) session).updateUser(user);
 			final MultiUserChat chat = (MultiUserChat) getChatFromSession(session);
 			for (final String u : chat.getUsers()) {
-				((MultiUserChatSession) session).updateUser(mUserService
-						.getUser(u, false));
+				((MultiUserChatSession) session).updateUser(mService
+						.getUserService().getUser(u, false));
 			}
 			mService.sendSessionUpdated(session);
 		}

@@ -26,10 +26,11 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener {
 	private final MultiUserChatParticipantStatusListener mParticipantStatusListener;
 	private final UserService mUserService;
 
-	public MultiUserChat(Connection mConnection, String id,
+	public MultiUserChat(Connection mConnection, MultiUserChatInfo mucinfo,
 			InternalChatManager internalChatManager, UserService userService) {
 		mUserService = userService;
-		mMUC = new org.jivesoftware.smackx.muc.MultiUserChat(mConnection, id);
+		mMUC = new org.jivesoftware.smackx.muc.MultiUserChat(mConnection,
+				mucinfo.getJid());
 		mInternalChatManager = internalChatManager;
 		mMessageListener = new MultiUserChatMessageListener(this);
 		mMUC.addMessageListener(mMessageListener);
@@ -40,7 +41,12 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener {
 		mMUC.addParticipantStatusListener(mParticipantStatusListener);
 		mMUC.addSubjectUpdatedListener(this);
 		try {
-			mMUC.join(mUserService.getUserMe().getDisplayName());
+			if (mucinfo.getPassword() != null
+					&& !mucinfo.getPassword().isEmpty()) {
+				mMUC.join(mucinfo.getNickname(), mucinfo.getPassword());
+			} else {
+				mMUC.join(mucinfo.getNickname());
+			}
 		} catch (final XMPPException e) {
 			throw new RuntimeException(e);
 		}

@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>xmpp-client</name>
+	<name>XMPP-for-Android</name>
 	<comment></comment>
-	<projects>
-		<project>SmackX</project>
-	</projects>
 	<buildSpec>
 		<buildCommand>
 			<name>com.android.ide.eclipse.adt.ResourceManagerBuilder</name>

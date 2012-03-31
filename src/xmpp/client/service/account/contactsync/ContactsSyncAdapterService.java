@@ -267,6 +267,11 @@ public class ContactsSyncAdapterService extends Service implements
 		}
 	}
 
+	@Override
+	public boolean isReady() {
+		return true;
+	}
+
 	boolean manageDatabaseUser(User user) {
 		final Uri rawContactUri = RawContacts.CONTENT_URI
 				.buildUpon()
@@ -390,11 +395,6 @@ public class ContactsSyncAdapterService extends Service implements
 		} catch (final RemoteException e) {
 			Log.e(TAG, "updateUser", e);
 		}
-	}
-
-	@Override
-	public boolean isReady() {
-		return true;
 	}
 
 }

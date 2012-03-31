@@ -8,7 +8,6 @@ import org.jivesoftware.smack.RosterGroup;
 
 import xmpp.client.service.user.contact.Contact;
 import xmpp.client.service.user.contact.ContactList;
-
 import android.os.Parcel;
 import android.os.Parcelable;
 

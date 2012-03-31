@@ -5,7 +5,6 @@ import java.util.Collections;
 
 import xmpp.client.service.user.User;
 import xmpp.client.service.user.UserList;
-
 import android.os.Parcel;
 import android.os.Parcelable;
 

@@ -22,10 +22,10 @@ public class UserService implements RosterListener {
 	private final Service mService;
 	private User mUserMe;
 
-	public UserService(Roster roster, Service service, User userMe) {
+	public UserService(Service service, User userMe) {
 		mService = service;
 		mUserMe = userMe;
-		mRoster = roster;
+		mRoster = mService.getConnection().getRoster();
 		mRoster.addRosterListener(this);
 		mUserList = new UserList();
 		mContactList = new ContactList();

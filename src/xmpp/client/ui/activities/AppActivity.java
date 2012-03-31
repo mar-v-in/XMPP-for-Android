@@ -6,6 +6,7 @@ import xmpp.client.service.Signals;
 import xmpp.client.service.account.AccountInfo;
 import xmpp.client.service.chat.ChatMessage;
 import xmpp.client.service.chat.ChatSession;
+import xmpp.client.service.chat.multi.MultiUserChatInfo;
 import xmpp.client.service.chat.multi.MultiUserChatSession;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
@@ -23,6 +24,7 @@ import xmpp.client.ui.dialogs.ResultListener;
 import xmpp.client.ui.dialogs.ResultProducer;
 import xmpp.client.ui.dialogs.StatusSelectorDialog;
 import xmpp.client.ui.provider.ChatProvider;
+import xmpp.client.ui.provider.ConferenceProvider;
 import xmpp.client.ui.provider.ContactProvider;
 import xmpp.client.ui.provider.ContactProviderListener;
 import android.accounts.Account;
@@ -81,6 +83,8 @@ public class AppActivity extends Activity implements
 				long id) {
 			if (item == 0) {
 				goStatusChange();
+			} else if (mCurrentNavigation == 3) {
+				goConference(((MultiUserChatInfo)mRosterAdapter.getItem(item)).getJid());
 			} else {
 				goChat(((Contact) mRosterAdapter.getItem(item)).getUserLogin());
 			}
@@ -141,8 +145,6 @@ public class AppActivity extends Activity implements
 
 	private Messenger mService = null;
 
-	private Contact mMeContact;
-
 	private StatusSelectorDialog mStatusSelectorDialog;
 	private AddUserDialog mAddUserDialog;
 	private AddConferenceDialog mAddConferenceDialog;
@@ -162,28 +164,7 @@ public class AppActivity extends Activity implements
 	};
 
 	private ChatSession mSession;
-
-	void checkState() {
-		if (mService != null) {
-			final Message msg = Message.obtain(null, Signals.SIG_IS_READY);
-			msg.replyTo = mMessenger;
-			try {
-				mService.send(msg);
-			} catch (final RemoteException e) {
-				Log.i(TAG, "checkState", e);
-			}
-			doCheck = false;
-		} else {
-			doCheck = true;
-		}
-	}
-
-	void doBindService() {
-		startService(new Intent(AppActivity.this, Service.class));
-		bindService(new Intent(AppActivity.this, Service.class), mConnection,
-				Context.BIND_ABOVE_CLIENT);
-		mIsBound = true;
-	}
+	private ConferenceProvider mConferenceProvider;
 
 	public void afterInit() {
 		mGroupAdapter = new GroupAdapter(this, mContactProvider);
@@ -195,7 +176,7 @@ public class AppActivity extends Activity implements
 					mNavigationListener);
 			mActionBar.setSelectedNavigationItem(mCurrentNavigation);
 			mRosterAdapter = new RosterAdapter(mListView.getContext(),
-					mContactProvider);
+					mContactProvider, mConferenceProvider);
 			mListView.setAdapter(mRosterAdapter);
 			mRosterAdapter.notifyDataSetChanged();
 		} else if (mCurrentView == VIEW_CHAT) {
@@ -229,6 +210,43 @@ public class AppActivity extends Activity implements
 		}
 	}
 
+	void checkState() {
+		if (mService != null) {
+			final Message msg = Message.obtain(null, Signals.SIG_IS_READY);
+			msg.replyTo = mMessenger;
+			try {
+				mService.send(msg);
+			} catch (final RemoteException e) {
+				Log.i(TAG, "checkState", e);
+			}
+			doCheck = false;
+		} else {
+			doCheck = true;
+		}
+	}
+
+	@Override
+	public void contactProviderChanged(ContactProvider contactProvider) {
+		if (mRosterAdapter != null) {
+			mRosterAdapter.notifyDataSetChanged();
+		}
+		if (mGroupAdapter != null) {
+			mGroupAdapter.notifyDataSetChanged();
+		}
+	}
+
+	@Override
+	public void contactProviderReady(ContactProvider contactProvider) {
+		afterInit();
+	}
+
+	void doBindService() {
+		startService(new Intent(AppActivity.this, Service.class));
+		bindService(new Intent(AppActivity.this, Service.class), mConnection,
+				Context.BIND_ABOVE_CLIENT);
+		mIsBound = true;
+	}
+
 	public void doLogin() {
 		updateStatus(UserState.STATUS_INITIALIZING);
 		final AccountManager am = AccountManager.get(this);
@@ -237,7 +255,7 @@ public class AppActivity extends Activity implements
 		if (accounts.length > 0) {
 			final Account account = accounts[0];
 			final String login = account.name;
-			mMeContact.getUsers().get(0).setUserLogin(login);
+			mContactProvider.getMeContact().getUser().setUserLogin(login);
 			mRosterAdapter.notifyDataSetChanged();
 			final String pass = am.getPassword(account);
 			final Message msg = Message.obtain(null, Signals.SIG_INIT);
@@ -389,7 +407,8 @@ public class AppActivity extends Activity implements
 				mActionBar.setTitle(mUser.getDisplayName());
 				mActionBar
 						.setSubtitle(mUser.getUserState().getStatusText(this));
-				mChatProvider = new ChatProvider(mMeContact, mSession);
+				mChatProvider = new ChatProvider(
+						mContactProvider.getMeContact(), mSession);
 				mChatAdapter = new ChatAdapter(this, mChatProvider,
 						mContactProvider);
 				mMessageHolder.setAdapter(mChatAdapter);
@@ -401,7 +420,8 @@ public class AppActivity extends Activity implements
 				mMenu.findItem(R.id.menu_call).setVisible(false);
 				mActionBar.setTitle(mSession.getSessionID());
 				mActionBar.setSubtitle(b.getString("subject"));
-				mChatProvider = new ChatProvider(mMeContact, mSession);
+				mChatProvider = new ChatProvider(
+						mContactProvider.getMeContact(), mSession);
 				mChatAdapter = new ChatAdapter(this, mChatProvider,
 						mContactProvider);
 				mMessageHolder.setAdapter(mChatAdapter);
@@ -444,15 +464,12 @@ public class AppActivity extends Activity implements
 				doUnbindService();
 				finish();
 				break;
+			case Signals.SIG_IS_READY:
+				updateStatus(UserState.STATUS_AVAILABLE);
+				afterInit();
+				break;
 			case Signals.SIG_IS_NOT_READY:
 				doLogin();
-				break;
-			case Signals.SIG_IS_READY:
-				b.setClassLoader(User.class.getClassLoader());
-				mMeContact = (Contact) b.getParcelable("contact");
-				if (mMeContact.getUserState().isTemporaryStatus()) {
-					updateStatus(UserState.STATUS_AVAILABLE);
-				}
 				break;
 			case Signals.SIG_INIT_ERROR:
 			case Signals.SIG_CONNECT_ERROR:
@@ -477,6 +494,11 @@ public class AppActivity extends Activity implements
 	}
 
 	@Override
+	public boolean isReady() {
+		return true;
+	}
+
+	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mMessageHandler = new SimpleMessageHandler(this);
@@ -490,7 +512,7 @@ public class AppActivity extends Activity implements
 		switch (id) {
 		case DIALOG_STATUSSELECTOR:
 			mStatusSelectorDialog = new StatusSelectorDialog(this,
-					mMeContact.getUserState());
+					mContactProvider.getMeContact().getUserState());
 			mStatusSelectorDialog.setResultListener(this);
 			dialog = mStatusSelectorDialog.getAlertDialog();
 			break;
@@ -565,7 +587,7 @@ public class AppActivity extends Activity implements
 			if (mCurrentView == VIEW_CHAT) {
 				final Message msg = Message.obtain(null,
 						Signals.SIG_DISABLE_CHATSESSION);
-				Bundle b = new Bundle();
+				final Bundle b = new Bundle();
 				b.putParcelable("session", mSession);
 				msg.setData(b);
 				msg.replyTo = mMessenger;
@@ -650,19 +672,16 @@ public class AppActivity extends Activity implements
 		mActionBar.setTitle(getText(R.string.process_loading));
 		mActionBar.setDisplayHomeAsUpEnabled(false);
 
-		if (mMeContact == null) {
-			final User u = new User();
-			u.setUserLogin((String) getText(R.string.process_loading));
-			u.setUserState(new UserState(UserState.STATUS_INITIALIZING, null));
-			mMeContact = new Contact(u);
+		if (mConferenceProvider == null) {
+			mConferenceProvider = new ConferenceProvider(mMessenger, mService, mMessageHandler);
 		}
 		if (mContactProvider == null) {
-			mContactProvider = new ContactProvider(mMessenger, mService, this, this,
-					mMessageHandler);
+			mContactProvider = new ContactProvider(mMessenger, mService, this,
+					this, mMessageHandler);
 		}
 		if (mRosterAdapter == null) {
 			mRosterAdapter = new RosterAdapter(mListView.getContext(),
-					mContactProvider);
+					mContactProvider, mConferenceProvider);
 		}
 		mListView.setAdapter(mRosterAdapter);
 
@@ -685,7 +704,7 @@ public class AppActivity extends Activity implements
 	}
 
 	private void updateStatus(UserState userState) {
-		mMeContact.getUsers().get(0).setUserState(userState);
+		mContactProvider.getMeContact().getUser().setUserState(userState);
 		mRosterAdapter.notifyDataSetChanged();
 		final Bundle b = new Bundle();
 		b.putParcelable("state", userState);
@@ -710,25 +729,5 @@ public class AppActivity extends Activity implements
 		} catch (final RemoteException e) {
 			Log.i(TAG, "updateStatus", e);
 		}
-	}
-
-	@Override
-	public boolean isReady() {
-		return true;
-	}
-
-	@Override
-	public void contactProviderChanged(ContactProvider contactProvider) {
-		if (mRosterAdapter != null) {
-			mRosterAdapter.notifyDataSetChanged();
-		}
-		if (mGroupAdapter != null) {
-			mGroupAdapter.notifyDataSetChanged();
-		}
-	}
-
-	@Override
-	public void contactProviderReady(ContactProvider contactProvider) {
-		afterInit();
 	}
 }

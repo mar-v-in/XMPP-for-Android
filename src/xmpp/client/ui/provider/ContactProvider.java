@@ -21,19 +21,20 @@ import android.util.Log;
 public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 	private static final String TAG = ContactProvider.class.getName();
 	private ContactList mContactList;
-	private GroupList mGroupList;
+	private final GroupList mGroupList;
 	private Contact mContact;
-	private ArrayList<ContactProviderListener> mListeners;
-	private Messenger mService;
-	private Messenger mMessenger;
-	private Context mContext;
+	private final ArrayList<ContactProviderListener> mListeners;
+	private final Messenger mService;
+	private final Messenger mMessenger;
+	private final Context mContext;
 
-	public ContactProvider(Messenger localMessenger, Messenger serviceMessenger, Context context) {
+	public ContactProvider(Messenger localMessenger,
+			Messenger serviceMessenger, Context context) {
 		mMessenger = localMessenger;
 		mService = serviceMessenger;
 		mContext = context;
 		mContactList = new ContactList();
-		mGroupList = new GroupList();			
+		mGroupList = new GroupList();
 		final User u = new User();
 		u.setUserLogin((String) mContext.getText(R.string.process_loading));
 		u.setUserState(new UserState(UserState.STATUS_INITIALIZING, null));
@@ -42,38 +43,42 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 	}
 
 	public ContactProvider(Messenger localMessenger,
-			Messenger serviceMessenger, Context context, ContactProviderListener listener) {
+			Messenger serviceMessenger, Context context,
+			ContactProviderListener listener) {
 		this(localMessenger, serviceMessenger, context);
 		addListener(listener);
 	}
-	
+
 	public ContactProvider(Messenger localMessenger,
-			Messenger serviceMessenger, Context context, SimpleMessageHandler messageHandler) {
+			Messenger serviceMessenger, Context context,
+			ContactProviderListener listener,
+			SimpleMessageHandler messageHandler) {
+		this(localMessenger, serviceMessenger, context, listener);
+		messageHandler.addClient(this);
+	}
+
+	public ContactProvider(Messenger localMessenger,
+			Messenger serviceMessenger, Context context,
+			SimpleMessageHandler messageHandler) {
 		this(localMessenger, serviceMessenger, context);
 		messageHandler.addClient(this);
 	}
-	
-	public ContactProvider(Messenger localMessenger,
-			Messenger serviceMessenger, Context context, ContactProviderListener listener, SimpleMessageHandler messageHandler) {
-		this(localMessenger, serviceMessenger, context, listener);
-		messageHandler.addClient(this);
+
+	public void add(User user) {
+		mContactList.add(user);
+		update();
 	}
 
 	public void addListener(ContactProviderListener listener) {
 		mListeners.add(listener);
 	}
 
-	public void delListener(ContactProviderListener listener) {
-		mListeners.remove(listener);
-	}
-
 	public void clearListeners() {
 		mListeners.clear();
 	}
 
-	public void add(User user) {
-		mContactList.add(user);
-		update();
+	public void delListener(ContactProviderListener listener) {
+		mListeners.remove(listener);
 	}
 
 	public Contact getContact(int position) {
@@ -110,39 +115,6 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 
 	public String getMeUserLogin() {
 		return mContact.getUserLogin();
-	}
-
-	public void remove(String address) {
-		mContactList.removeUser(address);
-		update();
-	}
-
-	void update() {
-		mContactList.sort();
-		mGroupList.fillFromContactList(mContactList);
-	}
-
-	public void update(User user) {
-		for (final Contact contact : mContactList) {
-			if (contact.contains(user.getUserLogin())) {
-				contact.remove(user.getUserLogin());
-				contact.add(user);
-				break;
-			}
-		}
-		update();
-	}
-
-	public int userGroupSize(CharSequence activeGroup) {
-		return mContactList.groupSize(activeGroup);
-	}
-
-	public int userOnlineSize() {
-		return mContactList.sizeOnline();
-	}
-
-	public int userSize() {
-		return mContactList.sizeVisible();
 	}
 
 	@Override
@@ -201,8 +173,18 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 		}
 	}
 
+	@Override
+	public boolean isReady() {
+		return true;
+	}
+
+	public void remove(String address) {
+		mContactList.removeUser(address);
+		update();
+	}
+
 	private void sendChanged() {
-		for (ContactProviderListener listener : mListeners) {
+		for (final ContactProviderListener listener : mListeners) {
 			if (listener != null && listener.isReady()) {
 				listener.contactProviderChanged(this);
 			}
@@ -210,15 +192,38 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 	}
 
 	private void sendReady() {
-		for (ContactProviderListener listener : mListeners) {
+		for (final ContactProviderListener listener : mListeners) {
 			if (listener != null && listener.isReady()) {
 				listener.contactProviderReady(this);
 			}
 		}
 	}
 
-	@Override
-	public boolean isReady() {
-		return true;
+	void update() {
+		mContactList.sort();
+		mGroupList.fillFromContactList(mContactList);
+	}
+
+	public void update(User user) {
+		for (final Contact contact : mContactList) {
+			if (contact.contains(user.getUserLogin())) {
+				contact.remove(user.getUserLogin());
+				contact.add(user);
+				break;
+			}
+		}
+		update();
+	}
+
+	public int userGroupSize(CharSequence activeGroup) {
+		return mContactList.groupSize(activeGroup);
+	}
+
+	public int userOnlineSize() {
+		return mContactList.sizeOnline();
+	}
+
+	public int userSize() {
+		return mContactList.sizeVisible();
 	}
 }

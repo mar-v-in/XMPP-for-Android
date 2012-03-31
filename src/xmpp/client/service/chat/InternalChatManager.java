@@ -10,28 +10,25 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Message.Type;
 import org.jivesoftware.smack.util.StringUtils;
 
+import xmpp.client.service.Service;
 import xmpp.client.service.chat.multi.MultiUserChat;
 import xmpp.client.service.chat.single.SingleUserChat;
 import xmpp.client.service.user.User;
-import xmpp.client.service.user.UserService;
 import xmpp.client.service.user.UserState;
 import android.util.Log;
 
 public class InternalChatManager implements ChatManagerListener, ChatCodes {
 	private static final String TAG = InternalChatManager.class.getName();
 
-	private final ChatListener mChatListener;
-	private UserService mUserService;
 	private ChatManager mChatManager;
 	private final Connection mConnection;
 	private ArrayList<Chat> mChatList;
+	private final Service mService;
 
-	public InternalChatManager(Connection connection, UserService userService,
-			ChatListener listener) {
-		mChatListener = listener;
-		mUserService = userService;
-		mConnection = connection;
-		mChatManager = connection.getChatManager();
+	public InternalChatManager(Service service) {
+		mService = service;
+		mConnection = mService.getConnection();
+		mChatManager = mConnection.getChatManager();
 		mChatManager.addChatListener(this);
 		mChatList = new ArrayList<Chat>();
 	}
@@ -44,27 +41,30 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes {
 			return;
 		}
 		final Chat chat = getChat(smackChat);
-		mChatListener.chatCreated(chat, createdLocally);
+		mService.getChatService().chatCreated(chat, createdLocally);
 	}
 
 	public void chatStateChanged(Chat chat) {
-		mChatListener.chatStateChanged(chat);
+		mService.getChatService().chatStateChanged(chat);
 	}
 
 	public void chatUpdated(Chat chat) {
-		mChatListener.chatUpdated(chat);
+		mService.getChatService().chatUpdated(chat);
 	}
 
 	public Chat createChat(String id, int chatType) {
 		switch (chatType) {
 		case CHAT_SINGLE:
 			final SingleUserChat singleUserChat = new SingleUserChat(
-					mChatManager, id, this, mUserService.getUserMe());
+					mChatManager, id, this, mService.getUserService()
+							.getUserMe());
 			insertEntry(singleUserChat);
 			return singleUserChat;
 		case CHAT_MULTI:
 			final MultiUserChat multiUserChat = new MultiUserChat(mConnection,
-					id, this, mUserService);
+					mService.getBookmarkService().getConferenceHandler()
+							.getMultiUserChatInfo(id), this,
+					mService.getUserService());
 			insertEntry(multiUserChat);
 			return multiUserChat;
 		}
@@ -79,7 +79,6 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes {
 		}
 		mChatList.clear();
 		mChatList = null;
-		mUserService = null;
 	}
 
 	public Chat getChat(org.jivesoftware.smack.Chat smackChat) {
@@ -109,8 +108,8 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes {
 	}
 
 	public Chat insertEntry(org.jivesoftware.smack.Chat smackChat) {
-		return insertEntry(new SingleUserChat(smackChat, this,
-				mUserService.getUserMe()));
+		return insertEntry(new SingleUserChat(smackChat, this, mService
+				.getUserService().getUserMe()));
 	}
 
 	public void processMessage(Chat chat, Message smackMessage) {
@@ -120,8 +119,9 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes {
 				if (smackMessage.getType() == Type.groupchat) {
 					if (StringUtils.parseResource(smackMessage.getFrom())
 							.equalsIgnoreCase(
-									mUserService.getUserMe().getUserName())) {
-						user = mUserService.getUserMe();
+									mService.getUserService().getUserMe()
+											.getUserName())) {
+						user = mService.getUserService().getUserMe();
 					} else {
 						user = new User();
 						user.setUserName(StringUtils.parseResource(smackMessage
@@ -134,12 +134,13 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes {
 								UserState.STATUS_AVAILABLE, null));
 					}
 				} else {
-					user = mUserService.getUser(smackMessage.getFrom(), false);
+					user = mService.getUserService().getUser(
+							smackMessage.getFrom(), false);
 				}
 				final ChatMessage message = new ChatMessage(new Date(), user,
 						smackMessage.getBody(),
 						smackMessage.getType() == Type.groupchat);
-				mChatListener.processMessage(chat, message);
+				mService.getChatService().processMessage(chat, message);
 			}
 		} catch (final Exception e) {
 			Log.e(TAG, "processMessage", e);
