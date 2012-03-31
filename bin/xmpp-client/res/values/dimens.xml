@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="border_size">0.9dip</dimen>
+    <dimen name="simple_row_margin">5.0dip</dimen>
+    <dimen name="contact_badge_size">64.0dip</dimen>
+    <dimen name="contact_badge_size_small">32.0dip</dimen>
+    <dimen name="chat_margin">10.0dip</dimen>
+    <dimen name="muc_userlist_height">42.0dip</dimen>
+</resources>

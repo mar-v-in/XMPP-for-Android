@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item
+        android:id="@+id/menu_add_user"
+        android:icon="@drawable/ic_add_contact_holo_dark"
+        android:showAsAction="ifRoom"
+        android:title="@string/add_contact"/>
+    <item
+        android:id="@+id/menu_add_conference"
+        android:icon="@drawable/ic_add_group_holo_dark"
+        android:showAsAction="ifRoom"
+        android:visible="true"
+        android:title="@string/add_conference"/>
+    <item
+        android:id="@+id/menu_change_status"
+        android:showAsAction="never"
+        android:title="@string/change_status"/>
+    <item
+        android:id="@+id/menu_disconnect"
+        android:showAsAction="never"
+        android:title="@string/disconnect"/>
+</menu>

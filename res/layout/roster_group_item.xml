@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/group_text"
+        style="@android:style/TextAppearance.Holo.Widget.ActionBar.Title.Inverse"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/simple_row_margin"
+        android:ellipsize="end"
+        android:lines="1"
+        android:singleLine="true" />
+
+</LinearLayout>

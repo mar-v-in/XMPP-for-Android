@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:icon="@drawable/ic_add_contact_holo_dark" android:id="@id/menu_add_user" android:title="@string/add_contact" android:showAsAction="1" />
+    <item android:icon="@drawable/ic_add_group_holo_dark" android:id="@id/menu_add_conference" android:visible="true" android:title="@string/add_conference" android:showAsAction="1" />
+    <item android:id="@id/menu_change_status" android:title="@string/change_status" android:showAsAction="0" />
+    <item android:id="@id/menu_disconnect" android:title="@string/disconnect" android:showAsAction="0" />
+</menu>

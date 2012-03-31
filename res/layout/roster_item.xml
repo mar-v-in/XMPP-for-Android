@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="true"
+    android:columnCount="5"
+    android:weightSum="5" >
+
+    <QuickContactBadge
+        android:id="@+id/user_badge"
+        android:layout_width="@dimen/contact_badge_size"
+        android:layout_height="@dimen/contact_badge_size" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="0dip"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="@dimen/simple_row_margin"
+        android:layout_weight="5"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/name_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/simple_row_margin"
+            android:layout_marginRight="@dimen/simple_row_margin"
+            android:layout_marginTop="@dimen/simple_row_margin"
+            android:ellipsize="end"
+            android:lines="1"
+            android:singleLine="true"
+            android:text="@string/chat"
+            android:textSize="18sp" />
+
+        <LinearLayout
+            android:id="@+id/linearLayout2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:id="@+id/status_text"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/simple_row_margin"
+                android:layout_weight="1"
+                android:drawableLeft="@android:drawable/presence_offline"
+                android:ellipsize="end"
+                android:lines="1"
+                android:singleLine="true"
+                android:text="@string/status_available" />
+
+            <LinearLayout
+                android:id="@+id/icon_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/simple_row_margin" >
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/unread_text"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="11dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="11dp"
+        android:textColor="@color/roster_offline"
+        android:textSize="32sp" />
+
+</LinearLayout>

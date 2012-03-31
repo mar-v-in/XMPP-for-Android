@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" 
+    >
+
+    <TextView
+        android:id="@+id/text_devider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/simple_row_margin"
+        android:layout_marginRight="@dimen/simple_row_margin"
+        android:layout_marginTop="@dimen/simple_row_margin"
+        android:ellipsize="end"
+        android:textAllCaps="true"
+        android:textColor="#999999"/>
+
+    <View
+        android:background="#999999"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/border_size" />
+
+</LinearLayout>
+

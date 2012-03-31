@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="border_size">0.9dp</dimen>
+    <dimen name="simple_row_margin">5dp</dimen>
+    <dimen name="contact_badge_size">64dp</dimen>
+    <dimen name="contact_badge_size_small">32dp</dimen>
+    <dimen name="chat_margin">10dp</dimen>
+    <dimen name="muc_userlist_height">42dp</dimen> <!-- = contact_badge_size_small + 2 * simple_row_margin -->
+</resources>

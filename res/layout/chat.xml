@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <com.devsmart.android.ui.HorizontalListView
+        android:id="@+id/user_container"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/muc_userlist_height"
+        android:background="@color/actionbar_background"
+        android:visibility="gone" >
+
+    </com.devsmart.android.ui.HorizontalListView>
+
+    <ListView
+        android:id="@+id/message_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dip"
+        android:footerDividersEnabled="false"
+        android:headerDividersEnabled="false"
+        android:stackFromBottom="true"
+        android:transcriptMode="alwaysScroll" >
+
+        <!-- Preview: listitem=@layout/chat_entry_incoming_first -->
+
+    </ListView>
+    <View android:background="?android:attr/dividerHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="0.9dp" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:paddingBottom="4dip" >
+
+        <EditText
+            android:id="@+id/text_send"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dip"
+            android:layout_weight="1"
+            android:autoText="true"
+            android:capitalize="sentences"
+            android:hint="@string/type_message"
+            android:imeOptions="actionSend|flagNoFullscreen"
+            android:minHeight="48dip"
+            android:nextFocusRight="@+id/btn_send"
+            android:singleLine="false"
+            android:textSize="16sp" >
+
+            <requestFocus />
+        </EditText>
+
+        <ImageButton
+            android:id="@+id/btn_send"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="4dip"
+            android:contentDescription="@string/send"
+            android:drawablePadding="0dip"
+            android:src="@drawable/ic_send_holo_light" />
+    </LinearLayout>
+
+</TableLayout>

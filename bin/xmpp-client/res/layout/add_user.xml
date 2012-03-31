@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditText android:id="@id/uid_edit" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="@dimen/simple_row_margin" android:hint="@string/userjid" android:singleLine="false" />
+    <EditText android:id="@id/nick_edit" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_margin="@dimen/simple_row_margin" android:hint="@string/nickname" android:singleLine="true" />
+</LinearLayout>
