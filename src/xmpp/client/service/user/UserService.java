@@ -179,6 +179,7 @@ public class UserService implements RosterListener, UserServiceProvider {
 			return;
 		}
 		user.setUserState(new UserState(presence));
+		user.setAvatar(mService.getAvatarService().getAvatar(user));
 		user.setRessource(StringUtils.parseResource(presence.getFrom()));
 		mService.sendRosterUpdated(user);
 	}
@@ -188,6 +189,7 @@ public class UserService implements RosterListener, UserServiceProvider {
 				.parseBareAddress(uid));
 		if (re != null) {
 			final User user = new User(re, mRoster.getPresence(re.getUser()));
+			user.setAvatar(mService.getAvatarService().getAvatar(user));
 			if (addIfNotExists) {
 				setupUser(user);
 			}

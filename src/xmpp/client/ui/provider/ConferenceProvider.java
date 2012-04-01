@@ -54,15 +54,16 @@ public class ConferenceProvider implements SimpleMessageHandlerClient, Signals {
 		}
 	}
 
-	public int size() {
-		if (mMultiUserChatInfoList != null)
-			return mMultiUserChatInfoList.size();
-		return 0;
-	}
-
 	@Override
 	public boolean isReady() {
 		return true;
+	}
+
+	public int size() {
+		if (mMultiUserChatInfoList != null) {
+			return mMultiUserChatInfoList.size();
+		}
+		return 0;
 	}
 
 }

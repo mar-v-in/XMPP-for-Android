@@ -26,6 +26,8 @@ import xmpp.client.service.user.User;
 import xmpp.client.service.user.UserService;
 import xmpp.client.service.user.UserServiceProvider;
 import xmpp.client.service.user.UserState;
+import xmpp.client.service.user.avatar.AvatarService;
+import xmpp.client.service.user.avatar.AvatarServiceProvider;
 import xmpp.client.service.user.contact.Contact;
 import xmpp.client.service.user.contact.ContactList;
 import xmpp.client.ui.activities.AppActivity;
@@ -44,7 +46,8 @@ import android.util.Log;
 
 public class Service extends android.app.Service implements
 		SimpleMessageHandlerClient, Signals, UserServiceProvider,
-		ChatServiceProvider, BookmarkServiceProvider, ConnectionProvider {
+		ChatServiceProvider, BookmarkServiceProvider, ConnectionProvider,
+		AvatarServiceProvider {
 	private static final String TAG = Service.class.getName();
 
 	private XMPPConnection mConnection;
@@ -89,6 +92,8 @@ public class Service extends android.app.Service implements
 	private HandlerThread mThread;
 
 	private BookmarkService mBookmarkService;
+
+	private AvatarService mAvatarService;
 
 	private void addUser(Message msg) {
 		Bundle b = msg.getData();
@@ -168,6 +173,11 @@ public class Service extends android.app.Service implements
 		final ChatSession session = b.getParcelable("session");
 		disableChatSession(session);
 		sendMsg(msg.replyTo, SIG_DISABLE_CHATSESSION);
+	}
+
+	@Override
+	public AvatarService getAvatarService() {
+		return mAvatarService;
 	}
 
 	@Override
@@ -360,6 +370,7 @@ public class Service extends android.app.Service implements
 						mAccountInfo.getPassword(),
 						(String) getText(R.string.xmpp_ressource));
 				mConnection.getRoster();
+				mAvatarService = new AvatarService(this);
 				mBookmarkService = new BookmarkService(this);
 				mUserService = new UserService(this, createMeUser());
 				mChatService = new ChatService(this);

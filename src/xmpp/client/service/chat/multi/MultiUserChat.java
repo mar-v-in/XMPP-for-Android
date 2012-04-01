@@ -1,3 +1,8 @@
+/*
+ * History: Message subitem:
+ * <x xmlns='jabber:x:delay' stamp='20120331T22:25:46' />
+ */
+
 package xmpp.client.service.chat.multi;
 
 import java.util.ArrayList;

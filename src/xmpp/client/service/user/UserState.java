@@ -1,5 +1,6 @@
 package xmpp.client.service.user;
 
+import org.jivesoftware.smack.packet.PacketExtension;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Presence.Mode;
 import org.jivesoftware.smack.packet.Presence.Type;
@@ -29,6 +30,7 @@ public class UserState implements Parcelable {
 
 	private final boolean mOnline;
 	private String mStatusText;
+	private String mAvatarSHA;
 
 	private int mStatus;
 	public final static int STATUS_INVALID = Integer.MIN_VALUE;
@@ -112,6 +114,7 @@ public class UserState implements Parcelable {
 		mOnline = (Boolean) in.readValue(null);
 		mStatusText = in.readString();
 		mStatus = in.readInt();
+		mAvatarSHA = in.readString();
 	}
 
 	public UserState(Presence p) {
@@ -123,6 +126,14 @@ public class UserState implements Parcelable {
 			} catch (final NullPointerException ex) {
 				mStatus = STATUS_AVAILABLE;
 			}
+			mAvatarSHA = null;
+			final PacketExtension pe = p.getExtension("vcard-temp:x:update");
+			if (pe != null) {
+				final String[] sp = pe.toXML().split("<[\\/]*photo>");
+				if (sp.length >= 3 && !sp[1].isEmpty()) {
+					mAvatarSHA = sp[1];
+				}
+			}
 		} else {
 			mStatus = STATUS_OFFLINE;
 		}
@@ -132,6 +143,10 @@ public class UserState implements Parcelable {
 	public int describeContents() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	public String getAvatarSHA() {
+		return mAvatarSHA;
 	}
 
 	public String getCustomStatusText() {
@@ -201,6 +216,7 @@ public class UserState implements Parcelable {
 		dest.writeValue(mOnline);
 		dest.writeString(mStatusText);
 		dest.writeInt(mStatus);
+		dest.writeString(mAvatarSHA);
 	}
 
 }

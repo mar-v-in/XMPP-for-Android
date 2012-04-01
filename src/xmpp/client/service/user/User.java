@@ -3,6 +3,7 @@ package xmpp.client.service.user;
 import java.util.ArrayList;
 
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.util.Base64;
 import org.jivesoftware.smack.util.StringUtils;
 
 import xmpp.client.R;
@@ -40,6 +41,7 @@ public class User implements Parcelable, Comparable<User> {
 	private int mTransportType;
 	private String mUserContact;
 	private ArrayList<String> mAdditionalInfo;
+	private byte[] mAvatar;
 
 	public static final Parcelable.Creator<User> CREATOR = new Parcelable.Creator<User>() {
 		@Override
@@ -54,7 +56,6 @@ public class User implements Parcelable, Comparable<User> {
 	};
 
 	public User() {
-
 	}
 
 	public User(org.jivesoftware.smack.RosterEntry re, Presence p) {
@@ -97,7 +98,10 @@ public class User implements Parcelable, Comparable<User> {
 		mTransportState = in.readInt();
 		mTransportType = in.readInt();
 		mAdditionalInfo = new ArrayList<String>();
-		in.readStringList(mAdditionalInfo);
+		final String s = in.readString();
+		if (s != null && !s.isEmpty()) {
+			mAvatar = Base64.decode(s);
+		}
 	}
 
 	public User(String login, String name, ArrayList<String> info, Presence p) {
@@ -181,7 +185,17 @@ public class User implements Parcelable, Comparable<User> {
 		}
 	}
 
+	public Bitmap getAvatar() {
+		if (mAvatar != null) {
+			return BitmapFactory.decodeByteArray(mAvatar, 0, mAvatar.length);
+		}
+		return null;
+	}
+
 	public Bitmap getBitmap(Context context) {
+		if (mAvatar != null) {
+			return getAvatar();
+		}
 		return BitmapFactory.decodeResource(context.getResources(),
 				R.drawable.ic_contact_picture);
 	}
@@ -262,6 +276,10 @@ public class User implements Parcelable, Comparable<User> {
 		return (mTransportState == TSTATE_IS_TRANSPORTED);
 	}
 
+	public void setAvatar(byte[] avatar) {
+		mAvatar = avatar;
+	}
+
 	public void setGroups(GroupList groups) {
 		mGroups = groups;
 	}
@@ -313,6 +331,11 @@ public class User implements Parcelable, Comparable<User> {
 		dest.writeInt(mTransportState);
 		dest.writeInt(mTransportType);
 		dest.writeStringList(mAdditionalInfo);
+		if (mAvatar != null) {
+			dest.writeString(Base64.encodeBytes(mAvatar));
+		} else {
+			dest.writeString("");
+		}
 	}
 
 }

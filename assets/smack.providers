@@ -579,6 +579,12 @@
     </extensionProvider>
     
     <extensionProvider>
+        <elementName>event</elementName>
+        <namespace>http://jabber.org/protocol/pubsub#event</namespace>
+        <className>org.jivesoftware.smackx.provider.PEPProvider</className>
+    </extensionProvider>
+    
+    <extensionProvider>
     	<elementName>configuration</elementName>
         <namespace>http://jabber.org/protocol/pubsub#event</namespace>
         <className>org.jivesoftware.smackx.pubsub.provider.ConfigEventProvider</className>

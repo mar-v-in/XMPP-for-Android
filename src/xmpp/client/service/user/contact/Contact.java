@@ -95,6 +95,11 @@ public class Contact implements Parcelable, Comparable<Contact> {
 	}
 
 	public Bitmap getBitmap(Context mContext) {
+		for (final User user : mUserList) {
+			if (user.getAvatar() != null) {
+				return user.getAvatar();
+			}
+		}
 		return getUser().getBitmap(mContext);
 	}
 
