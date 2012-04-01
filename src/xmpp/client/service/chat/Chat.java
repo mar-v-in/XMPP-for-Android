@@ -24,6 +24,8 @@ public abstract class Chat implements ChatCodes {
 
 	public abstract String getThreadID();
 
+	public abstract boolean isMe(String from);
+
 	public void sendMessage(String text) {
 		sendMessage(getIdentifier(), text);
 	}

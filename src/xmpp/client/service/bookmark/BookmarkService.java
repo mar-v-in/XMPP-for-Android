@@ -1,18 +1,18 @@
 package xmpp.client.service.bookmark;
 
-import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bookmark.BookmarkManager;
 
-import xmpp.client.service.Service;
+import xmpp.client.service.ConnectionProvider;
 
 public class BookmarkService {
 	private BookmarkManager mBookmarkManager;
 	private ConferenceBookmarkHandler mConferenceBookmarkHandler;
 
-	public BookmarkService(Service service) {
+	public BookmarkService(ConnectionProvider connectionProvider) {
 		try {
-			mBookmarkManager = BookmarkManager.getBookmarkManager(service.getConnection());
+			mBookmarkManager = BookmarkManager
+					.getBookmarkManager(connectionProvider.getConnection());
 			mConferenceBookmarkHandler = new ConferenceBookmarkHandler(
 					mBookmarkManager);
 		} catch (final XMPPException e) {

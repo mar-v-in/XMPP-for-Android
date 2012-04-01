@@ -52,7 +52,7 @@ public class RosterAdapter extends BaseAdapter {
 			return mContactProvider.userSize() + 1;
 		} else if (activeGroup.equals(mContext
 				.getText(R.string.conferences_group_name))) {
-			return mConferenceProvider.getList().size() + 1;
+			return mConferenceProvider.size() + 1;
 		} else if (activeGroup.equals(mContext
 				.getText(R.string.online_group_name))) {
 			return mContactProvider.userOnlineSize() + 1;
@@ -221,14 +221,13 @@ public class RosterAdapter extends BaseAdapter {
 
 	private void handleConference(int position, View view) {
 		final MultiUserChatInfo mucinfo = (MultiUserChatInfo) getItem(position);
-		final TextView name = (TextView) view
-				.findViewById(R.id.name_text);
+		final TextView name = (TextView) view.findViewById(R.id.name_text);
 		name.setText(mucinfo.getName());
-		final TextView status = (TextView) view
-				.findViewById(R.id.status_text);
+		final TextView status = (TextView) view.findViewById(R.id.status_text);
 		status.setText(mucinfo.getJid());
 		name.setTextColor(Color.BLACK);
 		status.setTextColor(Color.BLACK);
+		view.setBackgroundResource(R.drawable.listitem_default);
 
 		status.setCompoundDrawablesWithIntrinsicBounds(
 				UserState.getStatusIconResourceID(UserState.STATUS_OFFLINE), 0,
@@ -237,10 +236,9 @@ public class RosterAdapter extends BaseAdapter {
 		final QuickContactBadge q = (QuickContactBadge) view
 				.findViewById(R.id.user_badge);
 
-		q.setImageResource(R.drawable.ic_contact_picture);
-		
-		final TextView unread = (TextView) view
-				.findViewById(R.id.unread_text);
+		q.setImageResource(R.drawable.ic_group_picture);
+
+		final TextView unread = (TextView) view.findViewById(R.id.unread_text);
 		unread.setVisibility(View.GONE);
 
 		final LinearLayout iconContainer = (LinearLayout) view

@@ -4,7 +4,6 @@ import xmpp.client.R;
 import xmpp.client.service.Service;
 import xmpp.client.service.Signals;
 import xmpp.client.service.account.AccountInfo;
-import xmpp.client.service.chat.ChatMessage;
 import xmpp.client.service.chat.ChatSession;
 import xmpp.client.service.chat.multi.MultiUserChatInfo;
 import xmpp.client.service.chat.multi.MultiUserChatSession;
@@ -24,6 +23,7 @@ import xmpp.client.ui.dialogs.ResultListener;
 import xmpp.client.ui.dialogs.ResultProducer;
 import xmpp.client.ui.dialogs.StatusSelectorDialog;
 import xmpp.client.ui.provider.ChatProvider;
+import xmpp.client.ui.provider.ChatProviderListener;
 import xmpp.client.ui.provider.ConferenceProvider;
 import xmpp.client.ui.provider.ContactProvider;
 import xmpp.client.ui.provider.ContactProviderListener;
@@ -62,7 +62,8 @@ import android.widget.TextView.OnEditorActionListener;
 import com.devsmart.android.ui.HorizontalListView;
 
 public class AppActivity extends Activity implements
-		SimpleMessageHandlerClient, ResultListener, ContactProviderListener {
+		SimpleMessageHandlerClient, ResultListener, ContactProviderListener,
+		ChatProviderListener {
 	private static final String TAG = AppActivity.class.getName();
 	private static final int DIALOG_STATUSSELECTOR = 1;
 	private static final int DIALOG_ADDUSER = 2;
@@ -84,7 +85,8 @@ public class AppActivity extends Activity implements
 			if (item == 0) {
 				goStatusChange();
 			} else if (mCurrentNavigation == 3) {
-				goConference(((MultiUserChatInfo)mRosterAdapter.getItem(item)).getJid());
+				goConference(((MultiUserChatInfo) mRosterAdapter.getItem(item))
+						.getJid());
 			} else {
 				goChat(((Contact) mRosterAdapter.getItem(item)).getUserLogin());
 			}
@@ -135,6 +137,7 @@ public class AppActivity extends Activity implements
 			mCurrentNavigation = itemPosition;
 			mRosterAdapter.setActiveGroup((String) mGroupAdapter
 					.getItem(mCurrentNavigation));
+			onCreateOptionsMenu(mMenu);
 			return true;
 		}
 	};
@@ -208,6 +211,18 @@ public class AppActivity extends Activity implements
 				setTitle(mMUC);
 			}
 		}
+	}
+
+	@Override
+	public void chatProviderChanged(ChatProvider chatProvider) {
+		if (mChatAdapter != null) {
+			mChatAdapter.notifyDataSetChanged();
+		}
+	}
+
+	@Override
+	public void chatProviderReady(ChatProvider chatProvider) {
+
 	}
 
 	void checkState() {
@@ -319,13 +334,13 @@ public class AppActivity extends Activity implements
 
 	private void goChat(String userLogin) {
 		final Intent i = new Intent(AppActivity.this, AppActivity.class);
-		i.setData(Uri.parse("imto://jabber/" + userLogin));
+		i.setData(Uri.parse("imto://jabber/" + Uri.encode(userLogin)));
 		handleIntent(i);
 	}
 
 	private void goConference(String muc) {
 		final Intent i = new Intent(AppActivity.this, AppActivity.class);
-		i.setData(Uri.parse("imto://jabbermuc/" + muc));
+		i.setData(Uri.parse("imto://jabbermuc/" + Uri.encode(muc)));
 		handleIntent(i);
 	}
 
@@ -408,7 +423,8 @@ public class AppActivity extends Activity implements
 				mActionBar
 						.setSubtitle(mUser.getUserState().getStatusText(this));
 				mChatProvider = new ChatProvider(
-						mContactProvider.getMeContact(), mSession);
+						mContactProvider.getMeContact(), mSession, this,
+						mMessageHandler);
 				mChatAdapter = new ChatAdapter(this, mChatProvider,
 						mContactProvider);
 				mMessageHolder.setAdapter(mChatAdapter);
@@ -421,7 +437,8 @@ public class AppActivity extends Activity implements
 				mActionBar.setTitle(mSession.getSessionID());
 				mActionBar.setSubtitle(b.getString("subject"));
 				mChatProvider = new ChatProvider(
-						mContactProvider.getMeContact(), mSession);
+						mContactProvider.getMeContact(), mSession, this,
+						mMessageHandler);
 				mChatAdapter = new ChatAdapter(this, mChatProvider,
 						mContactProvider);
 				mMessageHolder.setAdapter(mChatAdapter);
@@ -443,30 +460,12 @@ public class AppActivity extends Activity implements
 							.getSubject());
 				}
 				break;
-
-			case Signals.SIG_MESSAGE_SENT:
-			case Signals.SIG_MESSAGE_GOT:
-				b.setClassLoader(ChatMessage.class.getClassLoader());
-				final ChatMessage message = b.getParcelable("message");
-				b.setClassLoader(ChatSession.class.getClassLoader());
-				final ChatSession session = b.getParcelable("session");
-				if (session.equals(mSession)) {
-					mChatProvider.addMessage(message);
-				} else {
-					// TODO: Do not hope everything is right!
-					mChatProvider.addMessage(message);
-				}
-				if (mChatAdapter != null) {
-					mChatAdapter.notifyDataSetChanged();
-				}
-				break;
 			case Signals.SIG_ROSTER_GET_CONTACTS_ERROR:
 				doUnbindService();
 				finish();
 				break;
 			case Signals.SIG_IS_READY:
 				updateStatus(UserState.STATUS_AVAILABLE);
-				afterInit();
 				break;
 			case Signals.SIG_IS_NOT_READY:
 				doLogin();
@@ -496,6 +495,15 @@ public class AppActivity extends Activity implements
 	@Override
 	public boolean isReady() {
 		return true;
+	}
+
+	@Override
+	public void onBackPressed() {
+		if (mCurrentView == VIEW_ROSTER) {
+			finish();
+		} else {
+			openRoster(null);
+		}
 	}
 
 	@Override
@@ -540,8 +548,20 @@ public class AppActivity extends Activity implements
 		switch (mCurrentView) {
 		case VIEW_ROSTER:
 			inflater.inflate(R.menu.roster_actionbar, menu);
+			if (mCurrentNavigation == 3) {
+				menu.findItem(R.id.menu_add_user).setVisible(false);
+			} else {
+				menu.findItem(R.id.menu_add_conference).setVisible(false);
+			}
 		case VIEW_CHAT:
 			inflater.inflate(R.menu.chat_actionbar, menu);
+			if (mUser != null) {
+				if (mUser.supportsAudio()) {
+					menu.findItem(R.id.menu_call).setVisible(true);
+				} else {
+					menu.findItem(R.id.menu_call).setVisible(false);
+				}
+			}
 		}
 		mMenu = menu;
 		return true;
@@ -673,7 +693,8 @@ public class AppActivity extends Activity implements
 		mActionBar.setDisplayHomeAsUpEnabled(false);
 
 		if (mConferenceProvider == null) {
-			mConferenceProvider = new ConferenceProvider(mMessenger, mService, mMessageHandler);
+			mConferenceProvider = new ConferenceProvider(mMessenger, mService,
+					mMessageHandler);
 		}
 		if (mContactProvider == null) {
 			mContactProvider = new ContactProvider(mMessenger, mService, this,

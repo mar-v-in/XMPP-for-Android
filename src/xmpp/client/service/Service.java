@@ -3,7 +3,6 @@ package xmpp.client.service;
 import java.security.Security;
 
 import org.apache.qpid.management.common.sasl.SaslProvider;
-import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionConfiguration.SecurityMode;
 import org.jivesoftware.smack.ConnectionListener;
@@ -15,15 +14,17 @@ import org.jivesoftware.smack.packet.Presence;
 import xmpp.client.R;
 import xmpp.client.service.account.AccountInfo;
 import xmpp.client.service.bookmark.BookmarkService;
+import xmpp.client.service.bookmark.BookmarkServiceProvider;
 import xmpp.client.service.chat.Chat;
-import xmpp.client.service.chat.ChatListener;
 import xmpp.client.service.chat.ChatMessage;
 import xmpp.client.service.chat.ChatService;
+import xmpp.client.service.chat.ChatServiceProvider;
 import xmpp.client.service.chat.ChatSession;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
 import xmpp.client.service.user.User;
 import xmpp.client.service.user.UserService;
+import xmpp.client.service.user.UserServiceProvider;
 import xmpp.client.service.user.UserState;
 import xmpp.client.service.user.contact.Contact;
 import xmpp.client.service.user.contact.ContactList;
@@ -42,7 +43,8 @@ import android.os.Process;
 import android.util.Log;
 
 public class Service extends android.app.Service implements
-		SimpleMessageHandlerClient, Signals {
+		SimpleMessageHandlerClient, Signals, UserServiceProvider,
+		ChatServiceProvider, BookmarkServiceProvider, ConnectionProvider {
 	private static final String TAG = Service.class.getName();
 
 	private XMPPConnection mConnection;
@@ -146,7 +148,6 @@ public class Service extends android.app.Service implements
 
 	private User createMeUser() {
 		final User user = new User();
-		user.setUserName("LoopBack|mobile");
 		user.setUserLogin(mConnection.getUser());
 		user.setRessource((String) getText(R.string.xmpp_ressource));
 		user.setUserState(new UserState(UserState.STATUS_INITIALIZING, null));
@@ -169,15 +170,18 @@ public class Service extends android.app.Service implements
 		sendMsg(msg.replyTo, SIG_DISABLE_CHATSESSION);
 	}
 
+	@Override
 	public BookmarkService getBookmarkService() {
 		return mBookmarkService;
 	}
 
-	public ChatListener getChatService() {
+	@Override
+	public ChatService getChatService() {
 		return mChatService;
 	}
 
-	public Connection getConnection() {
+	@Override
+	public XMPPConnection getConnection() {
 		return mConnection;
 	}
 
@@ -199,6 +203,7 @@ public class Service extends android.app.Service implements
 		sendMsg(msg.replyTo, SIG_GET_MUCS, b);
 	}
 
+	@Override
 	public UserService getUserService() {
 		return mUserService;
 	}
@@ -469,10 +474,9 @@ public class Service extends android.app.Service implements
 			if (session.isMUC()) {
 				showChatNotification(message);
 			} else {
-				final Contact contact = mUserService.getContact(
-						message.getUser(), true);
 				final User user = mUserService.getUser(message.getUser()
-						.getUserLogin(), false);
+						.getUserLogin(), true);
+				final Contact contact = mUserService.getContact(user, true);
 				contact.increaseUnreadMessages();
 				sendRosterUpdated(user);
 				showChatNotification(message);

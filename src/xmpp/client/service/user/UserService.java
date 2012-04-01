@@ -14,7 +14,7 @@ import xmpp.client.service.user.contact.ContactList;
 import xmpp.client.service.user.group.GroupList;
 import android.util.Log;
 
-public class UserService implements RosterListener {
+public class UserService implements RosterListener, UserServiceProvider {
 	private static final String TAG = UserService.class.getName();
 	private UserList mUserList;
 	private ContactList mContactList;
@@ -168,6 +168,11 @@ public class UserService implements RosterListener {
 	}
 
 	@Override
+	public UserService getUserService() {
+		return this;
+	}
+
+	@Override
 	public void presenceChanged(Presence presence) {
 		final User user = getUser(presence.getFrom(), true, false);
 		if (user == null) {
@@ -197,18 +202,28 @@ public class UserService implements RosterListener {
 	}
 
 	public User setupUser(User user) {
-		final User user2 = getUser(user.getFullUserLogin(), false, false);
-		if (user2 == null || user2.getUserState() == UserState.Invalid) {
-			if (user2 != null) {
-				mUserList.remove(user2);
-				mContactList.removeUser(user2.getFullUserLogin());
-				mService.sendRosterDeleted(user2.getFullUserLogin());
-			}
+		User user2 = getUser(user.getFullUserLogin(), false, false);
+		if (user2 != null
+				&& !user2.getFullUserLogin().equalsIgnoreCase(
+						user.getFullUserLogin())) {
+			user2 = null;
 		}
-		mUserList.add(user);
-		mContactList.add(user);
-		mService.sendRosterAdded(user);
-		return user2;
+		if (user2 != null && user2.getUserState() == UserState.Invalid) {
+			mUserList.remove(user2);
+			mContactList.removeUser(user2.getFullUserLogin());
+			mService.sendRosterDeleted(user2.getFullUserLogin());
+			user2 = null;
+		}
+		if (user2 == null) {
+			mUserList.add(user);
+			mContactList.add(user);
+			mService.sendRosterAdded(user);
+			return user;
+		} else {
+			user2.setUserState(user.getUserState());
+			mService.sendRosterUpdated(user2);
+			return user2;
+		}
 	}
 
 	public void setUserMe(User user) {

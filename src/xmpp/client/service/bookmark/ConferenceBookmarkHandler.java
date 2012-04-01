@@ -6,8 +6,6 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bookmark.BookmarkManager;
 import org.jivesoftware.smackx.bookmark.BookmarkedConference;
 
-import android.util.Log;
-
 import xmpp.client.service.chat.multi.MultiUserChatInfo;
 import xmpp.client.service.chat.multi.MultiUserChatInfoList;
 

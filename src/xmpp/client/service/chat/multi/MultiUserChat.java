@@ -3,19 +3,23 @@ package xmpp.client.service.chat.multi;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.util.StringUtils;
 import org.jivesoftware.smackx.muc.Occupant;
 import org.jivesoftware.smackx.muc.SubjectUpdatedListener;
 
+import xmpp.client.service.ConnectionProvider;
 import xmpp.client.service.chat.Chat;
 import xmpp.client.service.chat.InternalChatManager;
 import xmpp.client.service.user.User;
 import xmpp.client.service.user.UserService;
+import xmpp.client.service.user.UserServiceProvider;
+import android.util.Log;
 
-public class MultiUserChat extends Chat implements SubjectUpdatedListener {
+public class MultiUserChat extends Chat implements SubjectUpdatedListener,
+		UserServiceProvider {
 	@SuppressWarnings("unused")
 	private static final String TAG = MultiUserChat.class.getName();
 
@@ -24,13 +28,16 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener {
 	private final MultiUserChatParticipantListener mParticipantListener;
 	private final InternalChatManager mInternalChatManager;
 	private final MultiUserChatParticipantStatusListener mParticipantStatusListener;
-	private final UserService mUserService;
+	private final UserServiceProvider mUserServiceProvider;
+	private final MultiUserChatInfo mMUCInfo;
 
-	public MultiUserChat(Connection mConnection, MultiUserChatInfo mucinfo,
-			InternalChatManager internalChatManager, UserService userService) {
-		mUserService = userService;
-		mMUC = new org.jivesoftware.smackx.muc.MultiUserChat(mConnection,
-				mucinfo.getJid());
+	public MultiUserChat(ConnectionProvider connectionProvider,
+			MultiUserChatInfo mucinfo, InternalChatManager internalChatManager,
+			UserServiceProvider userServiceProvider) {
+		mMUCInfo = mucinfo;
+		mUserServiceProvider = userServiceProvider;
+		mMUC = new org.jivesoftware.smackx.muc.MultiUserChat(
+				connectionProvider.getConnection(), mucinfo.getJid());
 		mInternalChatManager = internalChatManager;
 		mMessageListener = new MultiUserChatMessageListener(this);
 		mMUC.addMessageListener(mMessageListener);
@@ -88,31 +95,44 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener {
 		return list;
 	}
 
+	@Override
+	public UserService getUserService() {
+		return mUserServiceProvider.getUserService();
+	}
+
+	@Override
+	public boolean isMe(String from) {
+		if (StringUtils.parseResource(from).equalsIgnoreCase(
+				mMUCInfo.getNickname())) {
+			return true;
+		}
+		return false;
+	}
+
 	public void processMessage(MultiUserChat mChat, Message msg) {
+		try {
+			setupUser(StringUtils.parseResource(msg.getFrom()));
+		} catch (final Exception e) {
+			Log.d(TAG, "setupUser", e);
+		}
 		mInternalChatManager.processMessage(mChat, msg);
 	}
 
 	public void processParticipantJoined(String participant) {
+		setupUser(participant);
 		final Presence presence = mMUC.getOccupantPresence(participant);
-		final Occupant occupant = mMUC.getOccupant(participant);
-		final ArrayList<String> info = new ArrayList<String>();
-		info.add(0, occupant.getJid());
-		info.add(1, occupant.getAffiliation());
-		info.add(2, occupant.getRole());
-		mUserService.setupUser(new User(getIdentifier(), occupant.getNick(),
-				info, presence));
-		mUserService.presenceChanged(presence);
+		getUserService().presenceChanged(presence);
 	}
 
 	public void processParticipantLeft(String participant) {
 		final Presence presence = new Presence(Presence.Type.unavailable, null,
 				0, null);
 		presence.setFrom(participant);
-		mUserService.presenceChanged(presence);
+		getUserService().presenceChanged(presence);
 	}
 
 	public void processParticipantPresence(Presence presence) {
-		mUserService.presenceChanged(presence);
+		getUserService().presenceChanged(presence);
 	}
 
 	@Override
@@ -123,6 +143,25 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener {
 			} catch (final XMPPException e) {
 				throw new RuntimeException(e);
 			}
+		}
+	}
+
+	private User setupUser(String participant) {
+		Log.d(TAG, participant);
+		final Presence presence = mMUC.getOccupantPresence(participant);
+		final Occupant occupant = mMUC.getOccupant(participant);
+		final ArrayList<String> info = new ArrayList<String>();
+		if (occupant != null) {
+			info.add(0, occupant.getJid());
+			info.add(1, occupant.getAffiliation());
+			info.add(2, occupant.getRole());
+			return getUserService().setupUser(
+					new User(getIdentifier(), occupant.getNick(), info,
+							presence));
+		} else {
+			return getUserService().setupUser(
+					new User(getIdentifier(), participant, info, new Presence(
+							Presence.Type.unavailable)));
 		}
 	}
 

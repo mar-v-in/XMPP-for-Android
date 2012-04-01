@@ -68,6 +68,14 @@ public class SingleUserChat extends xmpp.client.service.chat.Chat implements
 		return mChat.getThreadID();
 	}
 
+	@Override
+	public boolean isMe(String from) {
+		if (!from.equalsIgnoreCase(getIdentifier())) {
+			return true;
+		}
+		return false;
+	}
+
 	public boolean nearly(Chat chat) {
 		if (chat.getParticipant().equalsIgnoreCase(mChat.getParticipant())) {
 			return true;

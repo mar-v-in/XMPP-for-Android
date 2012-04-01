@@ -12,7 +12,8 @@ import xmpp.client.service.chat.single.SingleUserChatSession;
 import xmpp.client.service.user.User;
 import android.util.Log;
 
-public class ChatService implements ChatListener, ChatCodes {
+public class ChatService implements ChatListener, ChatCodes,
+		ChatServiceProvider {
 	private static final String TAG = ChatService.class.getName();
 
 	HashMap<Chat, ChatSession> mChats;
@@ -21,7 +22,8 @@ public class ChatService implements ChatListener, ChatCodes {
 
 	public ChatService(Service service) {
 		mService = service;
-		mInternalChatManager = new InternalChatManager(mService);
+		mInternalChatManager = new InternalChatManager(mService, mService,
+				this, mService);
 		mChats = new HashMap<Chat, ChatSession>();
 	}
 
@@ -80,6 +82,11 @@ public class ChatService implements ChatListener, ChatCodes {
 			Log.w(TAG, "Could not found closed session!");
 		}
 		return null;
+	}
+
+	@Override
+	public ChatService getChatService() {
+		return this;
 	}
 
 	public ChatSession getChatSessionFromIdentifier(String jid) {

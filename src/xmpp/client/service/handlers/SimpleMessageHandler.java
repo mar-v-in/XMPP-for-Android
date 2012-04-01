@@ -5,8 +5,11 @@ import java.util.ArrayList;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 
 public class SimpleMessageHandler extends Handler {
+	private final static String TAG = SimpleMessageHandler.class.getName();
+
 	ArrayList<SimpleMessageHandlerClient> mClients;
 
 	public SimpleMessageHandler() {
@@ -43,7 +46,9 @@ public class SimpleMessageHandler extends Handler {
 
 	@Override
 	public void handleMessage(Message msg) {
-		for (final SimpleMessageHandlerClient client : mClients) {
+		for (int i = 0; i < mClients.size(); i++) {
+			final SimpleMessageHandlerClient client = mClients.get(i);
+			Log.d(TAG, "Sending " + msg.toString() + " to " + client.toString());
 			if (client != null && client.isReady()) {
 				client.handleMessage(msg);
 			}
