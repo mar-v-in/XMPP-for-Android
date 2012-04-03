@@ -62,7 +62,8 @@ public class UserState implements Parcelable {
 
 	public static int getStatusIconResourceID(int status) {
 		if (status == STATUS_INVISIBLE || status < 0) {
-			return ContactsContract.StatusUpdates.getPresenceIconResourceId(STATUS_OFFLINE);
+			return ContactsContract.StatusUpdates
+					.getPresenceIconResourceId(STATUS_OFFLINE);
 		}
 		return ContactsContract.StatusUpdates.getPresenceIconResourceId(status);
 	}

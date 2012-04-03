@@ -83,18 +83,15 @@ public class RosterAdapter extends BaseAdapter {
 
 	private View getNormalItemView(int position, View view) {
 		final TextView name = (TextView) view.findViewById(R.id.name_text);
-		final TextView status = (TextView) view
-				.findViewById(R.id.status_text);
+		final TextView status = (TextView) view.findViewById(R.id.status_text);
 		name.setTextColor(Color.BLACK);
 		status.setTextColor(Color.BLACK);
 		view.setBackgroundResource(R.drawable.listitem_default);
-		view.findViewById(R.id.loading_spinner).setVisibility(
-				View.GONE);
+		view.findViewById(R.id.loading_spinner).setVisibility(View.GONE);
 
 		final Contact contact = (Contact) getItem(position);
 
-		final TextView unread = (TextView) view
-				.findViewById(R.id.unread_text);
+		final TextView unread = (TextView) view.findViewById(R.id.unread_text);
 		if (contact.getUnreadMessages() == 0) {
 			unread.setVisibility(View.GONE);
 		} else {
@@ -165,8 +162,7 @@ public class RosterAdapter extends BaseAdapter {
 
 	private View getSelfItemView(int position, View view) {
 		final TextView name = (TextView) view.findViewById(R.id.name_text);
-		final TextView status = (TextView) view
-				.findViewById(R.id.status_text);
+		final TextView status = (TextView) view.findViewById(R.id.status_text);
 		name.setTextColor(Color.WHITE);
 		status.setTextColor(Color.WHITE);
 
@@ -187,8 +183,7 @@ public class RosterAdapter extends BaseAdapter {
 			break;
 		}
 
-		final TextView unread = (TextView) view
-				.findViewById(R.id.unread_text);
+		final TextView unread = (TextView) view.findViewById(R.id.unread_text);
 		unread.setVisibility(View.GONE);
 
 		final LinearLayout iconContainer = (LinearLayout) view
@@ -196,11 +191,9 @@ public class RosterAdapter extends BaseAdapter {
 		iconContainer.removeAllViews();
 
 		if (contact.getUserState().isTemporaryStatus()) {
-			view.findViewById(R.id.loading_spinner).setVisibility(
-					View.VISIBLE);
+			view.findViewById(R.id.loading_spinner).setVisibility(View.VISIBLE);
 		} else {
-			view.findViewById(R.id.loading_spinner).setVisibility(
-					View.GONE);
+			view.findViewById(R.id.loading_spinner).setVisibility(View.GONE);
 		}
 
 		return view;
@@ -238,8 +231,7 @@ public class RosterAdapter extends BaseAdapter {
 		name.setTextColor(Color.BLACK);
 		status.setTextColor(Color.BLACK);
 		view.setBackgroundResource(R.drawable.listitem_default);
-		view.findViewById(R.id.loading_spinner).setVisibility(
-				View.GONE);
+		view.findViewById(R.id.loading_spinner).setVisibility(View.GONE);
 
 		status.setCompoundDrawablesWithIntrinsicBounds(
 				UserState.getStatusIconResourceID(UserState.STATUS_OFFLINE), 0,

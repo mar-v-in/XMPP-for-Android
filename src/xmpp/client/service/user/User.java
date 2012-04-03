@@ -14,12 +14,9 @@ import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorFilter;
-import android.graphics.LightingColorFilter;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -41,6 +38,19 @@ public class User implements Parcelable, Comparable<User> {
 	public static final int TRANSPORT_YAHOO = 5;
 	public static final int TRANSPORT_IRC = 6;
 
+	public static String intToARGB(int i) {
+		return "#" + intToHex((i >> 24) & 0xFF) + intToHex((i >> 16) & 0xFF)
+				+ intToHex((i >> 8) & 0xFF) + intToHex(i & 0xFF);
+	}
+
+	public static String intToHex(int i) {
+		final String s = Integer.toHexString(i);
+		if (s.length() == 1) {
+			return "0" + s;
+		}
+		return s;
+	}
+
 	private String mUserName;
 	private String mUserLogin;
 	private String mRessource;
@@ -49,7 +59,9 @@ public class User implements Parcelable, Comparable<User> {
 	private int mTransportState;
 	private int mTransportType;
 	private String mUserContact;
+
 	private ArrayList<String> mAdditionalInfo;
+
 	private byte[] mAvatar;
 
 	private int mUnreadMessages;
@@ -209,29 +221,17 @@ public class User implements Parcelable, Comparable<User> {
 		if (mAvatar != null) {
 			return getAvatar();
 		}
-		Bitmap b = BitmapFactory.decodeResource(context.getResources(),
+		final Bitmap b = BitmapFactory.decodeResource(context.getResources(),
 				R.drawable.ic_contact_picture);
-		Bitmap b2 = Bitmap.createBitmap(b.getWidth(), b.getHeight(),
+		final Bitmap b2 = Bitmap.createBitmap(b.getWidth(), b.getHeight(),
 				Config.ARGB_8888);
-		Paint paint = new Paint();
+		final Paint paint = new Paint();
 		paint.setColorFilter(new PorterDuffColorFilter(Color
-				.parseColor(intToARGB(getDisplayName().hashCode())), PorterDuff.Mode.OVERLAY));
-		Canvas c = new Canvas(b2);
+				.parseColor(intToARGB(getDisplayName().hashCode())),
+				PorterDuff.Mode.OVERLAY));
+		final Canvas c = new Canvas(b2);
 		c.drawBitmap(b, 0, 0, paint);
 		return b2;
-	}
-
-	public static String intToARGB(int i) {
-		return "#" + intToHex((i >> 24) & 0xFF) + intToHex((i >> 16) & 0xFF)
-				+ intToHex((i >> 8) & 0xFF) + intToHex(i & 0xFF);
-	}
-
-	public static String intToHex(int i) {
-		String s = Integer.toHexString(i);
-		if (s.length() == 1) {
-			return "0" + s;
-		}
-		return s;
 	}
 
 	public String getDisplayName() {

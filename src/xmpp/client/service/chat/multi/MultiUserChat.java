@@ -25,7 +25,6 @@ import android.util.Log;
 
 public class MultiUserChat extends Chat implements SubjectUpdatedListener,
 		UserServiceProvider {
-	@SuppressWarnings("unused")
 	private static final String TAG = MultiUserChat.class.getName();
 
 	private org.jivesoftware.smackx.muc.MultiUserChat mMUC;

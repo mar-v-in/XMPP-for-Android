@@ -256,7 +256,8 @@ public class AppActivity extends Activity implements
 	@Override
 	public void contactProviderReady(ContactProvider contactProvider) {
 		afterInit();
-		updateStatus(new UserState(UserState.STATUS_AVAILABLE, "via " + getText(R.string.app_name)));
+		updateStatus(new UserState(UserState.STATUS_AVAILABLE, "via "
+				+ getText(R.string.app_name)));
 	}
 
 	void doBindService() {
