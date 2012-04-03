@@ -81,17 +81,19 @@ public class RosterAdapter extends BaseAdapter {
 		return getItem(position).hashCode();
 	}
 
-	private View getNormalItemView(int position, View baseView) {
-		final TextView name = (TextView) baseView.findViewById(R.id.name_text);
-		final TextView status = (TextView) baseView
+	private View getNormalItemView(int position, View view) {
+		final TextView name = (TextView) view.findViewById(R.id.name_text);
+		final TextView status = (TextView) view
 				.findViewById(R.id.status_text);
 		name.setTextColor(Color.BLACK);
 		status.setTextColor(Color.BLACK);
+		view.setBackgroundResource(R.drawable.listitem_default);
+		view.findViewById(R.id.loading_spinner).setVisibility(
+				View.GONE);
 
 		final Contact contact = (Contact) getItem(position);
-		baseView.setBackgroundResource(R.drawable.listitem_default);
 
-		final TextView unread = (TextView) baseView
+		final TextView unread = (TextView) view
 				.findViewById(R.id.unread_text);
 		if (contact.getUnreadMessages() == 0) {
 			unread.setVisibility(View.GONE);
@@ -100,7 +102,7 @@ public class RosterAdapter extends BaseAdapter {
 			unread.setText("" + contact.getUnreadMessages());
 		}
 
-		final LinearLayout iconContainer = (LinearLayout) baseView
+		final LinearLayout iconContainer = (LinearLayout) view
 				.findViewById(R.id.icon_container);
 		iconContainer.removeAllViews();
 		for (final User user : contact.getUsers()) {
@@ -141,7 +143,7 @@ public class RosterAdapter extends BaseAdapter {
 			iconContainer.addView(iview);
 		}
 
-		return baseView;
+		return view;
 	}
 
 	public Contact getRosterEntry(String address) {
@@ -161,9 +163,9 @@ public class RosterAdapter extends BaseAdapter {
 		}
 	}
 
-	private View getSelfItemView(int position, View baseView) {
-		final TextView name = (TextView) baseView.findViewById(R.id.name_text);
-		final TextView status = (TextView) baseView
+	private View getSelfItemView(int position, View view) {
+		final TextView name = (TextView) view.findViewById(R.id.name_text);
+		final TextView status = (TextView) view
 				.findViewById(R.id.status_text);
 		name.setTextColor(Color.WHITE);
 		status.setTextColor(Color.WHITE);
@@ -171,29 +173,37 @@ public class RosterAdapter extends BaseAdapter {
 		final Contact contact = (Contact) getItem(position);
 		switch (contact.getUserState().getStatus()) {
 		case UserState.STATUS_AVAILABLE:
-			baseView.setBackgroundResource(R.drawable.rosteritem_highlight_online);
+			view.setBackgroundResource(R.drawable.rosteritem_highlight_online);
 			break;
 		case UserState.STATUS_AWAY:
 		case UserState.STATUS_IDLE:
-			baseView.setBackgroundResource(R.drawable.rosteritem_highlight_away);
+			view.setBackgroundResource(R.drawable.rosteritem_highlight_away);
 			break;
 		case UserState.STATUS_OFFLINE:
-			baseView.setBackgroundResource(R.drawable.rosteritem_highlight_offline);
+			view.setBackgroundResource(R.drawable.rosteritem_highlight_offline);
 			break;
 		case UserState.STATUS_DO_NOT_DISTURB:
-			baseView.setBackgroundResource(R.drawable.rosteritem_highlight_donotdisturb);
+			view.setBackgroundResource(R.drawable.rosteritem_highlight_donotdisturb);
 			break;
 		}
 
-		final TextView unread = (TextView) baseView
+		final TextView unread = (TextView) view
 				.findViewById(R.id.unread_text);
 		unread.setVisibility(View.GONE);
 
-		final LinearLayout iconContainer = (LinearLayout) baseView
+		final LinearLayout iconContainer = (LinearLayout) view
 				.findViewById(R.id.icon_container);
 		iconContainer.removeAllViews();
 
-		return baseView;
+		if (contact.getUserState().isTemporaryStatus()) {
+			view.findViewById(R.id.loading_spinner).setVisibility(
+					View.VISIBLE);
+		} else {
+			view.findViewById(R.id.loading_spinner).setVisibility(
+					View.GONE);
+		}
+
+		return view;
 	}
 
 	@Override
@@ -228,6 +238,8 @@ public class RosterAdapter extends BaseAdapter {
 		name.setTextColor(Color.BLACK);
 		status.setTextColor(Color.BLACK);
 		view.setBackgroundResource(R.drawable.listitem_default);
+		view.findViewById(R.id.loading_spinner).setVisibility(
+				View.GONE);
 
 		status.setCompoundDrawablesWithIntrinsicBounds(
 				UserState.getStatusIconResourceID(UserState.STATUS_OFFLINE), 0,

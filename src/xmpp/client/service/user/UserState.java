@@ -43,8 +43,8 @@ public class UserState implements Parcelable {
 	public final static int STATUS_AVAILABLE = ContactsContract.StatusUpdates.AVAILABLE;
 	public final static int STATUS_IDLE = ContactsContract.StatusUpdates.IDLE;
 	public final static int STATUS_DO_NOT_DISTURB = ContactsContract.StatusUpdates.DO_NOT_DISTURB;
-
 	public final static int STATUS_AWAY = ContactsContract.StatusUpdates.AWAY;
+	public final static int STATUS_INVISIBLE = 10;
 
 	public static UserState Invalid = new UserState(STATUS_INVALID, null);
 
@@ -61,11 +61,16 @@ public class UserState implements Parcelable {
 	};
 
 	public static int getStatusIconResourceID(int status) {
+		if (status == STATUS_INVISIBLE || status < 0) {
+			return ContactsContract.StatusUpdates.getPresenceIconResourceId(STATUS_OFFLINE);
+		}
 		return ContactsContract.StatusUpdates.getPresenceIconResourceId(status);
 	}
 
 	public static int getStatusTextResourceID(int status) {
 		switch (status) {
+		case STATUS_INVISIBLE:
+			return R.string.status_invisible;
 		case STATUS_INITIALIZING:
 			return R.string.process_initializing;
 		case STATUS_LOGGING_IN:

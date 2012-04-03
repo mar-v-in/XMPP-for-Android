@@ -116,7 +116,11 @@ public class Contact implements Parcelable, Comparable<Contact> {
 	}
 
 	public int getUnreadMessages() {
-		return mUnreadMessageCount;
+		int sum = 0;
+		for (final User user : mUserList) {
+			sum += user.getUnreadMessages();
+		}
+		return sum;
 	}
 
 	public User getUser() {

@@ -72,7 +72,7 @@ public class ContactsSyncAdapterService extends Service implements
 
 	void checkState() {
 		if (mService != null) {
-			final Message msg = Message.obtain(null, Signals.SIG_IS_READY);
+			final Message msg = Message.obtain(null, Signals.SIG_IS_ONLINE);
 			msg.replyTo = mMessenger;
 			try {
 				mService.send(msg);
@@ -189,7 +189,7 @@ public class ContactsSyncAdapterService extends Service implements
 		try {
 			final Bundle b = msg.getData();
 			switch (msg.what) {
-			case Signals.SIG_IS_READY:
+			case Signals.SIG_IS_ONLINE:
 				b.setClassLoader(Contact.class.getClassLoader());
 				mContactMe = b.getParcelable("contact");
 
@@ -209,7 +209,7 @@ public class ContactsSyncAdapterService extends Service implements
 				doNotify();
 				break;
 			case Signals.SIG_ROSTER_GET_CONTACTS_ERROR:
-			case Signals.SIG_IS_NOT_READY:
+			case Signals.SIG_IS_NOT_ONLINE:
 				doNotify();
 				break;
 			}

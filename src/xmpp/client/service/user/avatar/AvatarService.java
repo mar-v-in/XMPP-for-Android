@@ -1,15 +1,10 @@
 package xmpp.client.service.user.avatar;
 
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.packet.VCard;
-import org.jivesoftware.smackx.pubsub.Item;
-import org.jivesoftware.smackx.pubsub.LeafNode;
-import org.jivesoftware.smackx.pubsub.PayloadItem;
 
 import xmpp.client.service.ConnectionProvider;
 import xmpp.client.service.user.User;
@@ -49,7 +44,6 @@ public class AvatarService implements ConnectionProvider, AvatarServiceProvider 
 			return mCache.get(avatarSHA);
 		}
 
-		
 		return null;
 	}
 

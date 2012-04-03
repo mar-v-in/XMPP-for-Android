@@ -155,7 +155,8 @@ public class Service extends android.app.Service implements
 		final User user = new User();
 		user.setUserLogin(mConnection.getUser());
 		user.setRessource((String) getText(R.string.xmpp_ressource));
-		user.setUserState(new UserState(UserState.STATUS_INITIALIZING, null));
+		user.setUserState(new UserState(UserState.STATUS_INVISIBLE, null));
+		user.setAvatar(null);
 		return user;
 	}
 
@@ -249,7 +250,7 @@ public class Service extends android.app.Service implements
 		case SIG_GET_MUCS:
 			getMUCs(msg);
 			break;
-		case SIG_IS_READY:
+		case SIG_IS_ONLINE:
 			isOnline(msg);
 			break;
 		case SIG_DISABLE_CHATSESSION:
@@ -314,6 +315,8 @@ public class Service extends android.app.Service implements
 		config.setCompressionEnabled(true);
 		config.setSelfSignedCertificateEnabled(true);
 		config.setTruststoreType("BKS");
+		config.setRosterLoadedAtLogin(false);
+		config.setSendPresence(false);
 		SmackConfiguration.setKeepAliveInterval(60000);
 		SmackConfiguration.setPacketReplyTimeout(30000);
 		mConnection = new XMPPConnection(config);
@@ -338,9 +341,9 @@ public class Service extends android.app.Service implements
 			final Bundle b = new Bundle();
 			b.putParcelable("user", mUserService.getUserMe());
 			b.putParcelable("contact", new Contact(mUserService.getUserMe()));
-			sendMsg(msg.replyTo, SIG_IS_READY, b);
+			sendMsg(msg.replyTo, SIG_IS_ONLINE, b);
 		} else {
-			sendMsg(msg.replyTo, SIG_IS_NOT_READY);
+			sendMsg(msg.replyTo, SIG_IS_NOT_ONLINE);
 		}
 	}
 
@@ -646,11 +649,15 @@ public class Service extends android.app.Service implements
 		builder.setContentIntent(contentIntent);
 		builder.setOngoing(true);
 		if (title == null) {
-			if (mUserService == null) {
-				builder.setContentTitle(getText(R.string.app_name));
-			} else {
+			if (mUserService != null) {
 				builder.setContentTitle(mUserService.getUserMe()
 						.getDisplayName());
+
+			} else if (mAccountInfo != null) {
+				builder.setContentTitle(mAccountInfo.getUsername() + "@"
+						+ mAccountInfo.getHostname());
+			} else {
+				builder.setContentTitle(getText(R.string.app_name));
 			}
 		} else {
 			builder.setContentTitle(title);

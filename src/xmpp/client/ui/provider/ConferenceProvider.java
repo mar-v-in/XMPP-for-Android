@@ -38,7 +38,7 @@ public class ConferenceProvider implements SimpleMessageHandlerClient, Signals {
 		try {
 			final Bundle b = msg.getData();
 			switch (msg.what) {
-			case SIG_IS_READY:
+			case SIG_IS_ONLINE:
 				msg = Message.obtain(null, SIG_GET_MUCS);
 				msg.replyTo = mMessenger;
 				mService.send(msg);

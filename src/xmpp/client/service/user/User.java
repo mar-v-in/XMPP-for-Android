@@ -10,7 +10,16 @@ import xmpp.client.R;
 import xmpp.client.service.user.group.GroupList;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.LightingColorFilter;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -42,6 +51,8 @@ public class User implements Parcelable, Comparable<User> {
 	private String mUserContact;
 	private ArrayList<String> mAdditionalInfo;
 	private byte[] mAvatar;
+
+	private int mUnreadMessages;
 
 	public static final Parcelable.Creator<User> CREATOR = new Parcelable.Creator<User>() {
 		@Override
@@ -97,11 +108,13 @@ public class User implements Parcelable, Comparable<User> {
 		mGroups = in.readParcelable(GroupList.class.getClassLoader());
 		mTransportState = in.readInt();
 		mTransportType = in.readInt();
-		mAdditionalInfo = new ArrayList<String>();
+		mUnreadMessages = in.readInt();
 		final String s = in.readString();
 		if (s != null && !s.isEmpty()) {
 			mAvatar = Base64.decode(s);
 		}
+		mAdditionalInfo = new ArrayList<String>();
+		in.readStringList(mAdditionalInfo);
 	}
 
 	public User(String login, String name, ArrayList<String> info, Presence p) {
@@ -196,8 +209,29 @@ public class User implements Parcelable, Comparable<User> {
 		if (mAvatar != null) {
 			return getAvatar();
 		}
-		return BitmapFactory.decodeResource(context.getResources(),
+		Bitmap b = BitmapFactory.decodeResource(context.getResources(),
 				R.drawable.ic_contact_picture);
+		Bitmap b2 = Bitmap.createBitmap(b.getWidth(), b.getHeight(),
+				Config.ARGB_8888);
+		Paint paint = new Paint();
+		paint.setColorFilter(new PorterDuffColorFilter(Color
+				.parseColor(intToARGB(getDisplayName().hashCode())), PorterDuff.Mode.OVERLAY));
+		Canvas c = new Canvas(b2);
+		c.drawBitmap(b, 0, 0, paint);
+		return b2;
+	}
+
+	public static String intToARGB(int i) {
+		return "#" + intToHex((i >> 24) & 0xFF) + intToHex((i >> 16) & 0xFF)
+				+ intToHex((i >> 8) & 0xFF) + intToHex(i & 0xFF);
+	}
+
+	public static String intToHex(int i) {
+		String s = Integer.toHexString(i);
+		if (s.length() == 1) {
+			return "0" + s;
+		}
+		return s;
 	}
 
 	public String getDisplayName() {
@@ -234,6 +268,10 @@ public class User implements Parcelable, Comparable<User> {
 
 	public int getTransportType() {
 		return mTransportType;
+	}
+
+	public int getUnreadMessages() {
+		return mUnreadMessages;
 	}
 
 	public String getUserContact() {
@@ -330,12 +368,13 @@ public class User implements Parcelable, Comparable<User> {
 		dest.writeParcelable(mGroups, flags);
 		dest.writeInt(mTransportState);
 		dest.writeInt(mTransportType);
-		dest.writeStringList(mAdditionalInfo);
+		dest.writeInt(mUnreadMessages);
 		if (mAvatar != null) {
 			dest.writeString(Base64.encodeBytes(mAvatar));
 		} else {
 			dest.writeString("");
 		}
+		dest.writeStringList(mAdditionalInfo);
 	}
 
 }

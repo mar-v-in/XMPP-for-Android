@@ -3,8 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:baselineAligned="true"
-    android:columnCount="5"
-    android:weightSum="5" >
+    android:weightSum="1" >
 
     <QuickContactBadge
         android:id="@+id/user_badge"
@@ -13,10 +12,10 @@
 
     <LinearLayout
         android:id="@+id/linearLayout1"
-        android:layout_width="0dip"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_marginLeft="@dimen/simple_row_margin"
-        android:layout_weight="5"
+        android:layout_weight="1"
         android:orientation="vertical" >
 
         <TextView
@@ -54,6 +53,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/simple_row_margin" >
+
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
@@ -68,5 +68,12 @@
         android:layout_marginTop="11dp"
         android:textColor="@color/roster_offline"
         android:textSize="32sp" />
+
+    <ProgressBar
+        android:id="@+id/loading_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/simple_row_margin"
+        android:visibility="gone" />
 
 </LinearLayout>

@@ -227,7 +227,7 @@ public class AppActivity extends Activity implements
 
 	void checkState() {
 		if (mService != null) {
-			final Message msg = Message.obtain(null, Signals.SIG_IS_READY);
+			final Message msg = Message.obtain(null, Signals.SIG_IS_ONLINE);
 			msg.replyTo = mMessenger;
 			try {
 				mService.send(msg);
@@ -242,6 +242,9 @@ public class AppActivity extends Activity implements
 
 	@Override
 	public void contactProviderChanged(ContactProvider contactProvider) {
+		if (contactProvider.isReady()) {
+
+		}
 		if (mRosterAdapter != null) {
 			mRosterAdapter.notifyDataSetChanged();
 		}
@@ -253,6 +256,7 @@ public class AppActivity extends Activity implements
 	@Override
 	public void contactProviderReady(ContactProvider contactProvider) {
 		afterInit();
+		updateStatus(new UserState(UserState.STATUS_AVAILABLE, "via " + getText(R.string.app_name)));
 	}
 
 	void doBindService() {
@@ -263,7 +267,6 @@ public class AppActivity extends Activity implements
 	}
 
 	public void doLogin() {
-		updateStatus(UserState.STATUS_INITIALIZING);
 		final AccountManager am = AccountManager.get(this);
 		final Account[] accounts = am
 				.getAccountsByType((String) getText(R.string.account_type));
@@ -271,7 +274,7 @@ public class AppActivity extends Activity implements
 			final Account account = accounts[0];
 			final String login = account.name;
 			mContactProvider.getMeContact().getUser().setUserLogin(login);
-			mRosterAdapter.notifyDataSetChanged();
+			updateStatus(UserState.STATUS_INITIALIZING);
 			final String pass = am.getPassword(account);
 			final Message msg = Message.obtain(null, Signals.SIG_INIT);
 			final Bundle b = new Bundle();
@@ -464,10 +467,7 @@ public class AppActivity extends Activity implements
 				doUnbindService();
 				finish();
 				break;
-			case Signals.SIG_IS_READY:
-				updateStatus(UserState.STATUS_AVAILABLE);
-				break;
-			case Signals.SIG_IS_NOT_READY:
+			case Signals.SIG_IS_NOT_ONLINE:
 				doLogin();
 				break;
 			case Signals.SIG_INIT_ERROR:

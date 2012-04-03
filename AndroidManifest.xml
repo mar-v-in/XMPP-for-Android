@@ -57,7 +57,7 @@
             android:name=".ui.account.AccountLogin"
             android:exported="true" >
         </activity>
-        <activity android:label="@string/app_name" android:name=".ui.activities.AppActivity" android:launchMode="singleTop">
+        <activity android:label="@string/chat" android:name=".ui.activities.AppActivity" android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

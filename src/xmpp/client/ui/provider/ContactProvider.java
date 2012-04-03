@@ -125,11 +125,8 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 			case SIG_ROSTER_GET_CONTACTS_ERROR:
 				Log.e(TAG, "GET_CONTACTS_ERROR");
 				break;
-			case SIG_IS_NOT_READY:
-				Log.e(TAG, "NOT_READY");
-				break;
-			case SIG_IS_READY:
-				b.setClassLoader(User.class.getClassLoader());
+			case SIG_IS_ONLINE:
+				b.setClassLoader(Contact.class.getClassLoader());
 				mContact = (Contact) b.getParcelable("contact");
 				msg = Message.obtain(null, SIG_ROSTER_GET_CONTACTS);
 				msg.replyTo = mMessenger;

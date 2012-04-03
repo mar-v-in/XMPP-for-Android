@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-	<string name="app_name">XMPP</string>
+	<string name="app_name">XMPP for Android</string>
 	<string name="login">Login</string>
 	<string name="password">Password</string>
 	<string name="roster">Roster</string>
@@ -24,6 +24,7 @@
 	<string name="status_away">Away</string>
 	<string name="status_idle">Idle</string>
 	<string name="status_busy">Busy</string>
+	<string name="status_invisible">Invisible</string>
 	<string name="ok">OK</string>
 	<string name="cancel">Cancel</string>
 	<string name="me">Me</string>

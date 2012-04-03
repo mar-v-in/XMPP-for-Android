@@ -10,8 +10,8 @@ public interface Signals {
 	public static final int SIG_DISCONNECT = 0;
 	public static final int SIG_INIT = 4;
 	public static final int SIG_INIT_ERROR = -4;
-	public static final int SIG_IS_NOT_READY = -8;
-	public static final int SIG_IS_READY = 8;
+	public static final int SIG_IS_NOT_ONLINE = -8;
+	public static final int SIG_IS_ONLINE = 8;
 	public static final int SIG_LOGIN = 6;
 	public static final int SIG_LOGIN_ERROR = -6;
 	public static final int SIG_MESSAGE_GOT = 50;
