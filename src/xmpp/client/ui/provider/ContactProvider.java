@@ -27,6 +27,7 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 	private final Messenger mService;
 	private final Messenger mMessenger;
 	private final Context mContext;
+	private boolean initDone;
 
 	public ContactProvider(Messenger localMessenger,
 			Messenger serviceMessenger, Context context) {
@@ -40,6 +41,7 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 		u.setUserState(new UserState(UserState.STATUS_INITIALIZING, null));
 		mContact = new Contact(u);
 		mListeners = new ArrayList<ContactProviderListener>();
+		initDone = false;
 	}
 
 	public ContactProvider(Messenger localMessenger,
@@ -126,6 +128,7 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 				Log.e(TAG, "GET_CONTACTS_ERROR");
 				break;
 			case SIG_IS_ONLINE:
+				initDone = true;
 				b.setClassLoader(Contact.class.getClassLoader());
 				mContact = (Contact) b.getParcelable("contact");
 				msg = Message.obtain(null, SIG_ROSTER_GET_CONTACTS);
@@ -145,6 +148,7 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 				}
 				break;
 			case SIG_ROSTER_UPDATE:
+				if (!initDone) break;
 				b.setClassLoader(User.class.getClassLoader());
 				if (b.containsKey("type")) {
 					switch (b.getInt("type")) {

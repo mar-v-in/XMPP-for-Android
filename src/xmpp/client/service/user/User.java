@@ -209,6 +209,10 @@ public class User implements Parcelable, Comparable<User> {
 			return null;
 		}
 	}
+	
+	public String getStatusText() {
+		return mUserState.getStatusText(getNiceUserLogin());
+	}
 
 	public Bitmap getAvatar() {
 		if (mAvatar != null) {
@@ -231,7 +235,7 @@ public class User implements Parcelable, Comparable<User> {
 				PorterDuff.Mode.OVERLAY));
 		final Canvas c = new Canvas(b2);
 		c.drawBitmap(b, 0, 0, paint);
-		return b2;
+		return b;
 	}
 
 	public String getDisplayName() {

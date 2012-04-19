@@ -103,7 +103,7 @@ public class RosterAdapter extends BaseAdapter {
 				.findViewById(R.id.icon_container);
 		iconContainer.removeAllViews();
 		for (final User user : contact.getUsers()) {
-			if (user.isInvisible()) {
+			if (user.isInvisible() || !user.getUserState().isOnline()) {
 				continue;
 			}
 			final ImageView iview = new ImageView(mContext);
@@ -124,6 +124,9 @@ public class RosterAdapter extends BaseAdapter {
 						.getString(android.R.color.holo_green_light)));
 				break;
 			case UserState.STATUS_AWAY:
+				iview.setColorFilter(Color.parseColor(mContext
+						.getString(android.R.color.holo_purple)));
+				break;
 			case UserState.STATUS_IDLE:
 				iview.setColorFilter(Color.parseColor(mContext
 						.getString(android.R.color.holo_orange_light)));
@@ -257,8 +260,7 @@ public class RosterAdapter extends BaseAdapter {
 		name.setText(contact.getUserName());
 		final TextView status = (TextView) rosteritem
 				.findViewById(R.id.status_text);
-		final CharSequence statusText = contact.getUserState().getStatusText(
-				mContext);
+		final CharSequence statusText = contact.getUser().getStatusText();
 		if (statusText != null) {
 			status.setText(statusText);
 		}

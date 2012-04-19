@@ -181,6 +181,14 @@ public class UserState implements Parcelable {
 		return ContactsContract.StatusUpdates
 				.getPresencePrecedence(getStatus());
 	}
+	
+	public String getStatusText(String altText) {
+		if (mStatusText == null || mStatusText.isEmpty()) {
+			return altText;
+		} else {
+			return mStatusText;
+		}
+	}
 
 	public CharSequence getStatusText(Context context) {
 		if (mStatusText == null || mStatusText.isEmpty() || isTemporaryStatus()) {

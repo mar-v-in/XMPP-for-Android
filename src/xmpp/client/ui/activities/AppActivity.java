@@ -70,8 +70,14 @@ public class AppActivity extends Activity implements
 	private static final int DIALOG_ADDCONFERENCE = 3;
 	private static final int VIEW_ROSTER = 0;
 	private static final int VIEW_CHAT = 1;
+	private static final int VIEW_STATUS = 2;
+	private static final int VIEW_ADD_CONTACT = 3;
+	private static final int VIEW_ADD_CONFERENCE = 4;
+	private static final int VIEW_ACCOUNTS = 5;
+	private static final int VIEW_SETTINGS = 6;
+	private static final int VIEW_ACCOUNT_SETTINGS = 7;
 
-	private int mCurrentView = -1;
+	private int mCurrentView = VIEW_ACCOUNTS;
 	private String mUID;
 	private String mMUC;
 
@@ -168,6 +174,7 @@ public class AppActivity extends Activity implements
 
 	private ChatSession mSession;
 	private ConferenceProvider mConferenceProvider;
+	private int mMenuView = -1;
 
 	public void afterInit() {
 		mGroupAdapter = new GroupAdapter(this, mContactProvider);
@@ -544,18 +551,29 @@ public class AppActivity extends Activity implements
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.clear();
+		if (mMenuView != mCurrentView) {
+			menu.clear();
+		}
 		final MenuInflater inflater = getMenuInflater();
 		switch (mCurrentView) {
 		case VIEW_ROSTER:
-			inflater.inflate(R.menu.roster_actionbar, menu);
+			Log.d(TAG, mMenuView + "/" + mCurrentView);
+			if (mMenuView != mCurrentView) {
+				inflater.inflate(R.menu.roster, menu);
+			}
 			if (mCurrentNavigation == 3) {
 				menu.findItem(R.id.menu_add_user).setVisible(false);
+				menu.findItem(R.id.menu_add_conference).setVisible(true);
 			} else {
 				menu.findItem(R.id.menu_add_conference).setVisible(false);
+				menu.findItem(R.id.menu_add_user).setVisible(true);
 			}
+			mMenuView = mCurrentView;
+			break;
 		case VIEW_CHAT:
-			inflater.inflate(R.menu.chat_actionbar, menu);
+			if (mMenuView != mCurrentView) {
+				inflater.inflate(R.menu.chat, menu);
+			}
 			if (mUser != null) {
 				if (mUser.supportsAudio()) {
 					menu.findItem(R.id.menu_call).setVisible(true);
@@ -563,6 +581,8 @@ public class AppActivity extends Activity implements
 					menu.findItem(R.id.menu_call).setVisible(false);
 				}
 			}
+			mMenuView = mCurrentView;
+			break;
 		}
 		mMenu = menu;
 		return true;
@@ -577,7 +597,7 @@ public class AppActivity extends Activity implements
 	@Override
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
 		switch (item.getItemId()) {
-		case R.id.menu_disconnect:
+		case R.id.menu_sign_out:
 			stopService(new Intent(AppActivity.this, Service.class));
 			finish();
 			break;
@@ -586,9 +606,6 @@ public class AppActivity extends Activity implements
 			break;
 		case R.id.menu_add_conference:
 			goAddConference();
-			break;
-		case R.id.menu_change_status:
-			goStatusChange();
 			break;
 		}
 		return super.onMenuItemSelected(featureId, item);
