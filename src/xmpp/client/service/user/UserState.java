@@ -176,6 +176,19 @@ public class UserState implements Parcelable {
 	public int getStatusIconResourceID() {
 		return getStatusIconResourceID(getStatus());
 	}
+	
+	public int getStatusColorRessourceID() {
+		switch (mStatus) {
+		case STATUS_AVAILABLE:
+			return android.R.color.holo_green_light;
+		case STATUS_IDLE:
+		case STATUS_AWAY:
+			return android.R.color.holo_orange_dark;
+		case STATUS_DO_NOT_DISTURB:
+			return android.R.color.holo_red_light;
+		}
+		return R.color.roster_offline;
+	}
 
 	public int getStatusPrecedence() {
 		return ContactsContract.StatusUpdates

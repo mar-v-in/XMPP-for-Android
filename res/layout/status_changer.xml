@@ -4,19 +4,39 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <Spinner
-        android:id="@+id/status_spinner"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/simple_row_margin" />
+        android:layout_height="wrap_content" >
+
+        <ImageView
+            android:id="@+id/imageView1"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_contact_picture" />
+
+        <Spinner
+            android:id="@+id/status_spinner"
+            android:layout_width="0dip"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@color/roster_offline_highlight"
+            android:padding="8dp" />
+
+    </LinearLayout>
 
     <EditText
         android:id="@+id/status_edit"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/simple_row_margin"
+        android:layout_height="80dp"
+        android:gravity="top"
         android:hint="@string/custom_status_message"
-        android:singleLine="false" >
+        android:maxLines="4"
+        android:minLines="4"
+        android:padding="8dp"
+        android:singleLine="false"
+        android:textSize="18sp"
+        android:background="@android:color/white" >
 
         <requestFocus />
     </EditText>

@@ -17,8 +17,14 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ImageSpan;
 
 public class User implements Parcelable, Comparable<User> {
 	@SuppressWarnings("unused")
@@ -212,6 +218,18 @@ public class User implements Parcelable, Comparable<User> {
 	
 	public String getStatusText() {
 		return mUserState.getStatusText(getNiceUserLogin());
+	}
+	
+	public Spannable getStatusTextSpannable(Context context) {
+		SpannableStringBuilder builder = new SpannableStringBuilder("  "+getStatusText());
+		final Bitmap b = BitmapFactory.decodeResource(context.getResources(),
+				getUserState().getStatusIconResourceID());
+		final Bitmap b2 = Bitmap.createBitmap(b.getWidth(), b.getHeight()+1,
+				Config.ARGB_8888);
+		Canvas c = new Canvas(b2);
+		c.drawBitmap(b, 0, 0, new Paint());
+		builder.setSpan(new ImageSpan(context, b2, ImageSpan.ALIGN_BOTTOM), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+		return builder;
 	}
 
 	public Bitmap getAvatar() {

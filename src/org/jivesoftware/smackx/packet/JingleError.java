@@ -27,141 +27,131 @@ import org.xmlpull.v1.XmlPullParser;
 
 public class JingleError implements PacketExtension {
 
-	public static class Provider implements PacketExtensionProvider {
+    public static String NAMESPACE = "urn:xmpp:tmp:jingle:errors";
 
-		private PacketExtension audioInfo;
+    public static final JingleError OUT_OF_ORDER = new JingleError("out-of-order");
 
-		/**
-		 * Empty constructor.
-		 */
-		public Provider() {
-		}
+    public static final JingleError UNKNOWN_SESSION = new JingleError("unknown-session");
 
-		/**
-		 * Parse a JingleDescription.Audio extension.
-		 */
-		@Override
-		public PacketExtension parseExtension(final XmlPullParser parser)
-				throws Exception {
-			PacketExtension result = null;
+    public static final JingleError UNSUPPORTED_CONTENT = new JingleError(
+            "unsupported-content");
 
-			if (audioInfo != null) {
-				result = audioInfo;
-			} else {
-				final String elementName = parser.getName();
+    public static final JingleError UNSUPPORTED_TRANSPORTS = new JingleError(
+            "unsupported-transports");
 
-				// Try to get an Audio content info
-				final ContentInfo mi = ContentInfo.Audio
-						.fromString(elementName);
-				if (mi != null) {
-					result = new JingleContentInfo.Audio(mi);
-				}
-			}
-			return result;
-		}
-	}
+    // Non standard error messages
 
-	public static String NAMESPACE = "urn:xmpp:tmp:jingle:errors";
+    public static final JingleError NO_COMMON_PAYLOAD = new JingleError(
+            "unsupported-codecs");
 
-	public static final JingleError OUT_OF_ORDER = new JingleError(
-			"out-of-order");
+    public static final JingleError NEGOTIATION_ERROR = new JingleError(
+            "negotiation-error");
 
-	public static final JingleError UNKNOWN_SESSION = new JingleError(
-			"unknown-session");
+    public static final JingleError MALFORMED_STANZA = new JingleError("malformed-stanza");
 
-	public static final JingleError UNSUPPORTED_CONTENT = new JingleError(
-			"unsupported-content");
+    private String message;
 
-	// Non standard error messages
+    /**
+     * Creates a new error with the specified code and message.
+     *
+     * @param message a message describing the error.
+     */
+    public JingleError(final String message) {
+        this.message = message;
+    }
 
-	public static final JingleError UNSUPPORTED_TRANSPORTS = new JingleError(
-			"unsupported-transports");
+    /**
+     * Returns the message describing the error, or null if there is no message.
+     *
+     * @return the message describing the error, or null if there is no message.
+     */
+    public String getMessage() {
+        return message;
+    }
 
-	public static final JingleError NO_COMMON_PAYLOAD = new JingleError(
-			"unsupported-codecs");
+    /**
+     * Returns the error as XML.
+     *
+     * @return the error as XML.
+     */
+    public String toXML() {
+        StringBuilder buf = new StringBuilder();
+        if (message != null) {
+            buf.append("<error type=\"cancel\">");
+            buf.append("<").append(message).append(" xmlns=\"").append(NAMESPACE).append(
+                    "\"/>");
+            buf.append("</error>");
+        }
+        return buf.toString();
+    }
 
-	public static final JingleError NEGOTIATION_ERROR = new JingleError(
-			"negotiation-error");
+    /**
+     * Returns a Action instance associated with the String value.
+     */
+    public static JingleError fromString(String value) {
+        if (value != null) {
+            value = value.toLowerCase();
+            if (value.equals("out-of-order")) {
+                return OUT_OF_ORDER;
+            } else if (value.equals("unknown-session")) {
+                return UNKNOWN_SESSION;
+            } else if (value.equals("unsupported-content")) {
+                return UNSUPPORTED_CONTENT;
+            } else if (value.equals("unsupported-transports")) {
+                return UNSUPPORTED_TRANSPORTS;
+            } else if (value.equals("unsupported-codecs")) {
+                return NO_COMMON_PAYLOAD;
+            } else if (value.equals("negotiation-error")) {
+                return NEGOTIATION_ERROR;
+            } else if (value.equals("malformed-stanza")) {
+                return MALFORMED_STANZA;
+            }
 
-	public static final JingleError MALFORMED_STANZA = new JingleError(
-			"malformed-stanza");
+        }
+        return null;
+    }
 
-	/**
-	 * Returns a Action instance associated with the String value.
-	 */
-	public static JingleError fromString(String value) {
-		if (value != null) {
-			value = value.toLowerCase();
-			if (value.equals("out-of-order")) {
-				return OUT_OF_ORDER;
-			} else if (value.equals("unknown-session")) {
-				return UNKNOWN_SESSION;
-			} else if (value.equals("unsupported-content")) {
-				return UNSUPPORTED_CONTENT;
-			} else if (value.equals("unsupported-transports")) {
-				return UNSUPPORTED_TRANSPORTS;
-			} else if (value.equals("unsupported-codecs")) {
-				return NO_COMMON_PAYLOAD;
-			} else if (value.equals("negotiation-error")) {
-				return NEGOTIATION_ERROR;
-			} else if (value.equals("malformed-stanza")) {
-				return MALFORMED_STANZA;
-			}
+    public String toString() {
+        return getMessage();
+    }
 
-		}
-		return null;
-	}
+    public String getElementName() {
+        return message;
+    }
 
-	private final String message;
-
-	/**
-	 * Creates a new error with the specified code and message.
-	 * 
-	 * @param message
-	 *            a message describing the error.
-	 */
-	public JingleError(final String message) {
-		this.message = message;
-	}
-
-	@Override
-	public String getElementName() {
-		return message;
-	}
-
-	/**
-	 * Returns the message describing the error, or null if there is no message.
-	 * 
-	 * @return the message describing the error, or null if there is no message.
-	 */
-	public String getMessage() {
-		return message;
-	}
-
-	@Override
-	public String getNamespace() {
+    public String getNamespace() {
 		return NAMESPACE;
 	}
 
-	@Override
-	public String toString() {
-		return getMessage();
-	}
+    public static class Provider implements PacketExtensionProvider {
 
-	/**
-	 * Returns the error as XML.
-	 * 
-	 * @return the error as XML.
-	 */
-	@Override
-	public String toXML() {
-		final StringBuilder buf = new StringBuilder();
-		if (message != null) {
-			buf.append("<error type=\"cancel\">");
-			buf.append("<").append(message).append(" xmlns=\"")
-					.append(NAMESPACE).append("\"/>");
-			buf.append("</error>");
-		}
-		return buf.toString();
-	}
+           private PacketExtension audioInfo;
+
+           /**
+            * Empty constructor.
+            */
+           public Provider() {
+           }
+
+           /**
+            * Parse a JingleDescription.Audio extension.
+            */
+           public PacketExtension parseExtension(final XmlPullParser parser)
+                   throws Exception {
+               PacketExtension result = null;
+
+               if (audioInfo != null) {
+                   result = audioInfo;
+               } else {
+                   String elementName = parser.getName();
+
+                   // Try to get an Audio content info
+                   ContentInfo mi = ContentInfo.Audio.fromString(elementName);
+                   if (mi != null) {
+                       result = new JingleContentInfo.Audio(mi);
+                   }
+               }
+               return result;
+           }
+    }
 }

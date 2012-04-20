@@ -23,31 +23,29 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.jingle.JingleSession;
 
 /**
- * A Jingle Transport Manager implementation to be used on NAT networks with
- * STUN Service NOT Blocked.
- * 
+ * A Jingle Transport Manager implementation to be used on NAT networks with  STUN Service NOT Blocked.
+ *
  * @author Thiago Camargo
  */
 public class STUNTransportManager extends JingleTransportManager {
-	STUNResolver stunResolver = null;
+    STUNResolver stunResolver = null;
 
-	public STUNTransportManager() {
-		stunResolver = new STUNResolver() {
-		};
-		try {
-			stunResolver.initializeAndWait();
-		} catch (final XMPPException e) {
-			e.printStackTrace();
-		}
-	}
+    public STUNTransportManager() {
+        stunResolver = new STUNResolver() {
+        };
+        try {
+            stunResolver.initializeAndWait();
+        } catch (XMPPException e) {
+            e.printStackTrace();
+        }
+    }
 
-	@Override
-	protected TransportResolver createResolver(JingleSession session) {
-		try {
-			stunResolver.resolve(session);
-		} catch (final XMPPException e) {
-			e.printStackTrace();
-		}
-		return stunResolver;
-	}
+    protected TransportResolver createResolver(JingleSession session) {
+        try {
+            stunResolver.resolve(session);
+        } catch (XMPPException e) {
+            e.printStackTrace();
+        }
+        return stunResolver;
+    }
 }

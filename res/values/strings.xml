@@ -28,6 +28,7 @@
 	<string name="ok">OK</string>
 	<string name="cancel">Cancel</string>
 	<string name="me">Me</string>
+	<string name="done">Done</string>
 	<string name="disconnect">Disconnect</string>
 	<string name="add_contact">Add Contact</string>
 	<string name="add_conference">Add Conference</string>
@@ -51,5 +52,8 @@
 	<string name="send_feedback">Send feedback</string>
 	<string name="add_user_desc">Send chat invitation to</string>
 	<string name="add_conference_desc">Join chat conference</string>
+	<string name="jid_is_required">JID is required</string>
+	<string name="auto_join">Auto Join</string>
+	<string name="status">Status</string>
 
 </resources>

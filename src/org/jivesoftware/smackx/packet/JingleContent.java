@@ -33,158 +33,154 @@ import org.jivesoftware.smack.packet.PacketExtension;
  */
 public class JingleContent implements PacketExtension {
 
-	public static final String NODENAME = "content";
-	public static final String CREATOR = "creator";
-	public static final String NAME = "name";
+    public static final String NODENAME = "content";
+    public static final String CREATOR = "creator";
+    public static final String NAME = "name";
 
-	private final String creator;
-	private final String name;
+    private String creator;
+    private String name;
 
-	private JingleDescription description;
-	private final List<JingleTransport> transports = new ArrayList<JingleTransport>();
+    private JingleDescription description;
+    private final List<JingleTransport> transports = new ArrayList<JingleTransport>();
 
-	/**
-	 * Creates a content description..
-	 */
-	public JingleContent(String creator, String name) {
-		super();
-		this.creator = creator;
-		this.name = name;
-	}
+    /**
+     * Creates a content description..
+     */
+    public JingleContent(String creator, String name) {
+        super();
+        this.creator = creator;
+        this.name = name;
+    }
 
-	/**
-	 * Adds a JingleTransport type to the packet.
-	 * 
-	 * @param transport
-	 *            the JignleTransport to add.
-	 */
-	public void addJingleTransport(final JingleTransport transport) {
-		synchronized (transports) {
-			transports.add(transport);
-		}
-	}
+    public String getCreator() {
+        return creator;
+    }
 
-	/**
-	 * Adds a list of transports to add to the packet.
-	 * 
-	 * @param transports
-	 *            the transports to add.
-	 */
-	public void addTransports(final List<JingleTransport> transports) {
-		synchronized (transports) {
-			for (final JingleTransport transport : transports) {
-				addJingleTransport(transport);
-			}
-		}
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getCreator() {
-		return creator;
-	}
+    /**
+     * Returns the XML element name of the element.
+     * 
+     * @return the XML element name of the element.
+     */
+    public String getElementName() {
+        return NODENAME;
+    }
 
-	/**
-	 * Gets the description for this Jingle content.
-	 * 
-	 * @return The description.
-	 */
-	public JingleDescription getDescription() {
-		return description;
-	}
+    /**
+     * Return the namespace.
+     * 
+     * @return The namespace
+     */
+    public String getNamespace() {
+        // There is no namespace for <content>
+        return "";
+    }
 
-	/**
-	 * Returns the XML element name of the element.
-	 * 
-	 * @return the XML element name of the element.
-	 */
-	@Override
-	public String getElementName() {
-		return NODENAME;
-	}
+    /**
+     * Sets the description for this Jingle content.
+     * 
+     * @param description
+     *            The description
+     */
+    public void setDescription(JingleDescription description) {
+        this.description = description;
+    }
 
-	/**
-	 * Returns an Iterator for the JingleTransports in the packet.
-	 * 
-	 * @return an Iterator for the JingleTransports in the packet.
-	 */
-	public Iterator<JingleTransport> getJingleTransports() {
-		return Collections.unmodifiableList(getJingleTransportsList())
-				.iterator();
-	}
+    /**
+     * Gets the description for this Jingle content.
+     * 
+     * @return The description.
+     */
+    public JingleDescription getDescription() {
+        return description;
+    }
 
-	/**
-	 * Returns a count of the JingleTransports in the Jingle packet.
-	 * 
-	 * @return the number of the JingleTransports in the Jingle packet.
-	 */
-	public int getJingleTransportsCount() {
-		synchronized (transports) {
-			return transports.size();
-		}
-	}
+    /**
+     * Adds a JingleTransport type to the packet.
+     * 
+     * @param transport
+     *            the JignleTransport to add.
+     */
+    public void addJingleTransport(final JingleTransport transport) {
+        synchronized (transports) {
+            transports.add(transport);
+        }
+    }
 
-	/**
-	 * Returns a list for the JingleTransports in the packet.
-	 * 
-	 * @return a list for the JingleTransports in the packet.
-	 */
-	public List<JingleTransport> getJingleTransportsList() {
-		synchronized (transports) {
-			return new ArrayList<JingleTransport>(transports);
-		}
-	}
+    /**
+     * Adds a list of transports to add to the packet.
+     * 
+     * @param transports
+     *            the transports to add.
+     */
+    public void addTransports(final List<JingleTransport> transports) {
+        synchronized (transports) {
+            for (JingleTransport transport : transports) {
+                addJingleTransport(transport);
+            }
+        }
+    }
 
-	public String getName() {
-		return name;
-	}
+    /**
+     * Returns an Iterator for the JingleTransports in the packet.
+     * 
+     * @return an Iterator for the JingleTransports in the packet.
+     */
+    public Iterator<JingleTransport> getJingleTransports() {
+        return Collections.unmodifiableList(getJingleTransportsList()).iterator();
+    }
 
-	/**
-	 * Return the namespace.
-	 * 
-	 * @return The namespace
-	 */
-	@Override
-	public String getNamespace() {
-		// There is no namespace for <content>
-		return "";
-	}
+    /**
+     * Returns a list for the JingleTransports in the packet.
+     * 
+     * @return a list for the JingleTransports in the packet.
+     */
+    public List<JingleTransport> getJingleTransportsList() {
+        synchronized (transports) {
+            return new ArrayList<JingleTransport>(transports);
+        }
+    }
 
-	/**
-	 * Sets the description for this Jingle content.
-	 * 
-	 * @param description
-	 *            The description
-	 */
-	public void setDescription(JingleDescription description) {
-		this.description = description;
-	}
+    /**
+     * Returns a count of the JingleTransports in the Jingle packet.
+     * 
+     * @return the number of the JingleTransports in the Jingle packet.
+     */
+    public int getJingleTransportsCount() {
+        synchronized (transports) {
+            return transports.size();
+        }
+    }
 
-	/**
-	 * Convert a Jingle description to XML.
-	 * 
-	 * @return a string with the XML representation
-	 */
-	@Override
-	public String toXML() {
-		final StringBuilder buf = new StringBuilder();
+    /**
+     * Convert a Jingle description to XML.
+     * 
+     * @return a string with the XML representation
+     */
+    public String toXML() {
+        StringBuilder buf = new StringBuilder();
 
-		synchronized (transports) {
+        synchronized (transports) {
 
-			buf.append("<").append(getElementName());
+            buf.append("<").append(getElementName());
 
-			buf.append(" creator='" + creator + "' name='" + name + "'>");
+            buf.append(" creator='" + creator + "' name='" + name + "'>");
 
-			// Add the description.
-			if (description != null) {
-				buf.append(description.toXML());
-			}
+            // Add the description.
+            if (description != null) {
+                buf.append(description.toXML());
+            }
 
-			// Add all of the transports.
-			for (final JingleTransport transport : transports) {
-				buf.append(transport.toXML());
-			}
-			buf.append("</").append(getElementName()).append(">");
-		}
-		return buf.toString();
-	}
+            // Add all of the transports.
+            for (JingleTransport transport : transports) {
+                buf.append(transport.toXML());
+            }
+            buf.append("</").append(getElementName()).append(">");
+        }
+        return buf.toString();
+    }
 
 }

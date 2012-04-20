@@ -19,439 +19,412 @@
  */
 package org.jivesoftware.smackx.packet;
 
+import org.jivesoftware.smack.packet.PacketExtension;
+import org.jivesoftware.smackx.jingle.nat.ICECandidate;
+import org.jivesoftware.smackx.jingle.nat.TransportCandidate;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jivesoftware.smack.packet.PacketExtension;
-import org.jivesoftware.smackx.jingle.nat.ICECandidate;
-import org.jivesoftware.smackx.jingle.nat.TransportCandidate;
-
 /**
  * A jingle transport extension
- * 
+ *
  * @author Alvaro Saurin <alvaro.saurin@gmail.com>
  */
 public class JingleTransport implements PacketExtension {
 
-	// static
+    // static
 
-	/**
-	 * RTP-ICE profile
-	 */
-	public static class Ice extends JingleTransport {
-		public static class Candidate extends JingleTransportCandidate {
-			/**
-			 * Default constructor
-			 */
-			public Candidate() {
-				super();
-			}
+    public static final String NODENAME = "transport";
 
-			/**
-			 * Constructor with a transport candidate.
-			 */
-			public Candidate(final TransportCandidate tc) {
-				super(tc);
-			}
+    // non-static
 
-			/**
-			 * Get the elements of this candidate.
-			 */
-			@Override
-			protected String getChildElements() {
-				final StringBuilder buf = new StringBuilder();
+    protected String namespace;
 
-				if (transportCandidate != null) {// && transportCandidate
-													// instanceof ICECandidate)
-													// {
-					final ICECandidate tci = (ICECandidate) transportCandidate;
+    protected final List<JingleTransportCandidate> candidates = new ArrayList<JingleTransportCandidate>();
 
-					// We convert the transportElement candidate to XML here...
-					buf.append(" generation=\"").append(tci.getGeneration())
-							.append("\"");
-					buf.append(" ip=\"").append(tci.getIp()).append("\"");
-					buf.append(" port=\"").append(tci.getPort()).append("\"");
-					buf.append(" network=\"").append(tci.getNetwork())
-							.append("\"");
-					buf.append(" username=\"").append(tci.getUsername())
-							.append("\"");
-					buf.append(" password=\"").append(tci.getPassword())
-							.append("\"");
-					buf.append(" preference=\"").append(tci.getPreference())
-							.append("\"");
-					buf.append(" type=\"").append(tci.getType()).append("\"");
+    /**
+     * Default constructor.
+     */
+    public JingleTransport() {
+        super();
+    }
 
-					// Optional elements
-					if (transportCandidate.getName() != null) {
-						buf.append(" name=\"").append(tci.getName())
-								.append("\"");
-					}
-				}
+    /**
+     * Utility constructor, with a transport candidate element.
+     *
+     * @param candidate A transport candidate element to add.
+     */
+    public JingleTransport(final JingleTransportCandidate candidate) {
+        super();
+        addCandidate(candidate);
+    }
 
-				return buf.toString();
-			}
+    /**
+     * Copy constructor.
+     *
+     * @param tr the other jingle transport.
+     */
+    public JingleTransport(final JingleTransport tr) {
+        if (tr != null) {
+            namespace = tr.namespace;
 
-		}
+            if (tr.candidates.size() > 0) {
+                candidates.addAll(tr.candidates);
+            }
+        }
+    }
 
-		public static final String NAMESPACE = "urn:xmpp:tmp:jingle:transports:ice-udp";
+    /**
+     * Adds a transport candidate.
+     *
+     * @param candidate the candidate
+     */
+    public void addCandidate(final JingleTransportCandidate candidate) {
+        if (candidate != null) {
+            synchronized (candidates) {
+                candidates.add(candidate);
+            }
+        }
+    }
 
-		public Ice() {
-			super();
-			setNamespace(NAMESPACE);
-		}
+    /**
+     * Get an iterator for the candidates
+     *
+     * @return an iterator
+     */
+    public Iterator getCandidates() {
+        return Collections.unmodifiableList(getCandidatesList()).iterator();
+    }
 
-		/**
-		 * Add a transport candidate
-		 * 
-		 * @see org.jivesoftware.smackx.packet.JingleTransport#addCandidate(org.jivesoftware.smackx.packet.JingleTransport.JingleTransportCandidate)
-		 */
-		@Override
-		public void addCandidate(final JingleTransportCandidate candidate) {
-			super.addCandidate(candidate);
-		}
+    /**
+     * Get the list of candidates.
+     *
+     * @return The candidates list.
+     */
+    public List<JingleTransportCandidate> getCandidatesList() {
+        ArrayList<JingleTransportCandidate> res = null;
+        synchronized (candidates) {
+            res = new ArrayList<JingleTransportCandidate>(candidates);
+        }
+        return res;
+    }
 
-		/**
-		 * Get the list of candidates. As a "raw-udp" transport can only contain
-		 * one candidate, we use the first in the list...
-		 * 
-		 * @see org.jivesoftware.smackx.packet.JingleTransport#getCandidates()
-		 */
-		@Override
-		public List<JingleTransportCandidate> getCandidatesList() {
-			final List<JingleTransportCandidate> copy = new ArrayList<JingleTransportCandidate>();
-			final List<JingleTransportCandidate> superCandidatesList = super
-					.getCandidatesList();
-			for (int i = 0; i < superCandidatesList.size(); i++) {
-				copy.add(superCandidatesList.get(i));
-			}
+    /**
+     * Get the number of transport candidates.
+     *
+     * @return The number of transport candidates contained.
+     */
+    public int getCandidatesCount() {
+        return getCandidatesList().size();
+    }
 
-			return copy;
-		}
-	}
+    /**
+     * Returns the XML element name of the element.
+     *
+     * @return the XML element name of the element.
+     */
+    public String getElementName() {
+        return NODENAME;
+    }
 
-	// non-static
+    /**
+     * Set the namespace.
+     *
+     * @param ns The namespace
+     */
+    protected void setNamespace(final String ns) {
+        namespace = ns;
+    }
 
-	/**
-	 * Candidate element in the transport. This class acts as a view of the
-	 * "TransportCandidate" in the Jingle space.
-	 * 
-	 * @author Alvaro Saurin
-	 * @see TransportCandidate
-	 */
-	public static abstract class JingleTransportCandidate {
+    /**
+     * Get the namespace.
+     *
+     * @return The namespace
+     */
+    public String getNamespace() {
+        return namespace;
+    }
 
-		public static final String NODENAME = "candidate";
+    /**
+     * Return the XML representation for this element.
+     */
+    public String toXML() {
+        StringBuilder buf = new StringBuilder();
 
-		/**
-		 * Returns the XML element name of the element.
-		 * 
-		 * @return the XML element name of the element.
-		 */
-		public static String getElementName() {
-			return NODENAME;
-		}
+        buf.append("<").append(getElementName()).append(" xmlns=\"");
+        buf.append(getNamespace()).append("\" ");
 
-		// The transport candidate contained in the element.
-		protected TransportCandidate transportCandidate;
+        synchronized (candidates) {
+            if (getCandidatesCount() > 0) {
+                buf.append(">");
+                Iterator iter = getCandidates();
 
-		/**
-		 * Creates a new TransportNegotiator child.
-		 */
-		public JingleTransportCandidate() {
-			super();
-		}
+                while (iter.hasNext()) {
+                    JingleTransportCandidate candidate = (JingleTransportCandidate) iter
+                            .next();
+                    buf.append(candidate.toXML());
+                }
+                buf.append("</").append(getElementName()).append(">");
+            } else {
+                buf.append("/>");
+            }
+        }
 
-		/**
-		 * Creates a new TransportNegotiator child.
-		 * 
-		 * @param candidate
-		 *            the jmf transport candidate
-		 */
-		public JingleTransportCandidate(final TransportCandidate candidate) {
-			super();
-			setMediaTransport(candidate);
-		}
+        return buf.toString();
+    }
 
-		/**
-		 * Get the list of attributes.
-		 * 
-		 * @return a string with the list of attributes.
-		 */
-		protected String getChildElements() {
-			return null;
-		}
+    /**
+     * Candidate element in the transport. This class acts as a view of the
+     * "TransportCandidate" in the Jingle space.
+     *
+     * @author Alvaro Saurin
+     * @see TransportCandidate
+     */
+    public static abstract class JingleTransportCandidate {
 
-		/**
-		 * Get the current transportElement candidate.
-		 * 
-		 * @return the transportElement candidate
-		 */
-		public TransportCandidate getMediaTransport() {
-			return transportCandidate;
-		}
+        public static final String NODENAME = "candidate";
 
-		/**
-		 * Set the transportElement candidate.
-		 * 
-		 * @param cand
-		 *            the transportElement candidate
-		 */
-		public void setMediaTransport(final TransportCandidate cand) {
-			if (cand != null) {
-				transportCandidate = cand;
-			}
-		}
+        // The transport candidate contained in the element.
+        protected TransportCandidate transportCandidate;
 
-		/**
-		 * Obtain a valid XML representation of a trancport candidate
-		 * 
-		 * @return A string containing the XML dump of the transport candidate.
-		 */
-		public String toXML() {
-			final StringBuilder buf = new StringBuilder();
-			final String childElements = getChildElements();
+        /**
+         * Creates a new TransportNegotiator child.
+         */
+        public JingleTransportCandidate() {
+            super();
+        }
 
-			if (transportCandidate != null && childElements != null) {
-				buf.append("<").append(getElementName()).append(" ");
-				buf.append(childElements);
-				buf.append("/>");
-			}
+        /**
+         * Creates a new TransportNegotiator child.
+         *
+         * @param candidate the jmf transport candidate
+         */
+        public JingleTransportCandidate(final TransportCandidate candidate) {
+            super();
+            setMediaTransport(candidate);
+        }
 
-			return buf.toString();
-		}
-	}
+        /**
+         * Returns the XML element name of the element.
+         *
+         * @return the XML element name of the element.
+         */
+        public static String getElementName() {
+            return NODENAME;
+        }
 
-	/**
-	 * Raw UDP profile.
-	 */
-	public static class RawUdp extends JingleTransport {
-		/**
-		 * Raw-udp transport candidate.
-		 */
-		public static class Candidate extends JingleTransportCandidate {
-			/**
-			 * Default constructor
-			 */
-			public Candidate() {
-				super();
-			}
+        /**
+         * Get the current transportElement candidate.
+         *
+         * @return the transportElement candidate
+         */
+        public TransportCandidate getMediaTransport() {
+            return transportCandidate;
+        }
 
-			/**
-			 * Constructor with a transport candidate.
-			 */
-			public Candidate(final TransportCandidate tc) {
-				super(tc);
-			}
+        /**
+         * Set the transportElement candidate.
+         *
+         * @param cand the transportElement candidate
+         */
+        public void setMediaTransport(final TransportCandidate cand) {
+            if (cand != null) {
+                transportCandidate = cand;
+            }
+        }
 
-			/**
-			 * Get the elements of this candidate.
-			 */
-			@Override
-			protected String getChildElements() {
-				final StringBuilder buf = new StringBuilder();
+        /**
+         * Get the list of attributes.
+         *
+         * @return a string with the list of attributes.
+         */
+        protected String getChildElements() {
+            return null;
+        }
 
-				if (transportCandidate != null
-						&& transportCandidate instanceof TransportCandidate.Fixed) {
-					final TransportCandidate.Fixed tcf = (TransportCandidate.Fixed) transportCandidate;
+        /**
+         * Obtain a valid XML representation of a trancport candidate
+         *
+         * @return A string containing the XML dump of the transport candidate.
+         */
+        public String toXML() {
+            StringBuilder buf = new StringBuilder();
+            String childElements = getChildElements();
 
-					buf.append(" generation=\"").append(tcf.getGeneration())
-							.append("\"");
-					buf.append(" ip=\"").append(tcf.getIp()).append("\"");
-					buf.append(" port=\"").append(tcf.getPort()).append("\"");
+            if (transportCandidate != null && childElements != null) {
+                buf.append("<").append(getElementName()).append(" ");
+                buf.append(childElements);
+                buf.append("/>");
+            }
 
-					// Optional parameters
-					final String name = tcf.getName();
-					if (name != null) {
-						buf.append(" name=\"").append(name).append("\"");
-					}
-				}
-				return buf.toString();
-			}
+            return buf.toString();
+        }
+    }
 
-		}
+    // Subclasses
 
-		public static final String NAMESPACE = "http://www.xmpp.org/extensions/xep-0177.html#ns";
+    /**
+     * RTP-ICE profile
+     */
+    public static class Ice extends JingleTransport {
+        public static final String NAMESPACE = "urn:xmpp:tmp:jingle:transports:ice-udp";
 
-		public RawUdp() {
-			super();
-			setNamespace(NAMESPACE);
-		}
+        public Ice() {
+            super();
+            setNamespace(NAMESPACE);
+        }
 
-		/**
-		 * Add a transport candidate
-		 * 
-		 * @see org.jivesoftware.smackx.packet.JingleTransport#addCandidate(org.jivesoftware.smackx.packet.JingleTransport.JingleTransportCandidate)
-		 */
-		@Override
-		public void addCandidate(final JingleTransportCandidate candidate) {
-			candidates.clear();
-			super.addCandidate(candidate);
-		}
+        /**
+         * Add a transport candidate
+         *
+         * @see org.jivesoftware.smackx.packet.JingleTransport#addCandidate(org.jivesoftware.smackx.packet.JingleTransport.JingleTransportCandidate)
+         */
+        public void addCandidate(final JingleTransportCandidate candidate) {
+            super.addCandidate(candidate);
+        }
 
-		/**
-		 * Get the list of candidates. As a "raw-udp" transport can only contain
-		 * one candidate, we use the first in the list...
-		 * 
-		 * @see org.jivesoftware.smackx.packet.JingleTransport#getCandidates()
-		 */
-		@Override
-		public List<JingleTransportCandidate> getCandidatesList() {
-			final List<JingleTransportCandidate> copy = new ArrayList<JingleTransportCandidate>();
-			final List<JingleTransportCandidate> superCandidatesList = super
-					.getCandidatesList();
-			if (superCandidatesList.size() > 0) {
-				copy.add(superCandidatesList.get(0));
-			}
+        /**
+         * Get the list of candidates. As a "raw-udp" transport can only contain
+         * one candidate, we use the first in the list...
+         *
+         * @see org.jivesoftware.smackx.packet.JingleTransport#getCandidates()
+         */
+        public List<JingleTransportCandidate> getCandidatesList() {
+            List<JingleTransportCandidate> copy = new ArrayList<JingleTransportCandidate>();
+            List<JingleTransportCandidate> superCandidatesList = super.getCandidatesList();
+            for (int i = 0; i < superCandidatesList.size(); i++) {
+                copy.add(superCandidatesList.get(i));
+            }
 
-			return copy;
-		}
-	}
+            return copy;
+        }
 
-	public static final String NODENAME = "transport";
+        public static class Candidate extends JingleTransportCandidate {
+            /**
+             * Default constructor
+             */
+            public Candidate() {
+                super();
+            }
 
-	protected String namespace;
+            /**
+             * Constructor with a transport candidate.
+             */
+            public Candidate(final TransportCandidate tc) {
+                super(tc);
+            }
 
-	protected final List<JingleTransportCandidate> candidates = new ArrayList<JingleTransportCandidate>();
+            /**
+             * Get the elements of this candidate.
+             */
+            protected String getChildElements() {
+                StringBuilder buf = new StringBuilder();
 
-	/**
-	 * Default constructor.
-	 */
-	public JingleTransport() {
-		super();
-	}
+                if (transportCandidate != null) {// && transportCandidate instanceof ICECandidate) {
+                    ICECandidate tci = (ICECandidate) transportCandidate;
 
-	/**
-	 * Copy constructor.
-	 * 
-	 * @param tr
-	 *            the other jingle transport.
-	 */
-	public JingleTransport(final JingleTransport tr) {
-		if (tr != null) {
-			namespace = tr.namespace;
+                    // We convert the transportElement candidate to XML here...
+                    buf.append(" generation=\"").append(tci.getGeneration()).append("\"");
+                    buf.append(" ip=\"").append(tci.getIp()).append("\"");
+                    buf.append(" port=\"").append(tci.getPort()).append("\"");
+                    buf.append(" network=\"").append(tci.getNetwork()).append("\"");
+                    buf.append(" username=\"").append(tci.getUsername()).append("\"");
+                    buf.append(" password=\"").append(tci.getPassword()).append("\"");
+                    buf.append(" preference=\"").append(tci.getPreference()).append("\"");
+                    buf.append(" type=\"").append(tci.getType()).append("\"");
 
-			if (tr.candidates.size() > 0) {
-				candidates.addAll(tr.candidates);
-			}
-		}
-	}
+                    // Optional elements
+                    if (transportCandidate.getName() != null) {
+                        buf.append(" name=\"").append(tci.getName()).append("\"");
+                    }
+                }
 
-	/**
-	 * Utility constructor, with a transport candidate element.
-	 * 
-	 * @param candidate
-	 *            A transport candidate element to add.
-	 */
-	public JingleTransport(final JingleTransportCandidate candidate) {
-		super();
-		addCandidate(candidate);
-	}
+                return buf.toString();
+            }
 
-	/**
-	 * Adds a transport candidate.
-	 * 
-	 * @param candidate
-	 *            the candidate
-	 */
-	public void addCandidate(final JingleTransportCandidate candidate) {
-		if (candidate != null) {
-			synchronized (candidates) {
-				candidates.add(candidate);
-			}
-		}
-	}
+        }
+    }
 
-	/**
-	 * Get an iterator for the candidates
-	 * 
-	 * @return an iterator
-	 */
-	public Iterator<JingleTransportCandidate> getCandidates() {
-		return Collections.unmodifiableList(getCandidatesList()).iterator();
-	}
+    /**
+     * Raw UDP profile.
+     */
+    public static class RawUdp extends JingleTransport {
+        public static final String NAMESPACE = "http://www.xmpp.org/extensions/xep-0177.html#ns";
 
-	/**
-	 * Get the number of transport candidates.
-	 * 
-	 * @return The number of transport candidates contained.
-	 */
-	public int getCandidatesCount() {
-		return getCandidatesList().size();
-	}
+        public RawUdp() {
+            super();
+            setNamespace(NAMESPACE);
+        }
 
-	/**
-	 * Get the list of candidates.
-	 * 
-	 * @return The candidates list.
-	 */
-	public List<JingleTransportCandidate> getCandidatesList() {
-		ArrayList<JingleTransportCandidate> res = null;
-		synchronized (candidates) {
-			res = new ArrayList<JingleTransportCandidate>(candidates);
-		}
-		return res;
-	}
+        /**
+         * Add a transport candidate
+         *
+         * @see org.jivesoftware.smackx.packet.JingleTransport#addCandidate(org.jivesoftware.smackx.packet.JingleTransport.JingleTransportCandidate)
+         */
+        public void addCandidate(final JingleTransportCandidate candidate) {
+            candidates.clear();
+            super.addCandidate(candidate);
+        }
 
-	/**
-	 * Returns the XML element name of the element.
-	 * 
-	 * @return the XML element name of the element.
-	 */
-	@Override
-	public String getElementName() {
-		return NODENAME;
-	}
+        /**
+         * Get the list of candidates. As a "raw-udp" transport can only contain
+         * one candidate, we use the first in the list...
+         *
+         * @see org.jivesoftware.smackx.packet.JingleTransport#getCandidates()
+         */
+        public List<JingleTransportCandidate> getCandidatesList() {
+            List<JingleTransportCandidate> copy = new ArrayList<JingleTransportCandidate>();
+            List<JingleTransportCandidate> superCandidatesList = super.getCandidatesList();
+            if (superCandidatesList.size() > 0) {
+                copy.add(superCandidatesList.get(0));
+            }
 
-	/**
-	 * Get the namespace.
-	 * 
-	 * @return The namespace
-	 */
-	@Override
-	public String getNamespace() {
-		return namespace;
-	}
+            return copy;
+        }
 
-	// Subclasses
+        /**
+         * Raw-udp transport candidate.
+         */
+        public static class Candidate extends JingleTransportCandidate {
+            /**
+             * Default constructor
+             */
+            public Candidate() {
+                super();
+            }
 
-	/**
-	 * Set the namespace.
-	 * 
-	 * @param ns
-	 *            The namespace
-	 */
-	protected void setNamespace(final String ns) {
-		namespace = ns;
-	}
+            /**
+             * Constructor with a transport candidate.
+             */
+            public Candidate(final TransportCandidate tc) {
+                super(tc);
+            }
 
-	/**
-	 * Return the XML representation for this element.
-	 */
-	@Override
-	public String toXML() {
-		final StringBuilder buf = new StringBuilder();
+            /**
+             * Get the elements of this candidate.
+             */
+            protected String getChildElements() {
+                StringBuilder buf = new StringBuilder();
 
-		buf.append("<").append(getElementName()).append(" xmlns=\"");
-		buf.append(getNamespace()).append("\" ");
+                if (transportCandidate != null && transportCandidate instanceof TransportCandidate.Fixed) {
+                    TransportCandidate.Fixed tcf = (TransportCandidate.Fixed) transportCandidate;
 
-		synchronized (candidates) {
-			if (getCandidatesCount() > 0) {
-				buf.append(">");
-				final Iterator<?> iter = getCandidates();
+                    buf.append(" generation=\"").append(tcf.getGeneration()).append("\"");
+                    buf.append(" ip=\"").append(tcf.getIp()).append("\"");
+                    buf.append(" port=\"").append(tcf.getPort()).append("\"");
 
-				while (iter.hasNext()) {
-					final JingleTransportCandidate candidate = (JingleTransportCandidate) iter
-							.next();
-					buf.append(candidate.toXML());
-				}
-				buf.append("</").append(getElementName()).append(">");
-			} else {
-				buf.append("/>");
-			}
-		}
+                    // Optional parameters
+                    String name = tcf.getName();
+                    if (name != null) {
+                        buf.append(" name=\"").append(name).append("\"");
+                    }
+                }
+                return buf.toString();
+            }
 
-		return buf.toString();
-	}
+        }
+    }
 }

@@ -37,225 +37,224 @@ import org.jivesoftware.smackx.jingle.listeners.JingleListener;
  * act depending on the current state in the negotiation...
  * <p/>
  * </p>
- * 
+ *
  * @author Alvaro Saurin
  * @author Jeff Williams
  */
 public abstract class JingleNegotiator {
 
-	private static final SmackLogger LOGGER = SmackLogger
-			.getLogger(JingleNegotiator.class);
+	private static final SmackLogger LOGGER = SmackLogger.getLogger(JingleNegotiator.class);
 
-	// private Connection connection; // The connection associated
+	//private Connection connection; // The connection associated
 
-	protected JingleSession session;
+    protected JingleSession session;
 
-	private final List<JingleListener> listeners = new ArrayList<JingleListener>();
+    private final List<JingleListener> listeners = new ArrayList<JingleListener>();
 
-	private String expectedAckId;
+    private String expectedAckId;
 
-	private JingleNegotiatorState state;
+    private JingleNegotiatorState state;
+    
+    private boolean isStarted;
+    
+    /**
+     * Default constructor.
+     */
+    public JingleNegotiator() {
+        this(null);
+    }
 
-	private boolean isStarted;
+    /**
+     * Default constructor with a Connection
+     *
+     * @param connection the connection associated
+     */
+    public JingleNegotiator(JingleSession session) {
+        this.session = session;
+        state = JingleNegotiatorState.PENDING;
+    }
 
-	/**
-	 * Default constructor.
-	 */
-	public JingleNegotiator() {
-		this(null);
-	}
+    public JingleNegotiatorState getNegotiatorState() {
+        return state;
+    }
 
-	/**
-	 * Default constructor with a Connection
-	 * 
-	 * @param connection
-	 *            the connection associated
-	 */
-	public JingleNegotiator(JingleSession session) {
-		this.session = session;
-		state = JingleNegotiatorState.PENDING;
-	}
+    public void setNegotiatorState(JingleNegotiatorState stateIs) {
+        
+        JingleNegotiatorState stateWas = state;
+        
+        LOGGER.debug("Negotiator state change: " + stateWas + "->" + stateIs  + "(" + this.getClass().getSimpleName() + ")");
 
-	/**
-	 * Add expected ID
-	 * 
-	 * @param id
-	 */
-	public void addExpectedId(String id) {
-		expectedAckId = id;
-	}
+        switch (stateIs) {
+            case PENDING:
+                break;
 
-	/**
-	 * Add a Jingle session listener to listen to incoming session requests.
-	 * 
-	 * @param li
-	 *            The listener
-	 * @see org.jivesoftware.smackx.jingle.listeners.JingleListener
-	 */
-	public void addListener(JingleListener li) {
-		synchronized (listeners) {
-			listeners.add(li);
-		}
-	}
+            case FAILED:
+                break;
 
-	/**
-	 * Close the negotiation.
-	 */
-	public void close() {
+            case SUCCEEDED:
+                break;
 
-	}
+            default:
+                break;
+        }
 
-	/**
-	 * Dispatch an incoming packet.
-	 * 
-	 * The negotiators form a tree relationship that roughly matches the Jingle
-	 * packet format:
-	 * 
-	 * JingleSession Content Negotiator Media Negotiator Transport Negotiator
-	 * Content Negotiator Media Negotiator Transport Negotiator
-	 * 
-	 * <jingle> <content> <description> <transport> <content> <description>
-	 * <transport>
-	 * 
-	 * This way, each segment of a Jingle packet has a corresponding negotiator
-	 * that know how to deal with that part of the Jingle packet. It also allows
-	 * us to support Jingle packets of arbitraty complexity.
-	 * 
-	 * Each parent calls dispatchIncomingPacket for each of its children. The
-	 * children then pass back a List<> of results that will get sent when we
-	 * reach the top level negotiator (JingleSession).
-	 * 
-	 * @param iq
-	 *            the packet received
-	 * @param id
-	 *            the ID of the response that will be sent
-	 * @return the new packet to send (either a Jingle or an IQ error).
-	 * @throws XMPPException
-	 */
-	public abstract List<IQ> dispatchIncomingPacket(IQ iq, String id)
-			throws XMPPException;
+       this.state = stateIs;
+    }
 
-	/**
-	 * Each of the negotiators has their individual behavior when they start.
-	 */
-	protected abstract void doStart();
+    public Connection getConnection() {
+        if (session != null) {
+            return session.getConnection();
+        } else {
+            return null;
+        }
+    }
 
-	// Acks management
+    /**
+      * Get the XMPP connection associated with this negotiation.
+      *
+      * @return the connection
+      */
+    public JingleSession getSession() {
+        return session;
+    }
 
-	public Connection getConnection() {
-		if (session != null) {
-			return session.getConnection();
-		} else {
-			return null;
-		}
-	}
+    /**
+     * Set the XMPP connection associated.
+     *
+     * @param connection the connection to set
+     */
+    public void setSession(JingleSession session) {
+        this.session = session;
+    }
 
-	/**
-	 * Get a copy of the listeners
-	 * 
-	 * @return a copy of the listeners
-	 */
-	protected List<JingleListener> getListenersList() {
-		ArrayList<JingleListener> result;
+    // Acks management
 
-		synchronized (listeners) {
-			result = new ArrayList<JingleListener>(listeners);
-		}
+    /**
+     * Add expected ID
+     *
+     * @param id
+     */
+    public void addExpectedId(String id) {
+        expectedAckId = id;
+    }
 
-		return result;
-	}
+    /**
+     * Check if the passed ID is the expected ID
+     *
+     * @param id
+     * @return
+     */
+    public boolean isExpectedId(String id) {
+        if (id != null) {
+            return id.equals(expectedAckId);
+        } else {
+            return false;
+        }
+    }
 
-	public JingleNegotiatorState getNegotiatorState() {
-		return state;
-	}
+    /**
+     * Remove and expected ID
+     *
+     * @param id
+     */
+    public void removeExpectedId(String id) {
+        addExpectedId((String) null);
+    }
 
-	// Listeners
+    // Listeners
 
-	/**
-	 * Get the XMPP connection associated with this negotiation.
-	 * 
-	 * @return the connection
-	 */
-	public JingleSession getSession() {
-		return session;
-	}
+    /**
+     * Add a Jingle session listener to listen to incoming session requests.
+     *
+     * @param li The listener
+     * @see org.jivesoftware.smackx.jingle.listeners.JingleListener
+     */
+    public void addListener(JingleListener li) {
+        synchronized (listeners) {
+            listeners.add(li);
+        }
+    }
 
-	/**
-	 * Check if the passed ID is the expected ID
-	 * 
-	 * @param id
-	 * @return
-	 */
-	public boolean isExpectedId(String id) {
-		if (id != null) {
-			return id.equals(expectedAckId);
-		} else {
-			return false;
-		}
-	}
+    /**
+     * Removes a Jingle session listener.
+     *
+     * @param li The jingle session listener to be removed
+     * @see org.jivesoftware.smackx.jingle.listeners.JingleListener
+     */
+    public void removeListener(JingleListener li) {
+        synchronized (listeners) {
+            listeners.remove(li);
+        }
+    }
 
-	public boolean isStarted() {
-		return isStarted;
-	}
+    /**
+     * Get a copy of the listeners
+     *
+     * @return a copy of the listeners
+     */
+    protected List<JingleListener> getListenersList() {
+        ArrayList<JingleListener> result;
 
-	/**
-	 * Remove and expected ID
-	 * 
-	 * @param id
-	 */
-	public void removeExpectedId(String id) {
-		addExpectedId((String) null);
-	}
+        synchronized (listeners) {
+            result = new ArrayList<JingleListener>(listeners);
+        }
 
-	/**
-	 * Removes a Jingle session listener.
-	 * 
-	 * @param li
-	 *            The jingle session listener to be removed
-	 * @see org.jivesoftware.smackx.jingle.listeners.JingleListener
-	 */
-	public void removeListener(JingleListener li) {
-		synchronized (listeners) {
-			listeners.remove(li);
-		}
-	}
+        return result;
+    }
 
-	public void setNegotiatorState(JingleNegotiatorState stateIs) {
+    /**
+     * Dispatch an incoming packet.
+     * 
+     * The negotiators form a tree relationship that roughly matches the Jingle packet format:
+     * 
+     * JingleSession
+     *      Content Negotiator
+     *          Media Negotiator
+     *          Transport Negotiator
+     *      Content Negotiator
+     *          Media Negotiator
+     *          Transport Negotiator
+     *          
+     * <jingle>
+     *      <content>
+     *          <description>
+     *          <transport>
+     *      <content>
+     *          <description>
+     *          <transport>
+     *          
+     * This way, each segment of a Jingle packet has a corresponding negotiator that know how to deal with that
+     * part of the Jingle packet.  It also allows us to support Jingle packets of arbitraty complexity.
+     * 
+     * Each parent calls dispatchIncomingPacket for each of its children.  The children then pass back a List<> of
+     * results that will get sent when we reach the top level negotiator (JingleSession).
+     *
+     * @param iq the packet received
+     * @param id the ID of the response that will be sent
+     * @return the new packet to send (either a Jingle or an IQ error).
+     * @throws XMPPException
+     */
+    public abstract List<IQ> dispatchIncomingPacket(IQ iq, String id) throws XMPPException;
 
-		final JingleNegotiatorState stateWas = state;
+    
+    public void start() {
+    	isStarted = true;
+    	doStart();
+    }
+    
+    public boolean isStarted() {
+    	return isStarted;
+    }
+    
+    /**
+     * Each of the negotiators has their individual behavior when they start.
+     */
+    protected abstract void doStart();
+    
+    /**
+     * Close the negotiation.
+     */
+    public void close() {
 
-		LOGGER.debug("Negotiator state change: " + stateWas + "->" + stateIs
-				+ "(" + this.getClass().getSimpleName() + ")");
-
-		switch (stateIs) {
-		case PENDING:
-			break;
-
-		case FAILED:
-			break;
-
-		case SUCCEEDED:
-			break;
-
-		default:
-			break;
-		}
-
-		state = stateIs;
-	}
-
-	/**
-	 * Set the XMPP connection associated.
-	 * 
-	 * @param connection
-	 *            the connection to set
-	 */
-	public void setSession(JingleSession session) {
-		this.session = session;
-	}
-
-	public void start() {
-		isStarted = true;
-		doStart();
-	}
+    }
 }

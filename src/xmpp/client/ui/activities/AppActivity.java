@@ -17,10 +17,9 @@ import xmpp.client.ui.adapter.ChatAdapter;
 import xmpp.client.ui.adapter.ChatUserListAdapter;
 import xmpp.client.ui.adapter.GroupAdapter;
 import xmpp.client.ui.adapter.RosterAdapter;
+import xmpp.client.ui.adapter.StatusAdapter;
 import xmpp.client.ui.dialogs.AddConferenceDialog;
 import xmpp.client.ui.dialogs.AddUserDialog;
-import xmpp.client.ui.dialogs.ResultListener;
-import xmpp.client.ui.dialogs.ResultProducer;
 import xmpp.client.ui.dialogs.StatusSelectorDialog;
 import xmpp.client.ui.provider.ChatProvider;
 import xmpp.client.ui.provider.ChatProviderListener;
@@ -32,17 +31,20 @@ import android.accounts.AccountManager;
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ImageSpan;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -53,17 +55,29 @@ import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
+import android.widget.Toast;
 
 import com.devsmart.android.ui.HorizontalListView;
 
 public class AppActivity extends Activity implements
-		SimpleMessageHandlerClient, ResultListener, ContactProviderListener,
+		SimpleMessageHandlerClient, ContactProviderListener,
 		ChatProviderListener {
+	private static final String URI_HOST_CHANGE_STATUS = "change_status";
+	private static final String URI_HOST_ADD_CONFERENCE = "add_conference";
+	private static final String URI_PATH_DIVIDER = "/";
+	private static final String URI_SCHEME_HOST_DIVIDER = "://";
+	private static final String URI_HOST_ADD_CONTACT = "add_contact";
+	private static final String URI_HOST_JABBER_MUC = "jabbermuc";
+	private static final String URI_HOST_JABBER = "jabber";
+	private static final String URI_SCHEME_XMPP_FOR_ANDROID = "xmpp-for-android";
+	private static final String URI_SCHEME_IMTO = "imto";
 	private static final String TAG = AppActivity.class.getName();
 	private static final int DIALOG_STATUSSELECTOR = 1;
 	private static final int DIALOG_ADDUSER = 2;
@@ -263,8 +277,10 @@ public class AppActivity extends Activity implements
 	@Override
 	public void contactProviderReady(ContactProvider contactProvider) {
 		afterInit();
-		updateStatus(new UserState(UserState.STATUS_AVAILABLE, "via "
-				+ getText(R.string.app_name)));
+		/*
+		 * updateStatus(new UserState(UserState.STATUS_AVAILABLE, "via " +
+		 * getText(R.string.app_name)));
+		 */
 	}
 
 	void doBindService() {
@@ -336,22 +352,30 @@ public class AppActivity extends Activity implements
 	}
 
 	private void goAddConference() {
-		showDialog(DIALOG_ADDCONFERENCE);
+		final Intent i = new Intent(AppActivity.this, AppActivity.class);
+		i.setData(Uri.parse(URI_SCHEME_XMPP_FOR_ANDROID
+				+ URI_SCHEME_HOST_DIVIDER + URI_HOST_ADD_CONFERENCE));
+		handleIntent(i);
 	}
 
 	private void goAddUser() {
-		showDialog(DIALOG_ADDUSER);
+		final Intent i = new Intent(AppActivity.this, AppActivity.class);
+		i.setData(Uri.parse(URI_SCHEME_XMPP_FOR_ANDROID
+				+ URI_SCHEME_HOST_DIVIDER + URI_HOST_ADD_CONTACT));
+		handleIntent(i);
 	}
 
 	private void goChat(String userLogin) {
 		final Intent i = new Intent(AppActivity.this, AppActivity.class);
-		i.setData(Uri.parse("imto://jabber/" + Uri.encode(userLogin)));
+		i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
+				+ URI_HOST_JABBER + URI_PATH_DIVIDER + Uri.encode(userLogin)));
 		handleIntent(i);
 	}
 
 	private void goConference(String muc) {
 		final Intent i = new Intent(AppActivity.this, AppActivity.class);
-		i.setData(Uri.parse("imto://jabbermuc/" + Uri.encode(muc)));
+		i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
+				+ URI_HOST_JABBER_MUC + URI_PATH_DIVIDER + Uri.encode(muc)));
 		handleIntent(i);
 	}
 
@@ -360,58 +384,67 @@ public class AppActivity extends Activity implements
 	}
 
 	private void goStatusChange() {
-		showDialog(DIALOG_STATUSSELECTOR);
+		final Intent i = new Intent(AppActivity.this, AppActivity.class);
+		i.setData(Uri.parse(URI_SCHEME_XMPP_FOR_ANDROID
+				+ URI_SCHEME_HOST_DIVIDER + URI_HOST_CHANGE_STATUS));
+		handleIntent(i);
 	}
 
 	public void handleIntent(Intent intent) {
+		int mNewView = mCurrentView;
 		mMUC = null;
 		mUID = null;
 		if (intent.getData() != null) {
 			final Uri uri = intent.getData();
-			if (uri.getScheme().equalsIgnoreCase("imto")
-					&& uri.getHost().equalsIgnoreCase("jabber")) {
+			if (uri.getScheme().equalsIgnoreCase(URI_SCHEME_IMTO)
+					&& uri.getHost().equalsIgnoreCase(URI_HOST_JABBER)) {
 				mUID = uri.getLastPathSegment();
-			} else if (uri.getScheme().equalsIgnoreCase("imto")
-					&& uri.getHost().equalsIgnoreCase("jabbermuc")) {
+				mNewView = VIEW_CHAT;
+			} else if (uri.getScheme().equalsIgnoreCase(URI_SCHEME_IMTO)
+					&& uri.getHost().equalsIgnoreCase(URI_HOST_JABBER_MUC)) {
 				mMUC = uri.getLastPathSegment();
+				mNewView = VIEW_CHAT;
+			} else if (uri.getScheme().equalsIgnoreCase(
+					URI_SCHEME_XMPP_FOR_ANDROID)
+					&& uri.getHost().equalsIgnoreCase(URI_HOST_ADD_CONTACT)) {
+				mNewView = VIEW_ADD_CONTACT;
+			} else if (uri.getScheme().equalsIgnoreCase(
+					URI_SCHEME_XMPP_FOR_ANDROID)
+					&& uri.getHost().equalsIgnoreCase(URI_HOST_ADD_CONFERENCE)) {
+				mNewView = VIEW_ADD_CONFERENCE;
+			} else if (uri.getScheme().equalsIgnoreCase(
+					URI_SCHEME_XMPP_FOR_ANDROID)
+					&& uri.getHost().equalsIgnoreCase(URI_HOST_CHANGE_STATUS)) {
+				mNewView = VIEW_STATUS;
+			} else {
+				mNewView = VIEW_ROSTER;
 			}
+		} else {
+			mNewView = VIEW_ROSTER;
 		}
-		if ((mUID != null || mMUC != null) && mCurrentView != VIEW_CHAT) {
-			openChat();
-		} else if ((mUID == null && mMUC == null)
-				&& mCurrentView != VIEW_ROSTER) {
-			openRoster(null);
-		}
-		if (mUID != null) {
-			if (mService != null) {
-				final Message msg = Message.obtain(null,
-						Signals.SIG_OPEN_CHATSESSION);
-				msg.replyTo = mMessenger;
-				final Bundle b = new Bundle();
-				b.putString("uid", mUID);
-				msg.setData(b);
-				try {
-					mService.send(msg);
-				} catch (final RemoteException e) {
-					Log.i(TAG, "handleIntent", e);
+		if (mCurrentView != mNewView) {
+			switch (mNewView) {
+			case VIEW_CHAT:
+				openChat();
+				if (mUID != null) {
+					parseChatUID();
+				} else if (mMUC != null) {
+					parseChatMUC();
 				}
+				break;
+			case VIEW_ADD_CONTACT:
+				openAddContact();
+				break;
+			case VIEW_ROSTER:
+				openRoster(null);
+				break;
+			case VIEW_ADD_CONFERENCE:
+				openAddConference();
+				break;
+			case VIEW_STATUS:
+				openChangeStatus();
+				break;
 			}
-			setTitle(mUID);
-		} else if (mMUC != null) {
-			if (mService != null) {
-				final Message msg = Message.obtain(null,
-						Signals.SIG_OPEN_MUC_CHATSESSION);
-				msg.replyTo = mMessenger;
-				final Bundle b = new Bundle();
-				b.putString("muc", mMUC);
-				msg.setData(b);
-				try {
-					mService.send(msg);
-				} catch (final RemoteException e) {
-					Log.i(TAG, "handleIntent", e);
-				}
-			}
-			setTitle(mMUC);
 		}
 	}
 
@@ -431,8 +464,7 @@ public class AppActivity extends Activity implements
 					mMenu.findItem(R.id.menu_call).setVisible(false);
 				}
 				mActionBar.setTitle(mUser.getDisplayName());
-				mActionBar
-						.setSubtitle(mUser.getUserState().getStatusText(this));
+				mActionBar.setSubtitle(mUser.getStatusTextSpannable(this));
 				mChatProvider = new ChatProvider(
 						mContactProvider.getMeContact(), mSession, this,
 						mMessageHandler);
@@ -507,10 +539,35 @@ public class AppActivity extends Activity implements
 
 	@Override
 	public void onBackPressed() {
-		if (mCurrentView == VIEW_ROSTER) {
-			finish();
-		} else {
+		switch (mCurrentView) {
+		case VIEW_CHAT:
+			final Message msg = Message.obtain(null,
+					Signals.SIG_DISABLE_CHATSESSION);
+			final Bundle b = new Bundle();
+			b.putParcelable("session", mSession);
+			msg.setData(b);
+			msg.replyTo = mMessenger;
+			try {
+				mService.send(msg);
+			} catch (final RemoteException e) {
+				Log.e(TAG, "disableChat", e);
+			}
 			openRoster(null);
+			break;
+		case VIEW_ROSTER:
+			finish();
+			break;
+		case VIEW_STATUS:
+			final int status = (Integer) ((Spinner) findViewById(R.id.status_spinner))
+					.getSelectedItem();
+			String string = ((EditText) findViewById(R.id.status_edit))
+					.getText().toString();
+			if (string != null && string.isEmpty()) {
+				string = null;
+			}
+			updateStatus(new UserState(status, string));
+			openRoster(null);
+			break;
 		}
 	}
 
@@ -523,33 +580,6 @@ public class AppActivity extends Activity implements
 	}
 
 	@Override
-	protected Dialog onCreateDialog(int id) {
-		Dialog dialog;
-		switch (id) {
-		case DIALOG_STATUSSELECTOR:
-			mStatusSelectorDialog = new StatusSelectorDialog(this,
-					mContactProvider.getMeContact().getUserState());
-			mStatusSelectorDialog.setResultListener(this);
-			dialog = mStatusSelectorDialog.getAlertDialog();
-			break;
-		case DIALOG_ADDUSER:
-			mAddUserDialog = new AddUserDialog(this);
-			mAddUserDialog.setResultListener(this);
-			dialog = mAddUserDialog.getAlertDialog();
-			break;
-		case DIALOG_ADDCONFERENCE:
-			mAddConferenceDialog = new AddConferenceDialog(this);
-			mAddConferenceDialog.setResultListener(this);
-			dialog = mAddConferenceDialog.getAlertDialog();
-			break;
-		default:
-			dialog = null;
-		}
-		return dialog;
-
-	}
-
-	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		if (mMenuView != mCurrentView) {
 			menu.clear();
@@ -557,7 +587,6 @@ public class AppActivity extends Activity implements
 		final MenuInflater inflater = getMenuInflater();
 		switch (mCurrentView) {
 		case VIEW_ROSTER:
-			Log.d(TAG, mMenuView + "/" + mCurrentView);
 			if (mMenuView != mCurrentView) {
 				inflater.inflate(R.menu.roster, menu);
 			}
@@ -568,7 +597,6 @@ public class AppActivity extends Activity implements
 				menu.findItem(R.id.menu_add_conference).setVisible(false);
 				menu.findItem(R.id.menu_add_user).setVisible(true);
 			}
-			mMenuView = mCurrentView;
 			break;
 		case VIEW_CHAT:
 			if (mMenuView != mCurrentView) {
@@ -581,9 +609,9 @@ public class AppActivity extends Activity implements
 					menu.findItem(R.id.menu_call).setVisible(false);
 				}
 			}
-			mMenuView = mCurrentView;
 			break;
 		}
+		mMenuView = mCurrentView;
 		mMenu = menu;
 		return true;
 	}
@@ -622,20 +650,7 @@ public class AppActivity extends Activity implements
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:
-			if (mCurrentView == VIEW_CHAT) {
-				final Message msg = Message.obtain(null,
-						Signals.SIG_DISABLE_CHATSESSION);
-				final Bundle b = new Bundle();
-				b.putParcelable("session", mSession);
-				msg.setData(b);
-				msg.replyTo = mMessenger;
-				try {
-					mService.send(msg);
-				} catch (final RemoteException e) {
-					Log.e(TAG, "disableChat", e);
-				}
-			}
-			openRoster(null);
+			onBackPressed();
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
@@ -643,23 +658,124 @@ public class AppActivity extends Activity implements
 	}
 
 	@Override
-	public void onResultAvailable(ResultProducer resultProducer) {
-		if (resultProducer.getResult() == null) {
-			return;
-		}
-		if (resultProducer instanceof StatusSelectorDialog) {
-			updateStatus((UserState) resultProducer.getResult());
-		} else if (resultProducer instanceof AddUserDialog) {
-			userAdd((String) resultProducer.getResult());
-		} else if (resultProducer instanceof AddConferenceDialog) {
-			goConference((String) resultProducer.getResult());
-		}
-	}
-
-	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putInt("tab", mCurrentNavigation);
+	}
+
+	public void openAddConference() {
+		setContentView(R.layout.add_conference);
+		Log.i(TAG, "openAddConference");
+		mCurrentView = VIEW_ADD_CONFERENCE;
+		if (mMenu != null) {
+			onCreateOptionsMenu(mMenu);
+		}
+		setActionBarCancelDone();
+		mActionBar.getCustomView().findViewById(R.id.action_cancel)
+				.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						openRoster(null);
+					}
+				});
+		mActionBar.getCustomView().findViewById(R.id.action_done)
+				.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						final String jid = ((EditText) findViewById(R.id.jid_edit))
+								.getText().toString();
+						final String name = ((EditText) findViewById(R.id.nick_edit))
+								.getText().toString();
+						final String mynick = ((EditText) findViewById(R.id.mynick_edit))
+								.getText().toString();
+						final String password = ((EditText) findViewById(R.id.pass_edit))
+								.getText().toString();
+						if (jid != null && !jid.isEmpty()) {
+							// userAdd(uid, nick);
+							openRoster(null);
+						} else {
+							final Toast toast = Toast.makeText(
+									AppActivity.this, R.string.jid_is_required,
+									Toast.LENGTH_SHORT);
+							toast.show();
+						}
+					}
+				});
+	}
+
+	public void openAddContact() {
+		setContentView(R.layout.add_user);
+		Log.i(TAG, "openAddContact");
+		mCurrentView = VIEW_ADD_CONTACT;
+		if (mMenu != null) {
+			onCreateOptionsMenu(mMenu);
+		}
+		setActionBarCancelDone();
+		mActionBar.getCustomView().findViewById(R.id.action_cancel)
+				.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						openRoster(null);
+					}
+				});
+		mActionBar.getCustomView().findViewById(R.id.action_done)
+				.setOnClickListener(new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						final String uid = ((EditText) findViewById(R.id.uid_edit))
+								.getText().toString();
+						final String nick = ((EditText) findViewById(R.id.nick_edit))
+								.getText().toString();
+						if (uid != null && !uid.isEmpty()) {
+							userAdd(uid, nick);
+							openRoster(null);
+						} else {
+							final Toast toast = Toast.makeText(
+									AppActivity.this, R.string.jid_is_required,
+									Toast.LENGTH_SHORT);
+							toast.show();
+						}
+					}
+				});
+	}
+
+	public void openChangeStatus() {
+		setContentView(R.layout.status_changer);
+		Log.i(TAG, "openChangeStatus");
+		mCurrentView = VIEW_STATUS;
+		if (mMenu != null) {
+			onCreateOptionsMenu(mMenu);
+		}
+		((Spinner) findViewById(R.id.status_spinner))
+				.setAdapter(new StatusAdapter(this));
+		((Spinner) findViewById(R.id.status_spinner))
+				.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+					@Override
+					public void onItemSelected(AdapterView<?> view,
+							View selectedView, int position, long id) {
+						view.setBackgroundColor(Color
+								.parseColor(getString(new UserState((int) id,
+										null).getStatusColorRessourceID())));
+					}
+
+					@Override
+					public void onNothingSelected(AdapterView<?> arg0) {
+						// TODO Auto-generated method stub
+
+					}
+				});
+		((Spinner) findViewById(R.id.status_spinner))
+				.setSelection(StatusAdapter.statusToPosition(mContactProvider
+						.getMeContact().getUserState().getStatus()));
+		((EditText) findViewById(R.id.status_edit)).setText(mContactProvider.getMeContact().getUserState().getCustomStatusText());
+		setActionBarSimpleWithBack();
+		mActionBar.setTitle(R.string.status);
+		mActionBar.setSubtitle(mContactProvider.getMeUserLogin());
 	}
 
 	public void openChat() {
@@ -689,12 +805,8 @@ public class AppActivity extends Activity implements
 
 		});
 
-		mActionBar = getActionBar();
+		setActionBarSimpleWithBack();
 		mActionBar.setTitle(getText(R.string.process_loading));
-		mActionBar.setDisplayHomeAsUpEnabled(true);
-		mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-		mActionBar.setDisplayShowTitleEnabled(true);
-		mActionBar.setDisplayShowCustomEnabled(false);
 	}
 
 	public void openRoster(Bundle savedInstanceState) {
@@ -706,9 +818,8 @@ public class AppActivity extends Activity implements
 		}
 		mListView = (ListView) findViewById(R.id.list_roster);
 		mListView.setOnItemClickListener(itemClickListener);
-		mActionBar = getActionBar();
+		setActionBarSimpleWithoutBack();
 		mActionBar.setTitle(getText(R.string.process_loading));
-		mActionBar.setDisplayHomeAsUpEnabled(false);
 
 		if (mConferenceProvider == null) {
 			mConferenceProvider = new ConferenceProvider(mMessenger, mService,
@@ -729,13 +840,93 @@ public class AppActivity extends Activity implements
 		}
 
 		if (mGroupAdapter != null) {
-			mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-			mActionBar.setDisplayShowTitleEnabled(false);
-			mActionBar.setDisplayShowCustomEnabled(true);
+			setActionBarListNavigationWithoutBack();
 			mActionBar.setListNavigationCallbacks(mGroupAdapter,
 					mNavigationListener);
 			mActionBar.setSelectedNavigationItem(mCurrentNavigation);
 		}
+	}
+
+	private void parseChatMUC() {
+		if (mService != null) {
+			final Message msg = Message.obtain(null,
+					Signals.SIG_OPEN_MUC_CHATSESSION);
+			msg.replyTo = mMessenger;
+			final Bundle b = new Bundle();
+			b.putString("muc", mMUC);
+			msg.setData(b);
+			try {
+				mService.send(msg);
+			} catch (final RemoteException e) {
+				Log.i(TAG, "handleIntent", e);
+			}
+		}
+		setTitle(mMUC);
+	}
+
+	private void parseChatUID() {
+		if (mService != null) {
+			final Message msg = Message.obtain(null,
+					Signals.SIG_OPEN_CHATSESSION);
+			msg.replyTo = mMessenger;
+			final Bundle b = new Bundle();
+			b.putString("uid", mUID);
+			msg.setData(b);
+			try {
+				mService.send(msg);
+			} catch (final RemoteException e) {
+				Log.i(TAG, "handleIntent", e);
+			}
+		}
+		setTitle(mUID);
+	}
+
+	private void setActionBarCancelDone() {
+		mActionBar = getActionBar();
+		mActionBar.setDisplayHomeAsUpEnabled(false);
+		mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+		mActionBar.setDisplayShowTitleEnabled(false);
+		mActionBar.setDisplayShowCustomEnabled(true);
+		mActionBar.setDisplayShowHomeEnabled(false);
+		mActionBar.setTitle(null);
+		mActionBar.setSubtitle(null);
+		mActionBar.setCustomView(R.layout.actionbar_cancel_done);
+	}
+
+	private void setActionBarListNavigationWithoutBack() {
+		mActionBar = getActionBar();
+		mActionBar.setDisplayHomeAsUpEnabled(false);
+		mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+		mActionBar.setDisplayShowTitleEnabled(false);
+		mActionBar.setDisplayShowCustomEnabled(false);
+		mActionBar.setDisplayShowHomeEnabled(true);
+		mActionBar.setTitle(null);
+		mActionBar.setSubtitle(null);
+		mActionBar.setCustomView(null);
+	}
+
+	private void setActionBarSimpleWithBack() {
+		mActionBar = getActionBar();
+		mActionBar.setDisplayHomeAsUpEnabled(true);
+		mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+		mActionBar.setDisplayShowTitleEnabled(true);
+		mActionBar.setDisplayShowCustomEnabled(false);
+		mActionBar.setDisplayShowHomeEnabled(true);
+		mActionBar.setTitle(null);
+		mActionBar.setSubtitle(null);
+		mActionBar.setCustomView(null);
+	}
+
+	private void setActionBarSimpleWithoutBack() {
+		mActionBar = getActionBar();
+		mActionBar.setDisplayHomeAsUpEnabled(false);
+		mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+		mActionBar.setDisplayShowTitleEnabled(true);
+		mActionBar.setDisplayShowCustomEnabled(false);
+		mActionBar.setDisplayShowHomeEnabled(true);
+		mActionBar.setTitle(null);
+		mActionBar.setSubtitle(null);
+		mActionBar.setCustomView(null);
 	}
 
 	private void updateStatus(int status) {
@@ -766,7 +957,21 @@ public class AppActivity extends Activity implements
 		try {
 			mService.send(msg);
 		} catch (final RemoteException e) {
-			Log.i(TAG, "updateStatus", e);
+			Log.i(TAG, "userAdd", e);
+		}
+	}
+
+	protected void userAdd(String uid, String nick) {
+		final Bundle b = new Bundle();
+		b.putString("uid", uid);
+		b.putString("nick", nick);
+		final Message msg = Message.obtain(null, Signals.SIG_ROSTER_ADD);
+		msg.replyTo = mMessenger;
+		msg.setData(b);
+		try {
+			mService.send(msg);
+		} catch (final RemoteException e) {
+			Log.i(TAG, "userAdd", e);
 		}
 	}
 }

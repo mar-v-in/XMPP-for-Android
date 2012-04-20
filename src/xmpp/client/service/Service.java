@@ -22,6 +22,7 @@ import xmpp.client.service.chat.ChatServiceProvider;
 import xmpp.client.service.chat.ChatSession;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
+import xmpp.client.service.jingle.JingleService;
 import xmpp.client.service.user.User;
 import xmpp.client.service.user.UserService;
 import xmpp.client.service.user.UserServiceProvider;
@@ -95,6 +96,8 @@ public class Service extends android.app.Service implements
 
 	private AvatarService mAvatarService;
 
+	private JingleService mJingleService;
+
 	private void addUser(Message msg) {
 		Bundle b = msg.getData();
 		final String uid = b.getString("uid");
@@ -155,7 +158,7 @@ public class Service extends android.app.Service implements
 		final User user = new User();
 		user.setUserLogin(mConnection.getUser());
 		user.setRessource((String) getText(R.string.xmpp_ressource));
-		user.setUserState(new UserState(UserState.STATUS_INVISIBLE, null));
+		user.setUserState(new UserState(UserState.STATUS_AVAILABLE, null));
 		user.setAvatar(null);
 		return user;
 	}
@@ -316,7 +319,7 @@ public class Service extends android.app.Service implements
 		config.setSelfSignedCertificateEnabled(true);
 		config.setTruststoreType("BKS");
 		config.setRosterLoadedAtLogin(false);
-		config.setSendPresence(false);
+		config.setSendPresence(true);
 		SmackConfiguration.setKeepAliveInterval(60000);
 		SmackConfiguration.setPacketReplyTimeout(30000);
 		mConnection = new XMPPConnection(config);
@@ -377,6 +380,7 @@ public class Service extends android.app.Service implements
 				mBookmarkService = new BookmarkService(this);
 				mUserService = new UserService(this, createMeUser());
 				mChatService = new ChatService(this);
+				mJingleService = new JingleService(this);
 				return true;
 			} catch (final XMPPException e) {
 				Log.e(TAG, "loginXMPP", e);

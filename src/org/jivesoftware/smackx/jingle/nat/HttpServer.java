@@ -68,117 +68,115 @@ import org.jivesoftware.smackx.jingle.SmackLogger;
  */
 public class HttpServer {
 
-	class HttpRequestHandler implements Runnable {
-
-		final static String CRLF = "\r\n";
-		Socket socket;
-		InputStream input;
-		OutputStream output;
-		BufferedReader br;
-
-		public HttpRequestHandler(Socket socket) throws Exception {
-			this.socket = socket;
-			input = socket.getInputStream();
-			output = socket.getOutputStream();
-			br = new BufferedReader(new InputStreamReader(
-					socket.getInputStream()));
-		}
-
-		private void processRequest() throws Exception {
-			while (true) {
-
-				final String headerLine = br.readLine();
-				LOGGER.debug(headerLine);
-				if (headerLine.equals(CRLF) || headerLine.equals("")) {
-					break;
-				}
-
-				final StringTokenizer s = new StringTokenizer(headerLine);
-				final String temp = s.nextToken();
-
-				if (temp.equals("GET")) {
-
-					final String serverLine = "Server: Simple httpServer";
-					String contentTypeLine = "text";
-					final String entityBody = "";
-					String contentLengthLine;
-					final String statusLine = "HTTP/1.0 200 OK" + CRLF;
-					contentLengthLine = "Content-Length: "
-							+ (new Integer(entityBody.length())).toString()
-							+ CRLF;
-					contentTypeLine = "text/html";
-
-					output.write(statusLine.getBytes());
-
-					output.write(serverLine.getBytes());
-
-					output.write(contentTypeLine.getBytes());
-					output.write(contentLengthLine.getBytes());
-
-					output.write(CRLF.getBytes());
-
-					output.write(entityBody.getBytes());
-
-				}
-			}
-
-			try {
-				output.close();
-				br.close();
-				socket.close();
-			} catch (final Exception e) {
-				// Do Nothing
-				e.printStackTrace();
-			}
-		}
-
-		@Override
-		public void run() {
-			try {
-				processRequest();
-			} catch (final Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	private static final SmackLogger LOGGER = SmackLogger
-			.getLogger(HttpServer.class);
-
-	public static void main(String args[]) {
-		new HttpServer(Integer.parseInt(args[0]));
-	}
+	private static final SmackLogger LOGGER = SmackLogger.getLogger(HttpServer.class);
 
 	public HttpServer(int port) {
-		ServerSocket server_socket;
+        ServerSocket server_socket;
 
-		try {
+        try {
 
-			server_socket = new ServerSocket(port);
-			LOGGER.debug("httpServer running on port "
-					+ server_socket.getLocalPort());
+            server_socket = new ServerSocket(port);
+            LOGGER.debug("httpServer running on port " +
+                    server_socket.getLocalPort());
 
-			while (true) {
-				final Socket socket = server_socket.accept();
-				LOGGER.debug("New connection accepted "
-						+ socket.getInetAddress() + ":" + socket.getPort());
+            while (true) {
+                Socket socket = server_socket.accept();
+                LOGGER.debug("New connection accepted " +
+                        socket.getInetAddress() +
+                        ":" + socket.getPort());
 
-				try {
-					final HttpRequestHandler request = new HttpRequestHandler(
-							socket);
+                try {
+                    HttpRequestHandler request =
+                            new HttpRequestHandler(socket);
 
-					final Thread thread = new Thread(request);
+                    Thread thread = new Thread(request);
 
-					thread.start();
-				} catch (final Exception e) {
-					LOGGER.debug("", e);
-				}
-			}
-		}
+                    thread.start();
+                }
+                catch (Exception e) {
+                    LOGGER.debug("", e);
+                }
+            }
+        }
 
-		catch (final IOException e) {
-			LOGGER.debug("", e);
-		}
+        catch (IOException e) {
+            LOGGER.debug("", e);
+        }
 
-	}
+    }
+
+    public static void main(String args[]) {
+        HttpServer httpServer = new HttpServer(Integer.parseInt(args[0]));
+    }
+
+    class HttpRequestHandler implements Runnable {
+
+        final static String CRLF = "\r\n";
+        Socket socket;
+        InputStream input;
+        OutputStream output;
+        BufferedReader br;
+
+        public HttpRequestHandler(Socket socket) throws Exception {
+            this.socket = socket;
+            this.input = socket.getInputStream();
+            this.output = socket.getOutputStream();
+            this.br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        }
+
+        public void run() {
+            try {
+                processRequest();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void processRequest() throws Exception {
+            while (true) {
+
+                String headerLine = br.readLine();
+                LOGGER.debug(headerLine);
+                if (headerLine.equals(CRLF) || headerLine.equals("")) break;
+
+                StringTokenizer s = new StringTokenizer(headerLine);
+                String temp = s.nextToken();
+
+                if (temp.equals("GET")) {
+
+                    String serverLine = "Server: Simple httpServer";
+                    String contentTypeLine = "text";
+                    String entityBody = "";
+                    String contentLengthLine;
+                    String statusLine = "HTTP/1.0 200 OK" + CRLF;
+                    contentLengthLine = "Content-Length: "
+                            + (new Integer(entityBody.length())).toString() + CRLF;
+                    contentTypeLine = "text/html";
+
+                    output.write(statusLine.getBytes());
+
+                    output.write(serverLine.getBytes());
+
+                    output.write(contentTypeLine.getBytes());
+                    output.write(contentLengthLine.getBytes());
+
+                    output.write(CRLF.getBytes());
+
+                    output.write(entityBody.getBytes());
+
+                }
+            }
+
+            try {
+                output.close();
+                br.close();
+                socket.close();
+            }
+            catch (Exception e) {
+                // Do Nothing
+                e.printStackTrace();
+            }
+        }
+    }
 }

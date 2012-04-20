@@ -24,23 +24,20 @@ import org.jivesoftware.smackx.jingle.media.PayloadType;
 
 /**
  * Interface for listening to jmf events.
- * 
  * @author Thiago Camargo
  */
 public interface JingleMediaListener extends JingleListener {
-	/**
-	 * Notification that a payload type must be cancelled
-	 * 
-	 * @param cand
-	 *            The payload type that must be closed
-	 */
-	public void mediaClosed(PayloadType cand);
+    /**
+     * Notification that the jmf has been negotiated and established.
+     *
+     * @param pt The payload type agreed.
+     */
+    public void mediaEstablished(PayloadType pt);
 
-	/**
-	 * Notification that the jmf has been negotiated and established.
-	 * 
-	 * @param pt
-	 *            The payload type agreed.
-	 */
-	public void mediaEstablished(PayloadType pt);
+    /**
+     * Notification that a payload type must be cancelled
+     *
+     * @param cand The payload type that must be closed
+     */
+    public void mediaClosed(PayloadType cand);
 }

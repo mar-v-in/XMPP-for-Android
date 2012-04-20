@@ -26,120 +26,115 @@ import org.jivesoftware.smackx.packet.Jingle;
  * A Jingle session request.
  * <p/>
  * This class is a facade of a received Jingle request. The user can have direct
- * access to the Jingle packet (<i>JingleSessionRequest.getJingle() </i>) of the
- * request or can use the convencience methods provided by this class.
- * 
+ * access to the Jingle packet (<i>JingleSessionRequest.getJingle() </i>) of
+ * the request or can use the convencience methods provided by this class.
+ *
  * @author Alvaro Saurin
  */
 public class JingleSessionRequest {
 
-	private static final SmackLogger LOGGER = SmackLogger
-			.getLogger(JingleSessionRequest.class);
+	private static final SmackLogger LOGGER = SmackLogger.getLogger(JingleSessionRequest.class);
 
 	private final Jingle jingle; // The Jingle packet
 
-	private final JingleManager manager; // The manager associated to this
+    private final JingleManager manager; // The manager associated to this
 
-	// request
+    // request
 
-	/**
-	 * A recieve request is constructed from the Jingle Initiation request
-	 * received from the initator.
-	 * 
-	 * @param manager
-	 *            The manager handling this request
-	 * @param jingle
-	 *            The jingle IQ recieved from the initiator.
-	 */
-	public JingleSessionRequest(JingleManager manager, Jingle jingle) {
-		this.manager = manager;
-		this.jingle = jingle;
-	}
+    /**
+     * A recieve request is constructed from the Jingle Initiation request
+     * received from the initator.
+     *
+     * @param manager The manager handling this request
+     * @param jingle  The jingle IQ recieved from the initiator.
+     */
+    public JingleSessionRequest(JingleManager manager, Jingle jingle) {
+        this.manager = manager;
+        this.jingle = jingle;
+    }
 
-	/**
-	 * Accepts this request and creates the incoming Jingle session.
-	 * 
-	 * @return Returns the <b><i>IncomingJingleSession</b></i> on which the
-	 *         negotiation can be carried out.
-	 */
-	public synchronized JingleSession accept() throws XMPPException {
-		JingleSession session = null;
-		synchronized (manager) {
-			session = manager.createIncomingJingleSession(this);
-			// Acknowledge the IQ reception
-			session.setSid(getSessionID());
-			// session.sendAck(this.getJingle());
-			session.updatePacketListener();
-			session.receivePacketAndRespond(getJingle());
-		}
-		return session;
-	}
+    /**
+     * Returns the fully-qualified jabber ID of the user that requested this
+     * session.
+     *
+     * @return Returns the fully-qualified jabber ID of the user that requested
+     *         this session.
+     */
+    public String getFrom() {
+        return jingle.getFrom();
+    }
 
-	/**
-	 * Returns the fully-qualified jabber ID of the user that requested this
-	 * session.
-	 * 
-	 * @return Returns the fully-qualified jabber ID of the user that requested
-	 *         this session.
-	 */
-	public String getFrom() {
-		return jingle.getFrom();
-	}
+    /**
+     * Returns the session ID that uniquely identifies this session.
+     *
+     * @return Returns the session ID that uniquely identifies this session
+     */
+    public String getSessionID() {
+        return jingle.getSid();
+    }
 
-	/**
-	 * Returns the Jingle packet that was sent by the requester which contains
-	 * the parameters of the session.
-	 */
-	public Jingle getJingle() {
-		return jingle;
-	}
+    /**
+     * Returns the Jingle packet that was sent by the requester which contains
+     * the parameters of the session.
+     */
+    public Jingle getJingle() {
+        return jingle;
+    }
 
-	/**
-	 * Accepts this request and creates the incoming Jingle session.
-	 * 
-	 * @param pts
-	 *            list of supported Payload Types
-	 * @return Returns the <b><i>IncomingJingleSession</b></i> on which the
-	 *         negotiation can be carried out.
-	 */
-	// public synchronized JingleSession accept(List<PayloadType> pts) throws
-	// XMPPException {
-	// JingleSession session = null;
-	// synchronized (manager) {
-	// session = manager.createIncomingJingleSession(this, pts);
-	// // Acknowledge the IQ reception
-	// session.setSid(this.getSessionID());
-	// //session.sendAck(this.getJingle());
-	// //session.respond(this.getJingle());
-	// }
-	// return session;
-	// }
+    /**
+     * Accepts this request and creates the incoming Jingle session.
+     *
+     * @param pts list of supported Payload Types
+     * @return Returns the <b><i>IncomingJingleSession</b></i> on which the
+     *         negotiation can be carried out.
+     */
+//    public synchronized JingleSession accept(List<PayloadType> pts) throws XMPPException {
+//        JingleSession session = null;
+//        synchronized (manager) {
+//            session = manager.createIncomingJingleSession(this, pts);
+//            // Acknowledge the IQ reception
+//            session.setSid(this.getSessionID());
+//            //session.sendAck(this.getJingle());
+//            //session.respond(this.getJingle());
+//        }
+//        return session;
+//    }
 
-	/**
-	 * Returns the session ID that uniquely identifies this session.
-	 * 
-	 * @return Returns the session ID that uniquely identifies this session
-	 */
-	public String getSessionID() {
-		return jingle.getSid();
-	}
+    /**
+     * Accepts this request and creates the incoming Jingle session.
+     *
+     * @return Returns the <b><i>IncomingJingleSession</b></i> on which the
+     *         negotiation can be carried out.
+     */
+    public synchronized JingleSession accept() throws XMPPException {
+        JingleSession session = null;
+        synchronized (manager) {
+            session = manager.createIncomingJingleSession(this);
+            // Acknowledge the IQ reception
+            session.setSid(this.getSessionID());
+            //session.sendAck(this.getJingle());
+            session.updatePacketListener();
+            session.receivePacketAndRespond(this.getJingle());
+        }
+        return session;
+    }
 
-	/**
-	 * Rejects the session request.
-	 */
-	public synchronized void reject() {
-		JingleSession session = null;
-		synchronized (manager) {
-			try {
+    /**
+     * Rejects the session request.
+     */
+    public synchronized void reject() {
+        JingleSession session = null;
+        synchronized (manager) {
+            try {
 				session = manager.createIncomingJingleSession(this);
 				// Acknowledge the IQ reception
-				session.setSid(getSessionID());
-				// session.sendAck(this.getJingle());
+				session.setSid(this.getSessionID());
+				//session.sendAck(this.getJingle());
 				session.updatePacketListener();
 				session.terminate("Declined");
-			} catch (final XMPPException e) {
+			} catch (XMPPException e) {
 				LOGGER.error("", e);
 			}
-		}
-	}
+        }
+     }
 }

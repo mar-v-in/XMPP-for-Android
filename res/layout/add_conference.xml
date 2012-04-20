@@ -9,9 +9,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="5dp"
-        android:layout_marginLeft="15dp"
-        android:layout_marginRight="15dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginLeft="28dp"
+        android:layout_marginRight="28dp"
+        android:layout_marginTop="16dp"
         android:text="@string/add_conference_desc"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -19,43 +19,60 @@
         android:id="@+id/jid_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/simple_row_margin"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
         android:hint="@string/conferencejid"
+        android:inputType="textEmailAddress"
         android:singleLine="false" >
+
+        <requestFocus />
+
     </EditText>
 
     <EditText
         android:id="@+id/nick_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/simple_row_margin"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
         android:hint="@string/conferencename"
+        android:inputType="text"
         android:singleLine="true" >
+
     </EditText>
     
     <EditText
         android:id="@+id/mynick_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/simple_row_margin"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
         android:hint="@string/nickname"
+        android:inputType="textPersonName"
         android:singleLine="true" >
+
     </EditText>
     
     <EditText
         android:id="@+id/pass_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/simple_row_margin"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
         android:hint="@string/password"
+        android:inputType="textPassword"
         android:singleLine="false" >
+
     </EditText>
 
-    <CheckBox
-        android:id="@+id/checkBox1"
-        android:layout_width="wrap_content"
+    <Switch
+        android:id="@+id/chk_autojoin"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/simple_row_margin"
-        android:text="@string/auto_login" />
+        android:layout_marginLeft="28dp"
+        android:layout_marginRight="16dp"
+        android:checked="false"
+        android:text="@string/auto_join"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
 </LinearLayout>

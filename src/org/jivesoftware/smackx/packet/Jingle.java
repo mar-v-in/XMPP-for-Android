@@ -20,376 +20,358 @@
 
 package org.jivesoftware.smackx.packet;
 
+import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smackx.jingle.JingleActionEnum;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jivesoftware.smack.packet.IQ;
-import org.jivesoftware.smackx.jingle.JingleActionEnum;
-
 /**
  * An Jingle sub-packet, which is used by XMPP clients to exchange info like
- * descriptions and transports.
- * <p/>
- * The following link summarizes the requirements of Jingle IM: <a
+ * descriptions and transports. <p/> The following link summarizes the
+ * requirements of Jingle IM: <a
  * href="http://www.jabber.org/jeps/jep-0166.html">Valid tags</a>.
  * <p/>
- * <p/>
- * Warning: this is an non-standard protocol documented by <a
+ * <p/> Warning: this is an non-standard protocol documented by <a
  * href="http://www.jabber.org/jeps/jep-0166.html">JEP-166</a>. Because this is
  * a non-standard protocol, it is subject to change.
- * 
+ *
  * @author Alvaro Saurin
  */
 public class Jingle extends IQ {
 
-	// static
+    // static
 
-	public static final String NAMESPACE = "urn:xmpp:tmp:jingle";
+    public static final String NAMESPACE = "urn:xmpp:tmp:jingle";
 
-	public static final String NODENAME = "jingle";
+    public static final String NODENAME = "jingle";
 
-	// non-static
+    // non-static
 
-	/**
-	 * Returns the XML element name of the extension sub-packet root element.
-	 * Always returns "jingle"
-	 * 
-	 * @return the XML element name of the packet extension.
-	 */
-	public static String getElementName() {
-		return NODENAME;
-	}
+    private String sid; // The session id
 
-	/**
-	 * Returns the XML namespace of the extension sub-packet root element.
-	 * 
-	 * @return the XML namespace of the packet extension.
-	 */
-	public static String getNamespace() {
-		return NAMESPACE;
-	}
+    private JingleActionEnum action; // The action associated to the Jingle
 
-	/**
-	 * Get a hash key for the session this packet belongs to.
-	 * 
-	 * @param sid
-	 *            The session id
-	 * @param initiator
-	 *            The initiator
-	 * @return A hash key
-	 */
-	public static int getSessionHash(final String sid, final String initiator) {
-		final int PRIME = 31;
-		int result = 1;
-		result = PRIME * result
-				+ (initiator == null ? 0 : initiator.hashCode());
-		result = PRIME * result + (sid == null ? 0 : sid.hashCode());
-		return result;
-	}
+    private String initiator; // The initiator as a "user@host/resource"
 
-	private String sid; // The session id
+    private String responder; // The responder
 
-	// Sub-elements of a Jingle object.
+    // Sub-elements of a Jingle object.
+    
+    private final List<JingleContent> contents = new ArrayList<JingleContent>();
 
-	private JingleActionEnum action; // The action associated to the Jingle
+    private JingleContentInfo contentInfo;
 
-	private String initiator; // The initiator as a "user@host/resource"
+    /**
+     * A constructor where the main components can be initialized.
+     */
+    public Jingle(final List<JingleContent> contents, final JingleContentInfo mi,
+                  final String sid) {
+        super();
 
-	private String responder; // The responder
+        if (contents != null) {
+            contents.addAll(contents);
+        }
 
-	private final List<JingleContent> contents = new ArrayList<JingleContent>();
+        setContentInfo(mi);
+        setSid(sid);
 
-	private JingleContentInfo contentInfo;
+        // Set null all other fields in the packet
+        initiator = null;
+        responder = null;
+        action = null;
+    }
 
-	/**
-	 * The default constructor
-	 */
-	public Jingle() {
-		super();
-	}
+    /**
+     * Constructor with a contents.
+     *
+     * @param content a content
+     */
+    public Jingle(final JingleContent content) {
+        super();
 
-	/**
-	 * A constructor where the action can be specified.
-	 * 
-	 * @param action
-	 *            The action.
-	 */
-	public Jingle(final JingleActionEnum action) {
-		this(null, null, null);
-		this.action = action;
+        addContent(content);
 
-		// In general, a Jingle with an action is used in a SET packet...
-		setType(IQ.Type.SET);
-	}
+        // Set null all other fields in the packet
+        initiator = null;
+        responder = null;
 
-	/**
-	 * Constructor with a contents.
-	 * 
-	 * @param content
-	 *            a content
-	 */
-	public Jingle(final JingleContent content) {
-		super();
+        // Some default values for the most common situation...
+        action = JingleActionEnum.UNKNOWN;
+        this.setType(IQ.Type.SET);
+    }
 
-		addContent(content);
+     /**
+     * Constructor with a content info.
+     *
+     * @param info The content info
+     */
+    public Jingle(final JingleContentInfo info) {
+        super();
 
-		// Set null all other fields in the packet
-		initiator = null;
-		responder = null;
+        setContentInfo(info);
 
-		// Some default values for the most common situation...
-		action = JingleActionEnum.UNKNOWN;
-		setType(IQ.Type.SET);
-	}
+        // Set null all other fields in the packet
+        initiator = null;
+        responder = null;
 
-	/**
-	 * Constructor with a content info.
-	 * 
-	 * @param info
-	 *            The content info
-	 */
-	public Jingle(final JingleContentInfo info) {
-		super();
+        // Some default values for the most common situation...
+        action = JingleActionEnum.UNKNOWN;
+        this.setType(IQ.Type.SET);
+    }
 
-		setContentInfo(info);
+    /**
+     * A constructor where the action can be specified.
+     *
+     * @param action The action.
+     */
+    public Jingle(final JingleActionEnum action) {
+        this(null, null, null);
+        this.action = action;
 
-		// Set null all other fields in the packet
-		initiator = null;
-		responder = null;
+        // In general, a Jingle with an action is used in a SET packet...
+        this.setType(IQ.Type.SET);
+    }
 
-		// Some default values for the most common situation...
-		action = JingleActionEnum.UNKNOWN;
-		setType(IQ.Type.SET);
-	}
+    /**
+     * A constructor where the session ID can be specified.
+     *
+     * @param sid The session ID related to the negotiation.
+     * @see #setSid(String)
+     */
+    public Jingle(final String sid) {
+        this(null, null, sid);
+    }
 
-	/**
-	 * A constructor where the main components can be initialized.
-	 */
-	public Jingle(final List<JingleContent> contents,
-			final JingleContentInfo mi, final String sid) {
-		super();
+    /**
+     * The default constructor
+     */
+    public Jingle() {
+        super();
+    }
 
-		if (contents != null) {
-			contents.addAll(contents);
-		}
+    /**
+     * Set the session ID related to this session. The session ID is a unique
+     * identifier generated by the initiator. This should match the XML Nmtoken
+     * production so that XML character escaping is not needed for characters
+     * such as &.
+     *
+     * @param sid the session ID
+     */
+    public final void setSid(final String sid) {
+        this.sid = sid;
+    }
 
-		setContentInfo(mi);
-		setSid(sid);
+    /**
+     * Returns the session ID related to the session. The session ID is a unique
+     * identifier generated by the initiator. This should match the XML Nmtoken
+     * production so that XML character escaping is not needed for characters
+     * such as &.
+     *
+     * @return Returns the session ID related to the session.
+     * @see #setSid(String)
+     */
+    public String getSid() {
 
-		// Set null all other fields in the packet
-		initiator = null;
-		responder = null;
-		action = null;
-	}
+        return sid;
+    }
 
-	/**
-	 * A constructor where the session ID can be specified.
-	 * 
-	 * @param sid
-	 *            The session ID related to the negotiation.
-	 * @see #setSid(String)
-	 */
-	public Jingle(final String sid) {
-		this(null, null, sid);
-	}
+    /**
+     * Returns the XML element name of the extension sub-packet root element.
+     * Always returns "jingle"
+     *
+     * @return the XML element name of the packet extension.
+     */
+    public static String getElementName() {
+        return NODENAME;
+    }
 
-	/**
-	 * Add a new content.
-	 * 
-	 * @param content
-	 *            the content to add
-	 */
-	public void addContent(final JingleContent content) {
-		if (content != null) {
-			synchronized (contents) {
-				contents.add(content);
-			}
-		}
-	}
+    /**
+     * Returns the XML namespace of the extension sub-packet root element.
+     *
+     * @return the XML namespace of the packet extension.
+     */
+    public static String getNamespace() {
+        return NAMESPACE;
+    }
 
-	/**
-	 * Add a list of JingleContent elements
-	 * 
-	 * @param contentList
-	 *            the list of contents to add
-	 */
-	public void addContents(final List<JingleContent> contentList) {
-		if (contentList != null) {
-			synchronized (contents) {
-				contents.addAll(contentList);
-			}
-		}
-	}
+    /**
+     * @return the audioInfo
+     */
+    public JingleContentInfo getContentInfo() {
+        return contentInfo;
+    }
 
-	/**
-	 * Get the action specified in the packet
-	 * 
-	 * @return the action
-	 */
-	public JingleActionEnum getAction() {
-		return action;
-	}
+    /**
+     * @param contentInfo the audioInfo to set
+     */
+    public void setContentInfo(final JingleContentInfo contentInfo) {
+        this.contentInfo = contentInfo;
+    }
 
-	/**
-	 * Return the XML representation of the packet.
-	 * 
-	 * @return the XML string
-	 */
-	@Override
-	public String getChildElementXML() {
-		final StringBuilder buf = new StringBuilder();
+    /**
+     * Get an iterator for the contents
+     *
+     * @return the contents
+     */
+    public Iterator<JingleContent> getContents() {
+        synchronized (contents) {
+            return Collections.unmodifiableList(new ArrayList(contents)).iterator();
+        }
+    }
 
-		buf.append("<").append(getElementName());
-		buf.append(" xmlns=\"").append(getNamespace()).append("\"");
-		if (getInitiator() != null) {
-			buf.append(" initiator=\"").append(getInitiator()).append("\"");
-		}
-		if (getResponder() != null) {
-			buf.append(" responder=\"").append(getResponder()).append("\"");
-		}
-		if (getAction() != null) {
-			buf.append(" action=\"").append(getAction()).append("\"");
-		}
-		if (getSid() != null) {
-			buf.append(" sid=\"").append(getSid()).append("\"");
-		}
-		buf.append(">");
+    /**
+     * Get an iterator for the content
+     *
+     * @return the contents
+     */
+    public List<JingleContent> getContentsList() {
+        synchronized (contents) {
+            return new ArrayList<JingleContent>(contents);
+        }
+    }
 
-		synchronized (contents) {
-			for (final JingleContent content : contents) {
-				buf.append(content.toXML());
-			}
-		}
+    /**
+     * Add a new content.
+     *
+     * @param content the content to add
+     */
+    public void addContent(final JingleContent content) {
+        if (content != null) {
+            synchronized (contents) {
+                contents.add(content);
+            }
+        }
+    }
 
-		// and the same for audio jmf info
-		if (contentInfo != null) {
-			buf.append(contentInfo.toXML());
-		}
+    /**
+     * Add a list of JingleContent elements
+     *
+     * @param contentList the list of contents to add
+     */
+    public void addContents(final List<JingleContent> contentList) {
+        if (contentList != null) {
+            synchronized (contents) {
+                contents.addAll(contentList);
+            }
+        }
+    }
 
-		buf.append("</").append(getElementName()).append(">");
-		return buf.toString();
-	}
+     /**
+     * Get the action specified in the packet
+     *
+     * @return the action
+     */
+    public JingleActionEnum getAction() {
+        return action;
+    }
 
-	/**
-	 * @return the audioInfo
-	 */
-	public JingleContentInfo getContentInfo() {
-		return contentInfo;
-	}
+    /**
+     * Set the action in the packet
+     *
+     * @param action the action to set
+     */
+    public void setAction(final JingleActionEnum action) {
+        this.action = action;
+    }
 
-	/**
-	 * Get an iterator for the contents
-	 * 
-	 * @return the contents
-	 */
-	public Iterator<JingleContent> getContents() {
-		synchronized (contents) {
-			return Collections.unmodifiableList(
-					new ArrayList<JingleContent>(contents)).iterator();
-		}
-	}
+    /**
+     * Get the initiator. The initiator will be the full JID of the entity that
+     * has initiated the flow (which may be different to the "from" address in
+     * the IQ)
+     *
+     * @return the initiator
+     */
+    public String getInitiator() {
+        return initiator;
+    }
 
-	/**
-	 * Get an iterator for the content
-	 * 
-	 * @return the contents
-	 */
-	public List<JingleContent> getContentsList() {
-		synchronized (contents) {
-			return new ArrayList<JingleContent>(contents);
-		}
-	}
+    /**
+     * Set the initiator. The initiator must be the full JID of the entity that
+     * has initiated the flow (which may be different to the "from" address in
+     * the IQ)
+     *
+     * @param initiator the initiator to set
+     */
+    public void setInitiator(final String initiator) {
+        this.initiator = initiator;
+    }
 
-	/**
-	 * Get the initiator. The initiator will be the full JID of the entity that
-	 * has initiated the flow (which may be different to the "from" address in
-	 * the IQ)
-	 * 
-	 * @return the initiator
-	 */
-	public String getInitiator() {
-		return initiator;
-	}
+    /**
+     * Get the responder. The responder is the full JID of the entity that has
+     * replied to the initiation (which may be different to the "to" addresss in
+     * the IQ).
+     *
+     * @return the responder
+     */
+    public String getResponder() {
+        return responder;
+    }
 
-	/**
-	 * Get the responder. The responder is the full JID of the entity that has
-	 * replied to the initiation (which may be different to the "to" addresss in
-	 * the IQ).
-	 * 
-	 * @return the responder
-	 */
-	public String getResponder() {
-		return responder;
-	}
+    /**
+     * Set the responder. The responder must be the full JID of the entity that
+     * has replied to the initiation (which may be different to the "to"
+     * addresss in the IQ).
+     *
+     * @param resp the responder to set
+     */
+    public void setResponder(final String resp) {
+        responder = resp;
+    }
 
-	/**
-	 * Returns the session ID related to the session. The session ID is a unique
-	 * identifier generated by the initiator. This should match the XML Nmtoken
-	 * production so that XML character escaping is not needed for characters
-	 * such as &.
-	 * 
-	 * @return Returns the session ID related to the session.
-	 * @see #setSid(String)
-	 */
-	public String getSid() {
+    /**
+     * Get a hash key for the session this packet belongs to.
+     *
+     * @param sid       The session id
+     * @param initiator The initiator
+     * @return A hash key
+     */
+    public static int getSessionHash(final String sid, final String initiator) {
+        final int PRIME = 31;
+        int result = 1;
+        result = PRIME * result + (initiator == null ? 0 : initiator.hashCode());
+        result = PRIME * result + (sid == null ? 0 : sid.hashCode());
+        return result;
+    }
 
-		return sid;
-	}
+    /**
+     * Return the XML representation of the packet.
+     *
+     * @return the XML string
+     */
+    public String getChildElementXML() {
+        StringBuilder buf = new StringBuilder();
 
-	/**
-	 * Set the action in the packet
-	 * 
-	 * @param action
-	 *            the action to set
-	 */
-	public void setAction(final JingleActionEnum action) {
-		this.action = action;
-	}
+        buf.append("<").append(getElementName());
+        buf.append(" xmlns=\"").append(getNamespace()).append("\"");
+        if (getInitiator() != null) {
+            buf.append(" initiator=\"").append(getInitiator()).append("\"");
+        }
+        if (getResponder() != null) {
+            buf.append(" responder=\"").append(getResponder()).append("\"");
+        }
+        if (getAction() != null) {
+            buf.append(" action=\"").append(getAction()).append("\"");
+        }
+        if (getSid() != null) {
+            buf.append(" sid=\"").append(getSid()).append("\"");
+        }
+        buf.append(">");
+ 
+        synchronized (contents) {
+            for (JingleContent content : contents) {
+                buf.append(content.toXML());
+            }
+         }
 
-	/**
-	 * @param contentInfo
-	 *            the audioInfo to set
-	 */
-	public void setContentInfo(final JingleContentInfo contentInfo) {
-		this.contentInfo = contentInfo;
-	}
+        // and the same for audio jmf info
+        if (contentInfo != null) {
+            buf.append(contentInfo.toXML());
+        }
 
-	/**
-	 * Set the initiator. The initiator must be the full JID of the entity that
-	 * has initiated the flow (which may be different to the "from" address in
-	 * the IQ)
-	 * 
-	 * @param initiator
-	 *            the initiator to set
-	 */
-	public void setInitiator(final String initiator) {
-		this.initiator = initiator;
-	}
-
-	/**
-	 * Set the responder. The responder must be the full JID of the entity that
-	 * has replied to the initiation (which may be different to the "to"
-	 * addresss in the IQ).
-	 * 
-	 * @param resp
-	 *            the responder to set
-	 */
-	public void setResponder(final String resp) {
-		responder = resp;
-	}
-
-	/**
-	 * Set the session ID related to this session. The session ID is a unique
-	 * identifier generated by the initiator. This should match the XML Nmtoken
-	 * production so that XML character escaping is not needed for characters
-	 * such as &.
-	 * 
-	 * @param sid
-	 *            the session ID
-	 */
-	public final void setSid(final String sid) {
-		this.sid = sid;
-	}
+        buf.append("</").append(getElementName()).append(">");
+        return buf.toString();
+    }
 }

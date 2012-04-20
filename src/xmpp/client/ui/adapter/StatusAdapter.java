@@ -81,13 +81,15 @@ public class StatusAdapter extends BaseAdapter {
 		}
 
 		final int status = positionToStatus(position);
-
+		
+		view.setTextSize(16);
 		view.setText(mContext.getText(UserState.getStatusTextResourceID(status)));
 		view.setCompoundDrawablesWithIntrinsicBounds(
 				UserState.getStatusIconResourceID(status), 0, 0, 0);
+		view.setCompoundDrawablePadding(5);
 
 		final int p = mContext.getResources().getDimensionPixelSize(
-				R.dimen.simple_row_margin);
+				R.dimen.simple_row_margin)*2;
 
 		view.setPadding(p, p, p, p);
 

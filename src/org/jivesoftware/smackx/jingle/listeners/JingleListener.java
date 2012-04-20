@@ -22,18 +22,19 @@ package org.jivesoftware.smackx.jingle.listeners;
 
 /**
  * Jingle listeners interface.
- * 
+ *
  * This is the list of events that can be observed from a JingleSession and some
  * sub negotiators. This listeners can be added to different elements of the
  * Jingle model.
- * 
+ *
  * For example, a JingleManager can notify any SessionRequestListenerListener
  * listener when a new session request is received. In this case, the
  * <i>sessionRequested()</i> of the listener will be executed, and the listener
  * will be able to <i>accept()</i> or <i>decline()</i> the invitation.
  * 
- * @author Thiago Camargo
+  * @author Thiago Camargo
  */
 public interface JingleListener {
+
 
 }

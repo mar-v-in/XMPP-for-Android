@@ -20,72 +20,69 @@
 
 package org.jivesoftware.smackx.jingle.media;
 
-import java.util.List;
-
 import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.nat.JingleTransportManager;
 import org.jivesoftware.smackx.jingle.nat.TransportCandidate;
 
+import java.util.List;
+
 /**
  * This class provides necessary Jingle Session jmf methods and behavior.
  * <p/>
- * The goal of this class is to provide a flexible way to make JingleManager
- * control jmf streaming APIs without implement them. For instance you can
- * implement a file transfer using java sockets or a VOIP Media Manager using
- * JMF. You can implement many JingleMediaManager according to you necessity.
- * 
+ * The goal of this class is to provide a flexible way to make JingleManager control jmf streaming APIs without implement them.
+ * For instance you can implement a file transfer using java sockets or a VOIP Media Manager using JMF.
+ * You can implement many JingleMediaManager according to you necessity.
+ *
  * @author Thiago Camargo
  */
 public abstract class JingleMediaManager {
+    
+    public static final String MEDIA_NAME = "JingleMediaManager";
 
-	public static final String MEDIA_NAME = "JingleMediaManager";
+    // Each media manager must keep track of the transport manager that it uses.
+    private JingleTransportManager transportManager;
 
-	// Each media manager must keep track of the transport manager that it uses.
-	private final JingleTransportManager transportManager;
+    public JingleMediaManager(JingleTransportManager transportManager) {
+        this.transportManager = transportManager;
+    }
+    
+    /**
+     * Return   The transport manager that goes with this media manager.
+     */
+    public JingleTransportManager getTransportManager() {
+        return transportManager;
+    }
 
-	public JingleMediaManager(JingleTransportManager transportManager) {
-		this.transportManager = transportManager;
-	}
+    /**
+     * Return all supported Payloads for this Manager
+     *
+     * @return The Payload List
+     */
+    public abstract List<PayloadType> getPayloads();
 
-	/**
-	 * Create a Media Session Implementation
-	 * 
-	 * @param payloadType
-	 * @param remote
-	 * @param local
-	 * @return
-	 */
-	public abstract JingleMediaSession createMediaSession(
-			PayloadType payloadType, final TransportCandidate remote,
-			final TransportCandidate local, JingleSession jingleSession);
+    /**
+     * Returns the Preferred PayloadType of the Media Manager
+     *
+     * @return The PayloadType
+     */
+    public PayloadType getPreferredPayloadType() {
+        return getPayloads().size() > 0 ? getPayloads().get(0) : null;
+    }
 
-	// This is to set the attributes of the <content> element of the Jingle
-	// packet.
-	public String getName() {
-		return MEDIA_NAME;
-	}
-
-	/**
-	 * Return all supported Payloads for this Manager
-	 * 
-	 * @return The Payload List
-	 */
-	public abstract List<PayloadType> getPayloads();
-
-	/**
-	 * Returns the Preferred PayloadType of the Media Manager
-	 * 
-	 * @return The PayloadType
-	 */
-	public PayloadType getPreferredPayloadType() {
-		return getPayloads().size() > 0 ? getPayloads().get(0) : null;
-	}
-
-	/**
-	 * Return The transport manager that goes with this media manager.
-	 */
-	public JingleTransportManager getTransportManager() {
-		return transportManager;
-	}
+    /**
+     * Create a Media Session Implementation
+     *
+     * @param payloadType
+     * @param remote
+     * @param local
+     * @return
+     */
+    public abstract JingleMediaSession createMediaSession(PayloadType payloadType, final TransportCandidate remote,
+            final TransportCandidate local, JingleSession jingleSession);
+    
+    // This is to set the attributes of the <content> element of the Jingle packet.    
+    public String getName() {
+        return MEDIA_NAME;
+    }
 
 }

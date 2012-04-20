@@ -29,33 +29,30 @@ import org.jivesoftware.smackx.jingle.nat.TransportCandidate;
  */
 public interface JingleTransportListener extends JingleListener {
 
-	/**
-	 * Notification that a transport must be cancelled.
-	 * 
-	 * @param cand
-	 *            The transport candidate that must be cancelled. A value of
-	 *            "null" means all the transports for this session.
-	 */
-	public void transportClosed(TransportCandidate cand);
+    /**
+     * Notification that the transport has been established.
+     *
+     * @param local  The transport candidate that has been used for listening
+     *               in the local machine
+     * @param remote The transport candidate that has been used for
+     *               transmitting to the remote machine
+     */
+    public void transportEstablished(TransportCandidate local,
+                                     TransportCandidate remote);
 
-	/**
-	 * Notification that the transport was closed due to an exception.
-	 * 
-	 * @param e
-	 *            the exception.
-	 */
-	public void transportClosedOnError(XMPPException e);
+    /**
+     * Notification that a transport must be cancelled.
+     *
+     * @param cand The transport candidate that must be cancelled. A value
+     *             of "null" means all the transports for this session.
+     */
+    public void transportClosed(TransportCandidate cand);
 
-	/**
-	 * Notification that the transport has been established.
-	 * 
-	 * @param local
-	 *            The transport candidate that has been used for listening in
-	 *            the local machine
-	 * @param remote
-	 *            The transport candidate that has been used for transmitting to
-	 *            the remote machine
-	 */
-	public void transportEstablished(TransportCandidate local,
-			TransportCandidate remote);
+    /**
+     * Notification that the transport was closed due to an exception.
+     *
+     * @param e the exception.
+     */
+    public void transportClosedOnError(XMPPException e);
 }
+

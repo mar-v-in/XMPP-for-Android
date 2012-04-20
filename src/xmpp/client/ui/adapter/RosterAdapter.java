@@ -118,28 +118,8 @@ public class RosterAdapter extends BaseAdapter {
 				iview.setImageResource(R.drawable.ic_state_xmpp);
 				break;
 			}
-			switch (user.getUserState().getStatus()) {
-			case UserState.STATUS_AVAILABLE:
-				iview.setColorFilter(Color.parseColor(mContext
-						.getString(android.R.color.holo_green_light)));
-				break;
-			case UserState.STATUS_AWAY:
-				iview.setColorFilter(Color.parseColor(mContext
-						.getString(android.R.color.holo_purple)));
-				break;
-			case UserState.STATUS_IDLE:
-				iview.setColorFilter(Color.parseColor(mContext
-						.getString(android.R.color.holo_orange_light)));
-				break;
-			case UserState.STATUS_DO_NOT_DISTURB:
-				iview.setColorFilter(Color.parseColor(mContext
-						.getString(android.R.color.holo_red_light)));
-				break;
-			case UserState.STATUS_OFFLINE:
-				iview.setColorFilter(Color.parseColor(mContext
-						.getString(R.color.roster_offline)));
-				break;
-			}
+			iview.setColorFilter(Color.parseColor(mContext.getString(user
+					.getUserState().getStatusColorRessourceID())));
 			iconContainer.addView(iview);
 		}
 
@@ -236,9 +216,9 @@ public class RosterAdapter extends BaseAdapter {
 		view.setBackgroundResource(R.drawable.listitem_default);
 		view.findViewById(R.id.loading_spinner).setVisibility(View.GONE);
 
-		status.setCompoundDrawablesWithIntrinsicBounds(
+		/*status.setCompoundDrawablesWithIntrinsicBounds(
 				UserState.getStatusIconResourceID(UserState.STATUS_OFFLINE), 0,
-				0, 0);
+				0, 0);*/
 
 		final QuickContactBadge q = (QuickContactBadge) view
 				.findViewById(R.id.user_badge);
@@ -262,11 +242,8 @@ public class RosterAdapter extends BaseAdapter {
 				.findViewById(R.id.status_text);
 		final CharSequence statusText = contact.getUser().getStatusText();
 		if (statusText != null) {
-			status.setText(statusText);
+			status.setText(contact.getUser().getStatusTextSpannable(mContext));
 		}
-
-		status.setCompoundDrawablesWithIntrinsicBounds(contact.getUserState()
-				.getStatusIconResourceID(), 0, 0, 0);
 
 		final QuickContactBadge q = (QuickContactBadge) rosteritem
 				.findViewById(R.id.user_badge);

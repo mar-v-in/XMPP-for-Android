@@ -30,178 +30,171 @@ import org.jivesoftware.smackx.jingle.media.PayloadType;
 
 /**
  * Jingle content description.
- * 
+ *
  * @author Alvaro Saurin <alvaro.saurin@gmail.com>
  */
 public abstract class JingleDescription implements PacketExtension {
 
-	/**
-	 * Jingle audio description
-	 */
-	public static class Audio extends JingleDescription {
-
-		public static final String NAMESPACE = "urn:xmpp:tmp:jingle:apps:rtp";
-
-		public Audio() {
-			super();
-		}
-
-		/**
-		 * Utility constructor, with a PayloadType
-		 */
-		public Audio(final PayloadType pt) {
-			super();
-			addPayloadType(pt);
-		}
-
-		@Override
-		public String getNamespace() {
-			return NAMESPACE;
-		}
-	}
+	private static final SmackLogger LOGGER = SmackLogger.getLogger(JingleDescription.class);
 
 	// static
 
-	private static final SmackLogger LOGGER = SmackLogger
-			.getLogger(JingleDescription.class);
+    public static final String NODENAME = "description";
 
-	// non-static
+    // non-static
 
-	public static final String NODENAME = "description";
+    private final List<PayloadType> payloads = new ArrayList<PayloadType>();
 
-	private final List<PayloadType> payloads = new ArrayList<PayloadType>();
+    /**
+     * Creates a content description..
+     */
+    public JingleDescription() {
+        super();
+    }
 
-	/**
-	 * Creates a content description..
-	 */
-	public JingleDescription() {
-		super();
-	}
+    /**
+     * Returns the XML element name of the element.
+     *
+     * @return the XML element name of the element.
+     */
+    public String getElementName() {
+        return NODENAME;
+    }
 
-	/**
-	 * Adds a list of payloads to the packet.
-	 * 
-	 * @param pts
-	 *            the payloads to add.
-	 */
-	public void addAudioPayloadTypes(final List<PayloadType> pts) {
-		synchronized (payloads) {
-			final Iterator<PayloadType> ptIter = pts.iterator();
-			while (ptIter.hasNext()) {
-				final PayloadType.Audio pt = (PayloadType.Audio) ptIter.next();
-				addPayloadType(new PayloadType.Audio(pt));
-			}
-		}
-	}
+    /**
+     * Return the namespace.
+     *
+     * @return The namespace
+     */
+    public abstract String getNamespace();
 
-	/**
-	 * Adds a audio payload type to the packet.
-	 * 
-	 * @param pt
-	 *            the audio payload type to add.
-	 */
-	public void addPayloadType(final PayloadType pt) {
-		synchronized (payloads) {
-			if (pt == null) {
-				LOGGER.error("Null payload type");
-			} else {
-				payloads.add(pt);
-			}
-		}
-	}
+    /**
+     * Adds a audio payload type to the packet.
+     *
+     * @param pt the audio payload type to add.
+     */
+    public void addPayloadType(final PayloadType pt) {
+        synchronized (payloads) {
+            if (pt == null) {
+                LOGGER.error("Null payload type");
+            } else {
+                payloads.add(pt);
+            }
+        }
+    }
 
-	/**
-	 * Return the list of Payload types contained in the description.
-	 * 
-	 * @return a list of PayloadType.Audio
-	 */
-	public List<PayloadType> getAudioPayloadTypesList() {
-		final ArrayList<PayloadType> result = new ArrayList<PayloadType>();
-		final Iterator<PayloadType> jinglePtsIter = getPayloadTypes();
+    /**
+     * Adds a list of payloads to the packet.
+     *
+     * @param pts the payloads to add.
+     */
+    public void addAudioPayloadTypes(final List<PayloadType> pts) {
+        synchronized (payloads) {
+            Iterator ptIter = pts.iterator();
+            while (ptIter.hasNext()) {
+                PayloadType.Audio pt = (PayloadType.Audio) ptIter.next();
+                addPayloadType(new PayloadType.Audio(pt));
+            }
+        }
+    }
 
-		while (jinglePtsIter.hasNext()) {
-			final PayloadType jpt = jinglePtsIter.next();
-			if (jpt instanceof PayloadType.Audio) {
-				final PayloadType.Audio jpta = (PayloadType.Audio) jpt;
-				result.add(jpta);
-			}
-		}
+    /**
+     * Returns an Iterator for the audio payloads in the packet.
+     *
+     * @return an Iterator for the audio payloads in the packet.
+     */
+    public Iterator<PayloadType> getPayloadTypes() {
+        return Collections.unmodifiableList(getPayloadTypesList()).iterator();
+    }
 
-		return result;
-	}
+    /**
+     * Returns a list for the audio payloads in the packet.
+     *
+     * @return a list for the audio payloads in the packet.
+     */
+    public List<PayloadType> getPayloadTypesList() {
+        synchronized (payloads) {
+            return new ArrayList<PayloadType>(payloads);
+        }
+    }
 
-	/**
-	 * Returns the XML element name of the element.
-	 * 
-	 * @return the XML element name of the element.
-	 */
-	@Override
-	public String getElementName() {
-		return NODENAME;
-	}
+    /**
+     * Return the list of Payload types contained in the description.
+     *
+     * @return a list of PayloadType.Audio
+     */
+    public List<PayloadType> getAudioPayloadTypesList() {
+        ArrayList<PayloadType> result = new ArrayList<PayloadType>();
+        Iterator<PayloadType> jinglePtsIter = getPayloadTypes();
 
-	/**
-	 * Return the namespace.
-	 * 
-	 * @return The namespace
-	 */
-	@Override
-	public abstract String getNamespace();
+        while (jinglePtsIter.hasNext()) {
+            PayloadType jpt = (PayloadType) jinglePtsIter.next();
+            if (jpt instanceof PayloadType.Audio) {
+                PayloadType.Audio jpta = (PayloadType.Audio) jpt;
+                result.add(jpta);
+            }
+        }
 
-	/**
-	 * Returns an Iterator for the audio payloads in the packet.
-	 * 
-	 * @return an Iterator for the audio payloads in the packet.
-	 */
-	public Iterator<PayloadType> getPayloadTypes() {
-		return Collections.unmodifiableList(getPayloadTypesList()).iterator();
-	}
+        return result;
+    }
 
-	/**
-	 * Returns a count of the audio payloads in the Jingle packet.
-	 * 
-	 * @return the number of audio payloads in the Jingle packet.
-	 */
-	public int getPayloadTypesCount() {
-		synchronized (payloads) {
-			return payloads.size();
-		}
-	}
+    /**
+     * Returns a count of the audio payloads in the Jingle packet.
+     *
+     * @return the number of audio payloads in the Jingle packet.
+     */
+    public int getPayloadTypesCount() {
+        synchronized (payloads) {
+            return payloads.size();
+        }
+    }
 
-	/**
-	 * Returns a list for the audio payloads in the packet.
-	 * 
-	 * @return a list for the audio payloads in the packet.
-	 */
-	public List<PayloadType> getPayloadTypesList() {
-		synchronized (payloads) {
-			return new ArrayList<PayloadType>(payloads);
-		}
-	}
+    /**
+     * Convert a Jingle description to XML.
+     *
+     * @return a string with the XML representation
+     */
+    public String toXML() {
+        StringBuilder buf = new StringBuilder();
 
-	/**
-	 * Convert a Jingle description to XML.
-	 * 
-	 * @return a string with the XML representation
-	 */
-	@Override
-	public String toXML() {
-		final StringBuilder buf = new StringBuilder();
+        synchronized (payloads) {
+            if (payloads.size() > 0) {
+                buf.append("<").append(getElementName());
+                buf.append(" xmlns=\"").append(getNamespace()).append("\" >");
 
-		synchronized (payloads) {
-			if (payloads.size() > 0) {
-				buf.append("<").append(getElementName());
-				buf.append(" xmlns=\"").append(getNamespace()).append("\" >");
+                for (PayloadType payloadType : payloads) {
+                    if (payloadType != null) {
+                        buf.append(payloadType.toXML());
+                    }
+                }
+                buf.append("</").append(getElementName()).append(">");
+            }
+        }
 
-				for (final PayloadType payloadType : payloads) {
-					if (payloadType != null) {
-						buf.append(payloadType.toXML());
-					}
-				}
-				buf.append("</").append(getElementName()).append(">");
-			}
-		}
+        return buf.toString();
+    }
 
-		return buf.toString();
-	}
+    /**
+     * Jingle audio description
+     */
+    public static class Audio extends JingleDescription {
+
+        public static final String NAMESPACE = "urn:xmpp:tmp:jingle:apps:rtp";
+
+        public Audio() {
+            super();
+        }
+
+        /**
+         * Utility constructor, with a PayloadType
+         */
+        public Audio(final PayloadType pt) {
+            super();
+            addPayloadType(pt);
+        }
+
+        public String getNamespace() {
+            return NAMESPACE;
+        }
+    }
 }

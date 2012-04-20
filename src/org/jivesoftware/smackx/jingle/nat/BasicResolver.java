@@ -20,125 +20,104 @@
 
 package org.jivesoftware.smackx.jingle.nat;
 
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smackx.jingle.JingleSession;
+
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smackx.jingle.JingleSession;
-
 /**
- * Basic Resolver takes all IP addresses of the interfaces and uses the first
- * non-loopback address. A very simple and easy to use resolver.
+ * Basic Resolver takes all IP addresses of the interfaces and uses the
+ * first non-loopback address.
+ * A very simple and easy to use resolver.
  */
 public class BasicResolver extends TransportResolver {
 
-	/**
-	 * Constructor.
-	 */
-	public BasicResolver() {
-		super();
-	}
+    /**
+     * Constructor.
+     */
+    public BasicResolver() {
+        super();
+    }
 
-	@Override
-	public void cancel() throws XMPPException {
-		// Nothing to do here
-	}
+    /**
+     * Resolve the IP address.
+     * <p/>
+     * The BasicResolver takes the IP addresses of the interfaces and uses the
+     * first non-loopback, non-linklocal and non-sitelocal address.
+     */
+    public synchronized void resolve(JingleSession session) throws XMPPException {
 
-	@Override
-	public void initialize() throws XMPPException {
-		setInitialized();
-	}
+        setResolveInit();
 
-	/**
-	 * Resolve the IP address.
-	 * <p/>
-	 * The BasicResolver takes the IP addresses of the interfaces and uses the
-	 * first non-loopback, non-linklocal and non-sitelocal address.
-	 */
-	@Override
-	public synchronized void resolve(JingleSession session)
-			throws XMPPException {
+        clearCandidates();
 
-		setResolveInit();
+        Enumeration ifaces = null;
 
-		clearCandidates();
+        try {
+            ifaces = NetworkInterface.getNetworkInterfaces();
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
 
-		Enumeration<NetworkInterface> ifaces = null;
+        while (ifaces.hasMoreElements()) {
 
-		try {
-			ifaces = NetworkInterface.getNetworkInterfaces();
-		} catch (final SocketException e) {
-			e.printStackTrace();
-		}
+            NetworkInterface iface = (NetworkInterface) ifaces.nextElement();
+            Enumeration iaddresses = iface.getInetAddresses();
+            
+            while (iaddresses.hasMoreElements()) {
+                InetAddress iaddress = (InetAddress) iaddresses.nextElement();
+                if (!iaddress.isLoopbackAddress() && !iaddress.isLinkLocalAddress() && !iaddress.isSiteLocalAddress()) {
+                    TransportCandidate tr = new TransportCandidate.Fixed(iaddress.getHostAddress() != null ? iaddress.getHostAddress() : iaddress.getHostName(), getFreePort());
+                    tr.setLocalIp(iaddress.getHostAddress() != null ? iaddress.getHostAddress() : iaddress.getHostName());
+                    addCandidate(tr);
+                    setResolveEnd();
+                    return;
+                }
+            }
+        }
 
-		while (ifaces.hasMoreElements()) {
+        try {
+            ifaces = NetworkInterface.getNetworkInterfaces();
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
 
-			final NetworkInterface iface = (NetworkInterface) ifaces
-					.nextElement();
-			final Enumeration<InetAddress> iaddresses = iface.getInetAddresses();
+        while (ifaces.hasMoreElements()) {
 
-			while (iaddresses.hasMoreElements()) {
-				final InetAddress iaddress = (InetAddress) iaddresses
-						.nextElement();
-				if (!iaddress.isLoopbackAddress()
-						&& !iaddress.isLinkLocalAddress()
-						&& !iaddress.isSiteLocalAddress()) {
-					final TransportCandidate tr = new TransportCandidate.Fixed(
-							iaddress.getHostAddress() != null ? iaddress.getHostAddress()
-									: iaddress.getHostName(), getFreePort());
-					tr.setLocalIp(iaddress.getHostAddress() != null ? iaddress
-							.getHostAddress() : iaddress.getHostName());
-					addCandidate(tr);
-					setResolveEnd();
-					return;
-				}
-			}
-		}
+            NetworkInterface iface = (NetworkInterface) ifaces.nextElement();
+            Enumeration iaddresses = iface.getInetAddresses();
 
-		try {
-			ifaces = NetworkInterface.getNetworkInterfaces();
-		} catch (final SocketException e) {
-			e.printStackTrace();
-		}
+            while (iaddresses.hasMoreElements()) {
+                InetAddress iaddress = (InetAddress) iaddresses.nextElement();
+                if (!iaddress.isLoopbackAddress() && !iaddress.isLinkLocalAddress()) {
+                    TransportCandidate tr = new TransportCandidate.Fixed(iaddress.getHostAddress() != null ? iaddress.getHostAddress() : iaddress.getHostName(), getFreePort());
+                    tr.setLocalIp(iaddress.getHostAddress() != null ? iaddress.getHostAddress() : iaddress.getHostName());
+                    addCandidate(tr);
+                    setResolveEnd();
+                    return;
+                }
+            }
+        }
 
-		while (ifaces.hasMoreElements()) {
+        try {
+            TransportCandidate tr = new TransportCandidate.Fixed(InetAddress.getLocalHost().getHostAddress() != null ? InetAddress.getLocalHost().getHostAddress() : InetAddress.getLocalHost().getHostName(), getFreePort());
+            tr.setLocalIp(InetAddress.getLocalHost().getHostAddress() != null ? InetAddress.getLocalHost().getHostAddress() : InetAddress.getLocalHost().getHostName());
+            addCandidate(tr);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        setResolveEnd();
 
-			final NetworkInterface iface = (NetworkInterface) ifaces
-					.nextElement();
-			final Enumeration<?> iaddresses = iface.getInetAddresses();
+    }
 
-			while (iaddresses.hasMoreElements()) {
-				final InetAddress iaddress = (InetAddress) iaddresses
-						.nextElement();
-				if (!iaddress.isLoopbackAddress()
-						&& !iaddress.isLinkLocalAddress()) {
-					final TransportCandidate tr = new TransportCandidate.Fixed(
-							iaddress.getHostAddress() != null ? iaddress.getHostAddress()
-									: iaddress.getHostName(), getFreePort());
-					tr.setLocalIp(iaddress.getHostAddress() != null ? iaddress
-							.getHostAddress() : iaddress.getHostName());
-					addCandidate(tr);
-					setResolveEnd();
-					return;
-				}
-			}
-		}
+    public void initialize() throws XMPPException {
+        setInitialized();
+    }
 
-		try {
-			final TransportCandidate tr = new TransportCandidate.Fixed(
-					InetAddress.getLocalHost().getHostAddress() != null ? InetAddress
-							.getLocalHost().getHostAddress() : InetAddress
-							.getLocalHost().getHostName(), getFreePort());
-			tr.setLocalIp(InetAddress.getLocalHost().getHostAddress() != null ? InetAddress
-					.getLocalHost().getHostAddress() : InetAddress
-					.getLocalHost().getHostName());
-			addCandidate(tr);
-		} catch (final Exception e) {
-			e.printStackTrace();
-		}
-		setResolveEnd();
-
-	}
+    public void cancel() throws XMPPException {
+        // Nothing to do here
+    }
 }

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:divider="?android:dividerVertical"
+    android:dividerPadding="12dp"
+    android:orientation="horizontal"
+    android:showDividers="middle" >
+    
+    <TextView
+        android:id="@+id/action_cancel"
+            android:textAppearance="?android:actionMenuTextAppearance"
+            android:textColor="?android:actionMenuTextColor"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:drawableLeft="@drawable/ic_actionbar_cancel"
+            android:text="@string/cancel"
+            style="@android:style/Widget.Holo.Light.ActionButton"
+            android:paddingLeft="30dp"
+            android:paddingRight="30dp"
+            android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/action_done"
+            android:textAppearance="?android:actionMenuTextAppearance"
+            android:textColor="?android:actionMenuTextColor"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:drawableLeft="@drawable/ic_actionbar_done"
+            android:text="@string/done"
+            style="@android:style/Widget.Holo.Light.ActionButton"
+            android:paddingLeft="30dp"
+            android:paddingRight="30dp"
+            android:layout_weight="1" />
+</LinearLayout>

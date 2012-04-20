@@ -29,246 +29,237 @@ import org.xmlpull.v1.XmlPullParser;
 
 /**
  * Provider for a Jingle transport element
- * 
+ *
  * @author Alvaro Saurin <alvaro.saurin@gmail.com>
  */
-public abstract class JingleTransportProvider implements
-		PacketExtensionProvider {
+public abstract class JingleTransportProvider implements PacketExtensionProvider {
 
-	/**
-	 * RTP-ICE profile
-	 */
-	public static class Ice extends JingleTransportProvider {
+    /**
+     * Creates a new provider. ProviderManager requires that every
+     * PacketExtensionProvider has a public, no-argument constructor
+     */
+    public JingleTransportProvider() {
+        super();
+    }
 
-		/**
-		 * Defauls constructor.
-		 */
-		public Ice() {
-			super();
-		}
+    /**
+     * Obtain the corresponding TransportNegotiator instance.
+     *
+     * @return a new TransportNegotiator instance
+     */
+    protected JingleTransport getInstance() {
+        return new JingleTransport();
+    }
 
-		/**
-		 * Obtain the corresponding TransportNegotiator.Ice instance.
-		 * 
-		 * @return a new TransportNegotiator.Ice instance
-		 */
-		@Override
-		protected JingleTransport getInstance() {
-			return new JingleTransport.Ice();
-		}
+    /**
+     * Parse a iq/jingle/transport element.
+     *
+     * @param parser the structure to parse
+     * @return a transport element.
+     * @throws Exception
+     */
+    public PacketExtension parseExtension(final XmlPullParser parser) throws Exception {
+        boolean done = false;
+        JingleTransport trans = getInstance();
 
-		/**
-		 * Parse a iq/jingle/transport/candidate element.
-		 * 
-		 * @param parser
-		 *            the structure to parse
-		 * @return a candidate element
-		 * @throws Exception
-		 */
-		@Override
-		protected JingleTransportCandidate parseCandidate(XmlPullParser parser)
-				throws Exception {
-			final ICECandidate mt = new ICECandidate();
+        while (!done) {
+            int eventType = parser.next();
+            String name = parser.getName();
 
-			final String channel = parser.getAttributeValue("", "channel");
-			final String generation = parser
-					.getAttributeValue("", "generation");
-			final String ip = parser.getAttributeValue("", "ip");
-			final String name = parser.getAttributeValue("", "name");
-			final String network = parser.getAttributeValue("", "network");
-			final String username = parser.getAttributeValue("", "username");
-			final String password = parser.getAttributeValue("", "password");
-			final String port = parser.getAttributeValue("", "port");
-			final String preference = parser
-					.getAttributeValue("", "preference");
-			final String proto = parser.getAttributeValue("", "proto");
-			final String type = parser.getAttributeValue("", "type");
+            if (eventType == XmlPullParser.START_TAG) {
+                if (name.equals(JingleTransportCandidate.NODENAME)) {
+                    JingleTransportCandidate jtc = parseCandidate(parser);
+                    if (jtc != null) trans.addCandidate(jtc);
+                }
+                else {
+                    throw new Exception("Unknown tag \"" + name + "\" in transport element.");
+                }
+            }
+            else if (eventType == XmlPullParser.END_TAG) {
+                if (name.equals(JingleTransport.NODENAME)) {
+                    done = true;
+                }
+            }
+        }
 
-			if (channel != null) {
-				mt.setChannel(new TransportCandidate.Channel(channel));
-			}
+        return trans;
+    }
 
-			if (generation != null) {
-				try {
-					mt.setGeneration(Integer.parseInt(generation));
-				} catch (final Exception e) {
-				}
-			}
+    protected abstract JingleTransportCandidate parseCandidate(final XmlPullParser parser)
+            throws Exception;
 
-			if (ip != null) {
-				mt.setIp(ip);
-			} else {
-				return null;
-			}
+    /**
+     * RTP-ICE profile
+     */
+    public static class Ice extends JingleTransportProvider {
 
-			if (name != null) {
-				mt.setName(name);
-			}
+        /**
+         * Defauls constructor.
+         */
+        public Ice() {
+            super();
+        }
 
-			if (network != null) {
-				try {
-					mt.setNetwork(Integer.parseInt(network));
-				} catch (final Exception e) {
-				}
-			}
+        /**
+         * Obtain the corresponding TransportNegotiator.Ice instance.
+         *
+         * @return a new TransportNegotiator.Ice instance
+         */
+        protected JingleTransport getInstance() {
+            return new JingleTransport.Ice();
+        }
 
-			if (username != null) {
-				mt.setUsername(username);
-			}
+        /**
+         * Parse a iq/jingle/transport/candidate element.
+         *
+         * @param parser the structure to parse
+         * @return a candidate element
+         * @throws Exception
+         */
+        protected JingleTransportCandidate parseCandidate(XmlPullParser parser) throws Exception {
+            ICECandidate mt = new ICECandidate();
 
-			if (password != null) {
-				mt.setPassword(password);
-			}
+            String channel = parser.getAttributeValue("", "channel");
+            String generation = parser.getAttributeValue("", "generation");
+            String ip = parser.getAttributeValue("", "ip");
+            String name = parser.getAttributeValue("", "name");
+            String network = parser.getAttributeValue("", "network");
+            String username = parser.getAttributeValue("", "username");
+            String password = parser.getAttributeValue("", "password");
+            String port = parser.getAttributeValue("", "port");
+            String preference = parser.getAttributeValue("", "preference");
+            String proto = parser.getAttributeValue("", "proto");
+            String type = parser.getAttributeValue("", "type");
 
-			if (port != null) {
-				try {
-					mt.setPort(Integer.parseInt(port));
-				} catch (final Exception e) {
-				}
-			}
+            if (channel != null) {
+                mt.setChannel(new TransportCandidate.Channel(channel));
+            }
 
-			if (preference != null) {
-				try {
-					mt.setPreference(Integer.parseInt(preference));
-				} catch (final Exception e) {
-				}
-			}
+            if (generation != null) {
+                try {
+                    mt.setGeneration(Integer.parseInt(generation));
+                }
+                catch (Exception e) {
+                }
+            }
 
-			if (proto != null) {
-				mt.setProto(new TransportCandidate.Protocol(proto));
-			}
+            if (ip != null) {
+                mt.setIp(ip);
+            }
+            else {
+                return null;
+            }
 
-			if (type != null) {
-				mt.setType(ICECandidate.Type.valueOf(type));
-			}
+            if (name != null) {
+                mt.setName(name);
+            }
 
-			return new JingleTransport.Ice.Candidate(mt);
-		}
-	}
+            if (network != null) {
+                try {
+                    mt.setNetwork(Integer.parseInt(network));
+                }
+                catch (Exception e) {
+                }
+            }
 
-	/**
-	 * Raw UDP profile
-	 */
-	public static class RawUdp extends JingleTransportProvider {
+            if (username != null) {
+                mt.setUsername(username);
+            }
 
-		/**
-		 * Defauls constructor.
-		 */
-		public RawUdp() {
-			super();
-		}
+            if (password != null) {
+                mt.setPassword(password);
+            }
 
-		/**
-		 * Obtain the corresponding TransportNegotiator.RawUdp instance.
-		 * 
-		 * @return a new TransportNegotiator.RawUdp instance
-		 */
-		@Override
-		protected JingleTransport getInstance() {
-			return new JingleTransport.RawUdp();
-		}
+            if (port != null) {
+                try {
+                    mt.setPort(Integer.parseInt(port));
+                }
+                catch (Exception e) {
+                }
+            }
 
-		/**
-		 * Parse a iq/jingle/transport/candidate element.
-		 * 
-		 * @param parser
-		 *            the structure to parse
-		 * @return a candidate element
-		 * @throws Exception
-		 */
-		@Override
-		protected JingleTransportCandidate parseCandidate(XmlPullParser parser)
-				throws Exception {
-			final TransportCandidate.Fixed mt = new TransportCandidate.Fixed();
+            if (preference != null) {
+                try {
+                    mt.setPreference(Integer.parseInt(preference));
+                }
+                catch (Exception e) {
+                }
+            }
 
-			final String generation = parser
-					.getAttributeValue("", "generation");
-			final String ip = parser.getAttributeValue("", "ip");
-			final String name = parser.getAttributeValue("", "name");
-			final String port = parser.getAttributeValue("", "port");
+            if (proto != null) {
+                mt.setProto(new TransportCandidate.Protocol(proto));
+            }
 
-			// LOGGER.debug();
+            if (type != null) {
+                mt.setType(ICECandidate.Type.valueOf(type));
+            }
 
-			if (generation != null) {
-				try {
-					mt.setGeneration(Integer.parseInt(generation));
-				} catch (final Exception e) {
-				}
-			}
+            return new JingleTransport.Ice.Candidate(mt);
+        }
+    }
 
-			if (ip != null) {
-				mt.setIp(ip);
-			}
+    /**
+     * Raw UDP profile
+     */
+    public static class RawUdp extends JingleTransportProvider {
 
-			if (name != null) {
-				mt.setName(name);
-			}
+        /**
+         * Defauls constructor.
+         */
+        public RawUdp() {
+            super();
+        }
 
-			if (port != null) {
-				try {
-					mt.setPort(Integer.parseInt(port));
-				} catch (final Exception e) {
-				}
-			}
-			return new JingleTransport.RawUdp.Candidate(mt);
-		}
-	}
+        /**
+         * Obtain the corresponding TransportNegotiator.RawUdp instance.
+         *
+         * @return a new TransportNegotiator.RawUdp instance
+         */
+        protected JingleTransport getInstance() {
+            return new JingleTransport.RawUdp();
+        }
 
-	/**
-	 * Creates a new provider. ProviderManager requires that every
-	 * PacketExtensionProvider has a public, no-argument constructor
-	 */
-	public JingleTransportProvider() {
-		super();
-	}
+        /**
+         * Parse a iq/jingle/transport/candidate element.
+         *
+         * @param parser the structure to parse
+         * @return a candidate element
+         * @throws Exception
+         */
+        protected JingleTransportCandidate parseCandidate(XmlPullParser parser) throws Exception {
+            TransportCandidate.Fixed mt = new TransportCandidate.Fixed();
 
-	/**
-	 * Obtain the corresponding TransportNegotiator instance.
-	 * 
-	 * @return a new TransportNegotiator instance
-	 */
-	protected JingleTransport getInstance() {
-		return new JingleTransport();
-	}
+            String generation = parser.getAttributeValue("", "generation");
+            String ip = parser.getAttributeValue("", "ip");
+            String name = parser.getAttributeValue("", "name");
+            String port = parser.getAttributeValue("", "port");
 
-	protected abstract JingleTransportCandidate parseCandidate(
-			final XmlPullParser parser) throws Exception;
+            //LOGGER.debug();
 
-	/**
-	 * Parse a iq/jingle/transport element.
-	 * 
-	 * @param parser
-	 *            the structure to parse
-	 * @return a transport element.
-	 * @throws Exception
-	 */
-	@Override
-	public PacketExtension parseExtension(final XmlPullParser parser)
-			throws Exception {
-		boolean done = false;
-		final JingleTransport trans = getInstance();
+            if (generation != null) {
+                try {
+                    mt.setGeneration(Integer.parseInt(generation));
+                }
+                catch (Exception e) {
+                }
+            }
 
-		while (!done) {
-			final int eventType = parser.next();
-			final String name = parser.getName();
+            if (ip != null) {
+                mt.setIp(ip);
+            }
 
-			if (eventType == XmlPullParser.START_TAG) {
-				if (name.equals(JingleTransportCandidate.NODENAME)) {
-					final JingleTransportCandidate jtc = parseCandidate(parser);
-					if (jtc != null) {
-						trans.addCandidate(jtc);
-					}
-				} else {
-					throw new Exception("Unknown tag \"" + name
-							+ "\" in transport element.");
-				}
-			} else if (eventType == XmlPullParser.END_TAG) {
-				if (name.equals(JingleTransport.NODENAME)) {
-					done = true;
-				}
-			}
-		}
+            if (name != null) {
+                mt.setName(name);
+            }
 
-		return trans;
-	}
+            if (port != null) {
+                try {
+                    mt.setPort(Integer.parseInt(port));
+                }
+                catch (Exception e) {
+                }
+            }
+            return new JingleTransport.RawUdp.Candidate(mt);
+        }
+    }
 }

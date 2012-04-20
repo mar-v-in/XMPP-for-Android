@@ -42,7 +42,6 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="@dimen/simple_row_margin"
                 android:layout_weight="1"
-                android:drawableLeft="@android:drawable/presence_offline"
                 android:ellipsize="end"
                 android:lines="1"
                 android:singleLine="true"

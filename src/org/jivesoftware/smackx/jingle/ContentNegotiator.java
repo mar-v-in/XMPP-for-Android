@@ -18,332 +18,305 @@ import org.jivesoftware.smackx.packet.Jingle;
 import org.jivesoftware.smackx.packet.JingleContent;
 
 /**
- * @author Jeff Williams
+ *  @author Jeff Williams
  */
 public class ContentNegotiator extends JingleNegotiator {
 
-	public static final String INITIATOR = "initiator";
-	public static final String RESPONDER = "responder";
+    public static final String INITIATOR = "initiator";
+    public static final String RESPONDER = "responder";
 
-	private final List<TransportNegotiator> transportNegotiators;
-	private MediaNegotiator mediaNeg; // The description...
-	private TransportNegotiator transNeg; // and transport negotiators
-	private JingleTransportManager jingleTransportManager;
-	private final String creator;
-	private final String name;
-	private JingleMediaSession jingleMediaSession = null;
+    private List<TransportNegotiator> transportNegotiators;
+    private MediaNegotiator mediaNeg; // The description...
+    private TransportNegotiator transNeg; // and transport negotiators
+    private JingleTransportManager jingleTransportManager;
+    private String creator;
+    private String name;
+    private JingleMediaSession jingleMediaSession = null;
 
-	public ContentNegotiator(JingleSession session, String inCreator,
-			String inName) {
-		super(session);
-		creator = inCreator;
-		name = inName;
-		transportNegotiators = new ArrayList<TransportNegotiator>();
-	}
+    public ContentNegotiator(JingleSession session, String inCreator, String inName) {
+        super(session);
+        creator = inCreator;
+        name = inName;
+        transportNegotiators = new ArrayList<TransportNegotiator>();
+    }
 
-	public void addTransportNegotiator(TransportNegotiator transportNegotiator) {
-		transportNegotiators.add(transportNegotiator);
-	}
+    public List<IQ> dispatchIncomingPacket(IQ iq, String id) throws XMPPException {
+        List<IQ> responses = new ArrayList<IQ>();
 
-	/**
-	 * Prepare to close the media manager.
-	 */
-	@Override
-	public void close() {
-		destroyMediaNegotiator();
-		destroyTransportNegotiator();
-	}
+        // First only process IQ packets that contain <content> stanzas that
+        // match this media manager.
 
-	/**
-	 * Destroy the jmf negotiator.
-	 */
-	protected void destroyMediaNegotiator() {
-		if (mediaNeg != null) {
-			mediaNeg.close();
-			mediaNeg = null;
-		}
-	}
+        if (iq != null) {
+            if (iq.getType().equals(IQ.Type.ERROR)) {
+                // Process errors
+                // TODO getState().eventError(iq);
+            } else if (iq.getType().equals(IQ.Type.RESULT)) {
+                // Process ACKs
+                if (isExpectedId(iq.getPacketID())) {
+                    removeExpectedId(iq.getPacketID());
+                }
+            } else if (iq instanceof Jingle) {
+                Jingle jingle = (Jingle) iq;
 
-	/**
-	 * Destroy the transport negotiator.
-	 */
-	protected void destroyTransportNegotiator() {
-		if (transNeg != null) {
-			transNeg.close();
-			transNeg = null;
-		}
-	}
+                // There are 1 or more <content> sections in a Jingle packet.
+                // Find out which <content> section belongs to this content negotiator, and
+                // then dispatch the Jingle packet to the media and transport negotiators.
 
-	@Override
-	public List<IQ> dispatchIncomingPacket(IQ iq, String id)
-			throws XMPPException {
-		final List<IQ> responses = new ArrayList<IQ>();
+                for (JingleContent jingleContent : jingle.getContentsList()) {
+                    if (jingleContent.getName().equals(name)) {
+                        if (mediaNeg != null) {
+                            responses.addAll(mediaNeg.dispatchIncomingPacket(iq, id));
+                        }
 
-		// First only process IQ packets that contain <content> stanzas that
-		// match this media manager.
+                        if (transNeg != null) {
+                            responses.addAll(transNeg.dispatchIncomingPacket(iq, id));
+                        }
+                    }
 
-		if (iq != null) {
-			if (iq.getType().equals(IQ.Type.ERROR)) {
-				// Process errors
-				// TODO getState().eventError(iq);
-			} else if (iq.getType().equals(IQ.Type.RESULT)) {
-				// Process ACKs
-				if (isExpectedId(iq.getPacketID())) {
-					removeExpectedId(iq.getPacketID());
-				}
-			} else if (iq instanceof Jingle) {
-				final Jingle jingle = (Jingle) iq;
+                }
+            }
+        }
+        return responses;
+    }
 
-				// There are 1 or more <content> sections in a Jingle packet.
-				// Find out which <content> section belongs to this content
-				// negotiator, and
-				// then dispatch the Jingle packet to the media and transport
-				// negotiators.
+    public String getCreator() {
+        return creator;
+    }
 
-				for (final JingleContent jingleContent : jingle
-						.getContentsList()) {
-					if (jingleContent.getName().equals(name)) {
-						if (mediaNeg != null) {
-							responses.addAll(mediaNeg.dispatchIncomingPacket(
-									iq, id));
-						}
+    public String getName() {
+        return name;
+    }
 
-						if (transNeg != null) {
-							responses.addAll(transNeg.dispatchIncomingPacket(
-									iq, id));
-						}
-					}
+    /**
+     * Get the JingleMediaSession of this Jingle Session
+     * 
+     * @return the JingleMediaSession
+     */
+    public JingleMediaSession getJingleMediaSession() {
+        return jingleMediaSession;
+    }
 
-				}
-			}
-		}
-		return responses;
-	}
+    public void addTransportNegotiator(TransportNegotiator transportNegotiator) {
+        transportNegotiators.add(transportNegotiator);
+    }
 
-	/**
-	 * Called from above when starting a new session.
-	 */
-	@Override
-	protected void doStart() {
-		new JingleContent(creator, name);
+    /**
+     * @param jingleTransportManager
+     */
+    public void setJingleTransportManager(JingleTransportManager jingleTransportManager) {
+        this.jingleTransportManager = jingleTransportManager;
+    }
 
-		// result.setDescription(mediaNeg.start());
-		// result.addJingleTransport(transNeg.start());
-		//
-		// return result;
+    /**
+     * @return
+     */
+    public JingleTransportManager getTransportManager() {
+        return jingleTransportManager;
+    }
 
-		mediaNeg.start();
-		transNeg.start();
-	}
+    /**
+     * Called from above when starting a new session.
+     */
+    protected void doStart() {
+        JingleContent result = new JingleContent(creator, name);
 
-	public String getCreator() {
-		return creator;
-	}
+        //        result.setDescription(mediaNeg.start());
+        //        result.addJingleTransport(transNeg.start());
+        //
+        //        return result;
 
-	public JingleContent getJingleContent() {
-		final JingleContent result = new JingleContent(creator, name);
+        mediaNeg.start();
+        transNeg.start();
+    }
 
-		// PayloadType.Audio bestCommonAudioPt =
-		// getMediaNegotiator().getBestCommonAudioPt();
-		// TransportCandidate bestRemoteCandidate =
-		// getTransportNegotiator().getBestRemoteCandidate();
-		//
-		// // Ok, send a packet saying that we accept this session
-		// // with the audio payload type and the transport
-		// // candidate
-		// result.setDescription(new JingleDescription.Audio(new
-		// PayloadType(bestCommonAudioPt)));
-		// result.addJingleTransport(this.getTransportNegotiator().getJingleTransport(bestRemoteCandidate));
-		if (mediaNeg != null) {
-			result.setDescription(mediaNeg.getJingleDescription());
-		}
-		if (transNeg != null) {
-			result.addJingleTransport(transNeg.getJingleTransport());
-		}
+    /**
+     * Prepare to close the media manager.
+     */
+    public void close() {
+        destroyMediaNegotiator();
+        destroyTransportNegotiator();
+    }
 
-		return result;
-	}
+    /**
+     * Obtain the description negotiator for this session
+     * 
+     * @return the description negotiator
+     */
+    public MediaNegotiator getMediaNegotiator() {
+        return mediaNeg;
+    }
 
-	/**
-	 * Get the JingleMediaSession of this Jingle Session
-	 * 
-	 * @return the JingleMediaSession
-	 */
-	public JingleMediaSession getJingleMediaSession() {
-		return jingleMediaSession;
-	}
+    /**
+     * Set the jmf negotiator.
+     * 
+     * @param mediaNeg
+     *            the description negotiator to set
+     */
+    protected void setMediaNegotiator(MediaNegotiator mediaNeg) {
+        destroyMediaNegotiator();
+        this.mediaNeg = mediaNeg;
+    }
 
-	/**
-	 * Obtain the description negotiator for this session
-	 * 
-	 * @return the description negotiator
-	 */
-	public MediaNegotiator getMediaNegotiator() {
-		return mediaNeg;
-	}
+    /**
+     * Destroy the jmf negotiator.
+     */
+    protected void destroyMediaNegotiator() {
+        if (mediaNeg != null) {
+            mediaNeg.close();
+            mediaNeg = null;
+        }
+    }
 
-	public String getName() {
-		return name;
-	}
+    /**
+     * Obtain the transport negotiator for this session.
+     * 
+     * @return the transport negotiator instance
+     */
+    public TransportNegotiator getTransportNegotiator() {
+        return transNeg;
+    }
 
-	/**
-	 * The negotiator state for the ContentNegotiators is a special case. It is
-	 * a roll-up of the sub-negotiator states.
-	 */
-	@Override
-	public JingleNegotiatorState getNegotiatorState() {
-		JingleNegotiatorState result = JingleNegotiatorState.PENDING;
+    /**
+     * Set TransportNegociator
+     * 
+     * @param transNeg
+     *            the transNeg to set
+     */
+    protected void setTransportNegotiator(TransportNegotiator transNeg) {
+        destroyTransportNegotiator();
+        this.transNeg = transNeg;
+    }
 
-		if ((mediaNeg != null) && (transNeg != null)) {
+    /**
+     * Destroy the transport negotiator.
+     */
+    protected void destroyTransportNegotiator() {
+        if (transNeg != null) {
+            transNeg.close();
+            transNeg = null;
+        }
+    }
 
-			if ((mediaNeg.getNegotiatorState() == JingleNegotiatorState.SUCCEEDED)
-					|| (transNeg.getNegotiatorState() == JingleNegotiatorState.SUCCEEDED)) {
-				result = JingleNegotiatorState.SUCCEEDED;
-			}
+    /**
+     * Return true if the transport and content negotiators have finished
+     */
+    public boolean isFullyEstablished() {
+        boolean result = true;
 
-			if ((mediaNeg.getNegotiatorState() == JingleNegotiatorState.FAILED)
-					|| (transNeg.getNegotiatorState() == JingleNegotiatorState.FAILED)) {
-				result = JingleNegotiatorState.FAILED;
-			}
-		}
+        MediaNegotiator mediaNeg = getMediaNegotiator();
+        if ((mediaNeg == null) || (!mediaNeg.isFullyEstablished())) {
+            result = false;
+        }
 
-		// Store the state (to make it easier to know when debugging.)
-		setNegotiatorState(result);
+        TransportNegotiator transNeg = getTransportNegotiator();
+        if ((transNeg == null) || (!transNeg.isFullyEstablished())) {
+            result = false;
+        }
 
-		return result;
-	}
+        return result;
+    }
 
-	/**
-	 * @return
-	 */
-	public JingleTransportManager getTransportManager() {
-		return jingleTransportManager;
-	}
+    public JingleContent getJingleContent() {
+        JingleContent result = new JingleContent(creator, name);
 
-	/**
-	 * Obtain the transport negotiator for this session.
-	 * 
-	 * @return the transport negotiator instance
-	 */
-	public TransportNegotiator getTransportNegotiator() {
-		return transNeg;
-	}
+        //            PayloadType.Audio bestCommonAudioPt = getMediaNegotiator().getBestCommonAudioPt();
+        //            TransportCandidate bestRemoteCandidate = getTransportNegotiator().getBestRemoteCandidate();
+        //    
+        //            // Ok, send a packet saying that we accept this session
+        //            // with the audio payload type and the transport
+        //            // candidate
+        //            result.setDescription(new JingleDescription.Audio(new PayloadType(bestCommonAudioPt)));
+        //            result.addJingleTransport(this.getTransportNegotiator().getJingleTransport(bestRemoteCandidate));
+        if (mediaNeg != null) {
+            result.setDescription(mediaNeg.getJingleDescription());
+        }
+        if (transNeg != null) {
+            result.addJingleTransport(transNeg.getJingleTransport());
+        }
 
-	/**
-	 * Return true if the transport and content negotiators have finished
-	 */
-	public boolean isFullyEstablished() {
-		boolean result = true;
+        return result;
+    }
 
-		final MediaNegotiator mediaNeg = getMediaNegotiator();
-		if ((mediaNeg == null) || (!mediaNeg.isFullyEstablished())) {
-			result = false;
-		}
+    public void triggerContentEstablished() {
 
-		final TransportNegotiator transNeg = getTransportNegotiator();
-		if ((transNeg == null) || (!transNeg.isFullyEstablished())) {
-			result = false;
-		}
+        PayloadType bestCommonAudioPt = getMediaNegotiator().getBestCommonAudioPt();
+        TransportCandidate bestRemoteCandidate = getTransportNegotiator().getBestRemoteCandidate();
+        TransportCandidate acceptedLocalCandidate = getTransportNegotiator().getAcceptedLocalCandidate();
 
-		return result;
-	}
+        // Trigger the session established flag
+        triggerContentEstablished(bestCommonAudioPt, bestRemoteCandidate, acceptedLocalCandidate);
+    }
 
-	/**
-	 * @param jingleTransportManager
-	 */
-	public void setJingleTransportManager(
-			JingleTransportManager jingleTransportManager) {
-		this.jingleTransportManager = jingleTransportManager;
-	}
+    /**
+     * Trigger a session established event.
+     */
+    private void triggerContentEstablished(PayloadType pt, TransportCandidate rc, TransportCandidate lc) {
 
-	/**
-	 * Set the jmf negotiator.
-	 * 
-	 * @param mediaNeg
-	 *            the description negotiator to set
-	 */
-	protected void setMediaNegotiator(MediaNegotiator mediaNeg) {
-		destroyMediaNegotiator();
-		this.mediaNeg = mediaNeg;
-	}
+        // Let the session know that we've established a content/media segment.
+        JingleSession session = getSession();
+        if (session != null) {
+            List<JingleListener> listeners = session.getListenersList();
+            for (JingleListener li : listeners) {
+                if (li instanceof JingleSessionListener) {
+                    JingleSessionListener sli = (JingleSessionListener) li;
+                    sli.sessionEstablished(pt, rc, lc, session);
+                }
+            }
+        }
 
-	/**
-	 * Set TransportNegociator
-	 * 
-	 * @param transNeg
-	 *            the transNeg to set
-	 */
-	protected void setTransportNegotiator(TransportNegotiator transNeg) {
-		destroyTransportNegotiator();
-		this.transNeg = transNeg;
-	}
+        // Create a media session for each media manager in the session.
+        if (mediaNeg.getMediaManager() != null) {
+            rc.removeCandidateEcho();
+            lc.removeCandidateEcho();
 
-	/**
-	 * Stop a Jingle media session.
-	 */
-	public void stopJingleMediaSession() {
+            jingleMediaSession = getMediaNegotiator().getMediaManager().createMediaSession(pt, rc, lc, session);
+            jingleMediaSession.addMediaReceivedListener(session);
+            if (jingleMediaSession != null) {
 
-		if (jingleMediaSession != null) {
-			jingleMediaSession.stopTrasmit();
-			jingleMediaSession.stopReceive();
-		}
-	}
+                jingleMediaSession.startTrasmit();
+                jingleMediaSession.startReceive();
 
-	public void triggerContentEstablished() {
+                for (TransportCandidate candidate : getTransportNegotiator().getOfferedCandidates())
+                    candidate.removeCandidateEcho();
+            }
+            JingleMediaManager mediaManager = getMediaNegotiator().getMediaManager();
+            getSession().addJingleMediaSession(mediaManager.getName(), jingleMediaSession);
+        }
 
-		final PayloadType bestCommonAudioPt = getMediaNegotiator()
-				.getBestCommonAudioPt();
-		final TransportCandidate bestRemoteCandidate = getTransportNegotiator()
-				.getBestRemoteCandidate();
-		final TransportCandidate acceptedLocalCandidate = getTransportNegotiator()
-				.getAcceptedLocalCandidate();
+    }
 
-		// Trigger the session established flag
-		triggerContentEstablished(bestCommonAudioPt, bestRemoteCandidate,
-				acceptedLocalCandidate);
-	}
+    /**
+     *  Stop a Jingle media session.
+     */
+    public void stopJingleMediaSession() {
 
-	/**
-	 * Trigger a session established event.
-	 */
-	private void triggerContentEstablished(PayloadType pt,
-			TransportCandidate rc, TransportCandidate lc) {
+        if (jingleMediaSession != null) {
+            jingleMediaSession.stopTrasmit();
+            jingleMediaSession.stopReceive();
+        }
+    }
 
-		// Let the session know that we've established a content/media segment.
-		final JingleSession session = getSession();
-		if (session != null) {
-			final List<JingleListener> listeners = session.getListenersList();
-			for (final JingleListener li : listeners) {
-				if (li instanceof JingleSessionListener) {
-					final JingleSessionListener sli = (JingleSessionListener) li;
-					sli.sessionEstablished(pt, rc, lc, session);
-				}
-			}
-		}
+    /**
+     * The negotiator state for the ContentNegotiators is a special case.
+     * It is a roll-up of the sub-negotiator states.
+     */
+    public JingleNegotiatorState getNegotiatorState() {
+        JingleNegotiatorState result = JingleNegotiatorState.PENDING;
 
-		// Create a media session for each media manager in the session.
-		if (mediaNeg.getMediaManager() != null) {
-			rc.removeCandidateEcho();
-			lc.removeCandidateEcho();
+        if ((mediaNeg != null) && (transNeg != null)) {
 
-			jingleMediaSession = getMediaNegotiator().getMediaManager()
-					.createMediaSession(pt, rc, lc, session);
-			jingleMediaSession.addMediaReceivedListener(session);
-			if (jingleMediaSession != null) {
+            if ((mediaNeg.getNegotiatorState() == JingleNegotiatorState.SUCCEEDED)
+                    || (transNeg.getNegotiatorState() == JingleNegotiatorState.SUCCEEDED))
+                result = JingleNegotiatorState.SUCCEEDED;
 
-				jingleMediaSession.startTrasmit();
-				jingleMediaSession.startReceive();
+            if ((mediaNeg.getNegotiatorState() == JingleNegotiatorState.FAILED)
+                    || (transNeg.getNegotiatorState() == JingleNegotiatorState.FAILED))
+                result = JingleNegotiatorState.FAILED;
+        }
 
-				for (final TransportCandidate candidate : getTransportNegotiator()
-						.getOfferedCandidates()) {
-					candidate.removeCandidateEcho();
-				}
-			}
-			final JingleMediaManager mediaManager = getMediaNegotiator()
-					.getMediaManager();
-			getSession().addJingleMediaSession(mediaManager.getName(),
-					jingleMediaSession);
-		}
+        // Store the state (to make it easier to know when debugging.)
+        setNegotiatorState(result);
 
-	}
+        return result;
+    }
 }
