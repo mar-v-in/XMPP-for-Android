@@ -18,9 +18,6 @@ import xmpp.client.ui.adapter.ChatUserListAdapter;
 import xmpp.client.ui.adapter.GroupAdapter;
 import xmpp.client.ui.adapter.RosterAdapter;
 import xmpp.client.ui.adapter.StatusAdapter;
-import xmpp.client.ui.dialogs.AddConferenceDialog;
-import xmpp.client.ui.dialogs.AddUserDialog;
-import xmpp.client.ui.dialogs.StatusSelectorDialog;
 import xmpp.client.ui.provider.ChatProvider;
 import xmpp.client.ui.provider.ChatProviderListener;
 import xmpp.client.ui.provider.ConferenceProvider;
@@ -42,9 +39,6 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.style.ImageSpan;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -556,33 +550,6 @@ public class AppActivity extends Activity implements
 		}
 	}
 
-	private void sendDisableChatSession() {
-		final Message msg = Message.obtain(null,
-				Signals.SIG_DISABLE_CHATSESSION);
-		final Bundle b = new Bundle();
-		b.putParcelable("session", mSession);
-		msg.setData(b);
-		msg.replyTo = mMessenger;
-		try {
-			mService.send(msg);
-		} catch (final RemoteException e) {
-			Log.e(TAG, "disableChat", e);
-		}
-	}
-
-	private void sendCloseChatSession() {
-		final Message msg = Message.obtain(null, Signals.SIG_CLOSE_CHATSESSION);
-		final Bundle b = new Bundle();
-		b.putParcelable("session", mSession);
-		msg.setData(b);
-		msg.replyTo = mMessenger;
-		try {
-			mService.send(msg);
-		} catch (final RemoteException e) {
-			Log.e(TAG, "disableChat", e);
-		}
-	}
-
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -849,9 +816,9 @@ public class AppActivity extends Activity implements
 	}
 
 	public void openRoster(Bundle savedInstanceState) {
-		View view = findViewById(R.id.text_send);
+		final View view = findViewById(R.id.text_send);
 		if (view != null) {
-			InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+			final InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 			mgr.hideSoftInputFromWindow(view.getWindowToken(), 0);
 		}
 		setContentView(R.layout.roster);
@@ -923,6 +890,33 @@ public class AppActivity extends Activity implements
 			}
 		}
 		setTitle(mUID);
+	}
+
+	private void sendCloseChatSession() {
+		final Message msg = Message.obtain(null, Signals.SIG_CLOSE_CHATSESSION);
+		final Bundle b = new Bundle();
+		b.putParcelable("session", mSession);
+		msg.setData(b);
+		msg.replyTo = mMessenger;
+		try {
+			mService.send(msg);
+		} catch (final RemoteException e) {
+			Log.e(TAG, "disableChat", e);
+		}
+	}
+
+	private void sendDisableChatSession() {
+		final Message msg = Message.obtain(null,
+				Signals.SIG_DISABLE_CHATSESSION);
+		final Bundle b = new Bundle();
+		b.putParcelable("session", mSession);
+		msg.setData(b);
+		msg.replyTo = mMessenger;
+		try {
+			mService.send(msg);
+		} catch (final RemoteException e) {
+			Log.e(TAG, "disableChat", e);
+		}
 	}
 
 	private void setActionBarCancelDone() {

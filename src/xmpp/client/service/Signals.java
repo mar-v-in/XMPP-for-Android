@@ -37,8 +37,8 @@ public interface Signals {
 	public static final int SIG_UPDATE_USER = 40;
 	public static final int SIG_UPDATE_CONTACT = 41;
 
-	public static final int SIG_GET_MUCS = 50;
-	public static final int SIG_ADD_MUC = 51;
+	public static final int SIG_GET_MUCS = 60;
+	public static final int SIG_ADD_MUC = 61;
 
 	public static final int ROSTER_ADDED = 0;
 	public static final int ROSTER_DELETED = 1;

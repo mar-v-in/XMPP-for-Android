@@ -26,13 +26,14 @@ public class AndroidJingleMediaManager extends JingleMediaManager {
 			TransportCandidate remote, TransportCandidate local,
 			JingleSession jingleSession) {
 		Log.d(TAG, "createMediaSession");
-		return new AndroidJingleMediaSession(payloadType, remote, local, null, jingleSession);
+		return new AndroidJingleMediaSession(payloadType, remote, local, null,
+				jingleSession);
 	}
 
 	@Override
 	public List<PayloadType> getPayloads() {
 		Log.d(TAG, "getPayloads");
-		List<PayloadType> payloads = new ArrayList<PayloadType>();
+		final List<PayloadType> payloads = new ArrayList<PayloadType>();
 		payloads.add(new PayloadType.Audio(8, "PCMA", 1, 8000));
 		return payloads;
 	}

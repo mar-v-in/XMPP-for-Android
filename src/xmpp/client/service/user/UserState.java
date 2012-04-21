@@ -173,10 +173,6 @@ public class UserState implements Parcelable {
 		return getRealStatus();
 	}
 
-	public int getStatusIconResourceID() {
-		return getStatusIconResourceID(getStatus());
-	}
-
 	public int getStatusColorRessourceID() {
 		switch (mStatus) {
 		case STATUS_AVAILABLE:
@@ -190,9 +186,20 @@ public class UserState implements Parcelable {
 		return R.color.roster_offline;
 	}
 
+	public int getStatusIconResourceID() {
+		return getStatusIconResourceID(getStatus());
+	}
+
 	public int getStatusPrecedence() {
 		return ContactsContract.StatusUpdates
 				.getPresencePrecedence(getStatus());
+	}
+
+	public CharSequence getStatusText(Context context) {
+		if (mStatusText == null || mStatusText.isEmpty() || isTemporaryStatus()) {
+			return context.getText(getStatusTextResourceID());
+		}
+		return mStatusText;
 	}
 
 	public String getStatusText(String altText) {
@@ -203,13 +210,6 @@ public class UserState implements Parcelable {
 		} else {
 			return mStatusText;
 		}
-	}
-
-	public CharSequence getStatusText(Context context) {
-		if (mStatusText == null || mStatusText.isEmpty() || isTemporaryStatus()) {
-			return context.getText(getStatusTextResourceID());
-		}
-		return mStatusText;
 	}
 
 	public int getStatusTextResourceID() {

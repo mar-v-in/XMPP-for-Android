@@ -21,12 +21,12 @@ public abstract class Chat implements ChatCodes {
 	public String getSubject() {
 		return null;
 	}
-	
+
+	public abstract String getThreadID();
+
 	public boolean init() {
 		return true;
 	}
-
-	public abstract String getThreadID();
 
 	public abstract boolean isMe(String from);
 

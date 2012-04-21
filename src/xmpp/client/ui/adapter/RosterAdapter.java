@@ -216,9 +216,11 @@ public class RosterAdapter extends BaseAdapter {
 		view.setBackgroundResource(R.drawable.listitem_default);
 		view.findViewById(R.id.loading_spinner).setVisibility(View.GONE);
 
-		/*status.setCompoundDrawablesWithIntrinsicBounds(
-				UserState.getStatusIconResourceID(UserState.STATUS_OFFLINE), 0,
-				0, 0);*/
+		/*
+		 * status.setCompoundDrawablesWithIntrinsicBounds(
+		 * UserState.getStatusIconResourceID(UserState.STATUS_OFFLINE), 0, 0,
+		 * 0);
+		 */
 
 		final QuickContactBadge q = (QuickContactBadge) view
 				.findViewById(R.id.user_badge);

@@ -67,6 +67,11 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener,
 	}
 
 	@Override
+	public XMPPConnection getConnection() {
+		return mConnectionProvider.getConnection();
+	}
+
+	@Override
 	public String getIdentifier() {
 		if (mMUC != null) {
 			return mMUC.getRoom();
@@ -103,6 +108,31 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener,
 	@Override
 	public UserService getUserService() {
 		return mUserServiceProvider.getUserService();
+	}
+
+	@Override
+	public boolean init() {
+		if (mInitDone) {
+			return true;
+		}
+		mMUC = new org.jivesoftware.smackx.muc.MultiUserChat(getConnection(),
+				mMUCInfo.getJid());
+		mMUC.addMessageListener(mMessageListener);
+		mMUC.addParticipantListener(mParticipantListener);
+		mMUC.addParticipantStatusListener(mParticipantStatusListener);
+		mMUC.addSubjectUpdatedListener(this);
+		try {
+			if (mMUCInfo.getPassword() != null
+					&& !mMUCInfo.getPassword().isEmpty()) {
+				mMUC.join(mMUCInfo.getNickname(), mMUCInfo.getPassword());
+			} else {
+				mMUC.join(mMUCInfo.getNickname());
+			}
+			mInitDone = true;
+			return true;
+		} catch (final XMPPException e) {
+			return false;
+		}
 	}
 
 	@Override
@@ -173,35 +203,6 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener,
 	@Override
 	public void subjectUpdated(String subject, String from) {
 		mInternalChatManager.chatUpdated(this);
-	}
-
-	@Override
-	public boolean init() {
-		if (mInitDone)
-			return true;
-		mMUC = new org.jivesoftware.smackx.muc.MultiUserChat(getConnection(),
-				mMUCInfo.getJid());
-		mMUC.addMessageListener(mMessageListener);
-		mMUC.addParticipantListener(mParticipantListener);
-		mMUC.addParticipantStatusListener(mParticipantStatusListener);
-		mMUC.addSubjectUpdatedListener(this);
-		try {
-			if (mMUCInfo.getPassword() != null
-					&& !mMUCInfo.getPassword().isEmpty()) {
-				mMUC.join(mMUCInfo.getNickname(), mMUCInfo.getPassword());
-			} else {
-				mMUC.join(mMUCInfo.getNickname());
-			}
-			mInitDone = true;
-			return true;
-		} catch (final XMPPException e) {
-			return false;
-		}
-	}
-
-	@Override
-	public XMPPConnection getConnection() {
-		return mConnectionProvider.getConnection();
 	}
 
 }

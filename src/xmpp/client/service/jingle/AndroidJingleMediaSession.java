@@ -27,7 +27,7 @@ public class AndroidJingleMediaSession extends JingleMediaSession {
 
 	@Override
 	public void setTrasmit(boolean active) {
-		Log.d(TAG, "setTsmt"+active);
+		Log.d(TAG, "setTsmt" + active);
 		// TODO Auto-generated method stub
 
 	}

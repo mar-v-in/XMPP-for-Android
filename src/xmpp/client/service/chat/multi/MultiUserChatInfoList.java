@@ -43,6 +43,11 @@ public class MultiUserChatInfoList extends ArrayList<MultiUserChatInfo>
 	}
 
 	@Override
+	public MultiUserChatInfo get(int index) {
+		return super.get(index);
+	}
+
+	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(size());
 		for (final MultiUserChatInfo i : this) {

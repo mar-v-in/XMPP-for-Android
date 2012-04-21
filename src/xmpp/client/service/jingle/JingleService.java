@@ -12,16 +12,16 @@ import org.jivesoftware.smackx.jingle.listeners.JingleSessionRequestListener;
 import org.jivesoftware.smackx.jingle.media.JingleMediaManager;
 import org.jivesoftware.smackx.jingle.nat.BasicTransportManager;
 
+import xmpp.client.service.ConnectionProvider;
 import android.util.Log;
 
-import xmpp.client.service.ConnectionProvider;
-
-public class JingleService implements JingleSessionRequestListener, JingleListener {
+public class JingleService implements JingleSessionRequestListener,
+		JingleListener {
 	JingleManager mJingleManager;
 	private static final String TAG = "JingleService";
 
 	public JingleService(ConnectionProvider cp) {
-		List<JingleMediaManager> jingleMediaManagers = new ArrayList<JingleMediaManager>();
+		final List<JingleMediaManager> jingleMediaManagers = new ArrayList<JingleMediaManager>();
 		jingleMediaManagers.add(new AndroidJingleMediaManager(
 				new BasicTransportManager()));
 		mJingleManager = new JingleManager(cp.getConnection(),
@@ -30,27 +30,27 @@ public class JingleService implements JingleSessionRequestListener, JingleListen
 		startCall("echo@bot.talk.google.com/bot");
 	}
 
-	public void startCall(String jid) {
-		Log.d(TAG, "startCall" + jid);
+	@Override
+	public void sessionRequested(JingleSessionRequest request) {
+		Log.d(TAG, "sessionRequested" + request);
 		try {
-			JingleSession session = mJingleManager
-					.createOutgoingJingleSession(jid);
+			final JingleSession session = request.accept();
 			session.addListener(this);
-			session.startOutgoing();
-		} catch (XMPPException e) {
+			session.startIncoming();
+		} catch (final XMPPException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	@Override
-	public void sessionRequested(JingleSessionRequest request) {
-		Log.d(TAG, "sessionRequested" + request);
+	public void startCall(String jid) {
+		Log.d(TAG, "startCall" + jid);
 		try {
-			JingleSession session = request.accept();
+			final JingleSession session = mJingleManager
+					.createOutgoingJingleSession(jid);
 			session.addListener(this);
-			session.startIncoming();
-		} catch (XMPPException e) {
+			session.startOutgoing();
+		} catch (final XMPPException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

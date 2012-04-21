@@ -143,8 +143,9 @@ public class Contact implements Parcelable, Comparable<Contact> {
 	}
 
 	public String getUserName() {
-		if (getUser() != null)
+		if (getUser() != null) {
 			return getUser().getDisplayName();
+		}
 		return null;
 	}
 

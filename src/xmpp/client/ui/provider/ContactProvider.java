@@ -2,7 +2,6 @@ package xmpp.client.ui.provider;
 
 import java.util.ArrayList;
 
-import xmpp.client.R;
 import xmpp.client.service.Signals;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
@@ -148,7 +147,9 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 				}
 				break;
 			case SIG_ROSTER_UPDATE:
-				if (!initDone) break;
+				if (!initDone) {
+					break;
+				}
 				b.setClassLoader(User.class.getClassLoader());
 				if (b.containsKey("type")) {
 					switch (b.getInt("type")) {
