@@ -7,5 +7,10 @@
         android:showAsAction="ifRoom"
         android:title="@string/help">
     </item>
+    <item
+        android:id="@+id/menu_send_feedback"
+        android:showAsAction="never"
+        android:title="@string/send_feedback">
+    </item>
 
 </menu>

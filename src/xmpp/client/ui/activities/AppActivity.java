@@ -621,9 +621,24 @@ public class AppActivity extends Activity implements
 				}
 			}
 			break;
-		default:
+		case VIEW_ACCOUNTS:
+			if (mMenuView != mCurrentView) {
+				inflater.inflate(R.menu.accounts, menu);
+			}
+			break;
+		case VIEW_SETTINGS:
+			if (mMenuView != mCurrentView) {
+				inflater.inflate(R.menu.settings, menu);
+			}
+			break;
+		case VIEW_ACCOUNT_SETTINGS:
 			if (mMenuView != mCurrentView) {
 				inflater.inflate(R.menu.account_settings, menu);
+			}
+			break;
+		default:
+			if (mMenuView != mCurrentView) {
+				inflater.inflate(R.menu.nomenu, menu);
 			}
 			break;
 		}

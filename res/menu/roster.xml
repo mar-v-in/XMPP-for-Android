@@ -17,7 +17,15 @@
         android:title="@string/sign_out"/>
     
     
-    <item android:id="@+id/menu_settings" android:title="@string/settings" android:showAsAction="never"></item>
-    <item android:id="@+id/menu_help" android:title="@string/help" android:showAsAction="never"></item>
-    <item android:id="@+id/menu_send_feedback" android:title="@string/send_feedback" android:showAsAction="never"></item>
+    <item android:id="@+id/menu_settings" android:title="@string/settings" android:showAsAction="never"></item><item
+        android:id="@+id/menu_help"
+        android:showAsAction="never"
+        android:title="@string/help">
+    </item>
+    <item
+        android:id="@+id/menu_send_feedback"
+        android:showAsAction="never"
+        android:title="@string/send_feedback">
+    </item>
+
 </menu>

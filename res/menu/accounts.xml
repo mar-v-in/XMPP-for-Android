@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:id="@+id/menu_add_account" android:title="@string/add_account" android:showAsAction="ifRoom|withText"></item>
-    
+
+    <item
+        android:id="@+id/menu_add_account"
+        android:showAsAction="ifRoom|withText"
+        android:title="@string/add_account">
+    </item>
+    <item
+        android:id="@+id/menu_help"
+        android:showAsAction="never"
+        android:title="@string/help">
+    </item>
+    <item
+        android:id="@+id/menu_send_feedback"
+        android:showAsAction="never"
+        android:title="@string/send_feedback">
+    </item>
 
 </menu>
