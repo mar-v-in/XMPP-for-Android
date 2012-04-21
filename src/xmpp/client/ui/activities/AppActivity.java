@@ -59,8 +59,6 @@ import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 
-import com.devsmart.android.ui.HorizontalListView;
-
 public class AppActivity extends Activity implements
 		SimpleMessageHandlerClient, ContactProviderListener,
 		ChatProviderListener {
@@ -161,13 +159,11 @@ public class AppActivity extends Activity implements
 	private Messenger mService = null;
 
 	private ListView mMessageHolder;
-	private HorizontalListView mUserHolder;
 	private EditText mSendText;
 	private User mUser;
 	private Menu mMenu;
 	private ChatProvider mChatProvider;
 	private ChatAdapter mChatAdapter;
-	private ChatUserListAdapter mChatUserListAdapter;
 	private final OnClickListener sendClickListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
@@ -460,7 +456,6 @@ public class AppActivity extends Activity implements
 				mChatAdapter = new ChatAdapter(this, mChatProvider,
 						mContactProvider);
 				mMessageHolder.setAdapter(mChatAdapter);
-				mUserHolder.setVisibility(View.GONE);
 				break;
 			case Signals.SIG_OPEN_MUC_CHATSESSION:
 				b.setClassLoader(ChatSession.class.getClassLoader());
@@ -474,11 +469,6 @@ public class AppActivity extends Activity implements
 				mChatAdapter = new ChatAdapter(this, mChatProvider,
 						mContactProvider);
 				mMessageHolder.setAdapter(mChatAdapter);
-				mChatUserListAdapter = new ChatUserListAdapter(this,
-						mContactProvider, mChatProvider);
-				mUserHolder.setAdapter(mChatUserListAdapter);
-				// TODO: FIX UserHolder and make it nicelooking!
-				mUserHolder.setVisibility(View.GONE);
 				break;
 			case Signals.SIG_CHAT_SESSION_UPDATE:
 				b.setClassLoader(ChatSession.class.getClassLoader());
@@ -794,7 +784,6 @@ public class AppActivity extends Activity implements
 		final ImageButton btn_send = (ImageButton) findViewById(R.id.btn_send);
 		btn_send.setOnClickListener(sendClickListener);
 		mMessageHolder = (ListView) findViewById(R.id.message_container);
-		mUserHolder = (HorizontalListView) findViewById(R.id.user_container);
 		mSendText = (EditText) findViewById(R.id.text_send);
 		mSendText.setOnEditorActionListener(new OnEditorActionListener() {
 

@@ -4,15 +4,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
-    <com.devsmart.android.ui.HorizontalListView
-        android:id="@+id/user_container"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/muc_userlist_height"
-        android:background="@color/actionbar_background"
-        android:visibility="gone" >
-
-    </com.devsmart.android.ui.HorizontalListView>
-
     <ListView
         android:id="@+id/message_container"
         android:layout_width="match_parent"
