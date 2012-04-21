@@ -1,13 +1,18 @@
 package xmpp.client.service.chat;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Message.Type;
+import org.jivesoftware.smack.packet.PacketExtension;
 
 import xmpp.client.service.ConnectionProvider;
 import xmpp.client.service.bookmark.BookmarkService;
@@ -152,7 +157,34 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes,
 					user = getUserService().getUser(smackMessage.getFrom(),
 							false);
 				}
-				final ChatMessage message = new ChatMessage(new Date(), user,
+				String datestring = null;
+				PacketExtension pe = smackMessage
+						.getExtension("jabber:x:delay");// XEP-0091
+				if (pe == null) {
+					pe = smackMessage.getExtension("urn:xmpp:delay");// XEP-0203
+				}
+				if (pe != null && pe.toXML() != null) {
+					String xml = pe.toXML();
+					String[] arr = xml.split("stamp='");
+					if (arr.length > 1) {
+						arr = arr[1].split("'");
+						if (arr.length > 1) {
+							datestring = arr[0];
+						}
+					} else {
+						arr = xml.split("stamp=\"");
+						if (arr.length > 1) {
+							arr = arr[1].split("\"");
+							if (arr.length > 1) {
+								datestring = arr[0];
+							}
+						}
+					}
+				}
+				Date d = parseDateString(datestring);
+				
+
+				final ChatMessage message = new ChatMessage(d, user,
 						smackMessage.getBody(),
 						smackMessage.getType() == Type.groupchat);
 				getChatService().processMessage(chat, message);
@@ -161,6 +193,27 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes,
 			Log.e(TAG, "processMessage", e);
 		}
 
+	}
+
+	private static String[] dateStringVariants = new String[] {
+			"yyyy-MM-dd'T'HH:mm:ssZ", "yyyy-MM-dd'T'HH:mm:ss.SZ",
+			"yyyy-MM-dd'T'HH:mm:ss.S'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'",
+			"yyyyMMdd'T'HH:mm:ss" };
+
+	private static Date parseDateString(String datestring) {
+		if (datestring != null && !datestring.isEmpty()) {
+			for (int i = 0; i < dateStringVariants.length; i++) {
+				SimpleDateFormat sdf = new SimpleDateFormat(
+						dateStringVariants[i]);
+				sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+				try {
+					return sdf.parse(datestring);
+				} catch (ParseException e) {
+
+				}
+			}
+		}
+		return new Date();
 	}
 
 }
