@@ -21,6 +21,10 @@ public abstract class Chat implements ChatCodes {
 	public String getSubject() {
 		return null;
 	}
+	
+	public boolean init() {
+		return true;
+	}
 
 	public abstract String getThreadID();
 

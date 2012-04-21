@@ -459,11 +459,11 @@ public class Service extends android.app.Service implements
 		if (session == null) {
 			session = mChatService.startSession(user);
 		}
+		mActiveChatSession = session;
 		b = new Bundle();
 		b.putParcelable("session", session);
 		b.putParcelable("user", user);
 		b.putParcelable("contact", contact);
-		mActiveChatSession = session;
 		sendMsg(msg.replyTo, SIG_OPEN_CHATSESSION, b);
 	}
 
@@ -475,11 +475,16 @@ public class Service extends android.app.Service implements
 			session = mChatService.startSession(muc);
 		}
 		final Chat chat = mChatService.getChatFromSession(session);
-		b = new Bundle();
-		b.putParcelable("session", session);
-		b.putString("subject", chat.getSubject());
 		mActiveChatSession = session;
-		sendMsg(msg.replyTo, SIG_OPEN_MUC_CHATSESSION, b);
+		if (chat.init()) {
+			b = new Bundle();
+			b.putParcelable("session", session);
+			b.putString("subject", chat.getSubject());
+			sendMsg(msg.replyTo, SIG_OPEN_MUC_CHATSESSION, b);
+		} else {
+			closeChatSession(session);
+			sendMsg(msg.replyTo, SIG_OPEN_MUC_CHATSESSION_ERROR);
+		}
 	}
 
 	public void processMessage(ChatSession session, ChatMessage message) {
@@ -709,7 +714,6 @@ public class Service extends android.app.Service implements
 		}
 		final User user = mUserService.getUserMe();
 		user.setUserState(state);
-		mUserService.setUserMe(user);
 		showNotification(null, null);
 		final Presence presence = state.toPresence();
 		presence.setFrom(user.getUserLogin() + "/"

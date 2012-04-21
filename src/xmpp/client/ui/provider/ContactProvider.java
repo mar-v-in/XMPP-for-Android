@@ -37,7 +37,7 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 		mContactList = new ContactList();
 		mGroupList = new GroupList();
 		final User u = new User();
-		u.setUserLogin((String) mContext.getText(R.string.process_loading));
+		u.setUserLogin("");
 		u.setUserState(new UserState(UserState.STATUS_INITIALIZING, null));
 		mContact = new Contact(u);
 		mListeners = new ArrayList<ContactProviderListener>();

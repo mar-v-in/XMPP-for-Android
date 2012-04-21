@@ -5,8 +5,10 @@
     android:orientation="vertical" >
 
     <LinearLayout
+        android:id="@+id/status_background"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:background="@color/roster_offline_highlight" >
 
         <ImageView
             android:id="@+id/imageView1"
@@ -20,23 +22,22 @@
             android:layout_width="0dip"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:background="@color/roster_offline_highlight"
-            android:padding="8dp" />
-
+            android:padding="8dp"
+            style="?android:attr/spinnerStyle" />
     </LinearLayout>
 
     <EditText
         android:id="@+id/status_edit"
         android:layout_width="match_parent"
         android:layout_height="80dp"
+        android:background="@android:color/white"
         android:gravity="top"
         android:hint="@string/custom_status_message"
         android:maxLines="4"
         android:minLines="4"
         android:padding="8dp"
         android:singleLine="false"
-        android:textSize="18sp"
-        android:background="@android:color/white" >
+        android:textSize="18sp" >
 
         <requestFocus />
     </EditText>

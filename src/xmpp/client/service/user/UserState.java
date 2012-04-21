@@ -176,7 +176,7 @@ public class UserState implements Parcelable {
 	public int getStatusIconResourceID() {
 		return getStatusIconResourceID(getStatus());
 	}
-	
+
 	public int getStatusColorRessourceID() {
 		switch (mStatus) {
 		case STATUS_AVAILABLE:
@@ -194,9 +194,11 @@ public class UserState implements Parcelable {
 		return ContactsContract.StatusUpdates
 				.getPresencePrecedence(getStatus());
 	}
-	
+
 	public String getStatusText(String altText) {
-		if (mStatusText == null || mStatusText.isEmpty()) {
+		if (isTemporaryStatus()) {
+			return "Loading..."; // TODO This should be done better!
+		} else if (mStatusText == null || mStatusText.isEmpty()) {
 			return altText;
 		} else {
 			return mStatusText;

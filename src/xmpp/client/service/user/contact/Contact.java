@@ -11,7 +11,6 @@ import android.os.Parcelable;
 
 public class Contact implements Parcelable, Comparable<Contact> {
 
-	private String mUserName;
 	private final UserList mUserList;
 	private String mUserContact;
 	private int mUnreadMessageCount;
@@ -35,7 +34,6 @@ public class Contact implements Parcelable, Comparable<Contact> {
 
 	private Contact(Parcel in) {
 		mUserList = in.readParcelable(UserList.class.getClassLoader());
-		mUserName = in.readString();
 		mUserContact = in.readString();
 		mUnreadMessageCount = in.readInt();
 	}
@@ -43,7 +41,6 @@ public class Contact implements Parcelable, Comparable<Contact> {
 	public Contact(User user) {
 		this();
 		mUserList.add(user);
-		mUserName = user.getDisplayName();
 	}
 
 	public void add(User user) {
@@ -146,7 +143,9 @@ public class Contact implements Parcelable, Comparable<Contact> {
 	}
 
 	public String getUserName() {
-		return mUserName;
+		if (getUser() != null)
+			return getUser().getDisplayName();
+		return null;
 	}
 
 	public UserList getUsers() {
@@ -175,14 +174,9 @@ public class Contact implements Parcelable, Comparable<Contact> {
 		mUserContact = userContact;
 	}
 
-	public void setUserName(String name) {
-		mUserName = name;
-	}
-
 	@Override
 	public void writeToParcel(Parcel out, int flags) {
 		out.writeParcelable(mUserList, flags);
-		out.writeString(mUserName);
 		out.writeString(mUserContact);
 		out.writeInt(mUnreadMessageCount);
 	}

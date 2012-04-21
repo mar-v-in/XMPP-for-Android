@@ -32,6 +32,7 @@ public interface Signals {
 	public static final int SIG_CLOSE_CHATSESSION = 31;
 	public static final int SIG_DISABLE_CHATSESSION = 32;
 	public static final int SIG_OPEN_MUC_CHATSESSION = 33;
+	public static final int SIG_OPEN_MUC_CHATSESSION_ERROR = -33;
 
 	public static final int SIG_UPDATE_USER = 40;
 	public static final int SIG_UPDATE_CONTACT = 41;

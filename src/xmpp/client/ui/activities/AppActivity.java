@@ -79,9 +79,6 @@ public class AppActivity extends Activity implements
 	private static final String URI_SCHEME_XMPP_FOR_ANDROID = "xmpp-for-android";
 	private static final String URI_SCHEME_IMTO = "imto";
 	private static final String TAG = AppActivity.class.getName();
-	private static final int DIALOG_STATUSSELECTOR = 1;
-	private static final int DIALOG_ADDUSER = 2;
-	private static final int DIALOG_ADDCONFERENCE = 3;
 	private static final int VIEW_ROSTER = 0;
 	private static final int VIEW_CHAT = 1;
 	private static final int VIEW_STATUS = 2;
@@ -168,9 +165,6 @@ public class AppActivity extends Activity implements
 
 	private Messenger mService = null;
 
-	private StatusSelectorDialog mStatusSelectorDialog;
-	private AddUserDialog mAddUserDialog;
-	private AddConferenceDialog mAddConferenceDialog;
 	private ListView mMessageHolder;
 	private HorizontalListView mUserHolder;
 	private EditText mSendText;
@@ -521,7 +515,7 @@ public class AppActivity extends Activity implements
 				updateStatus(UserState.STATUS_LOGGING_IN);
 				break;
 			case Signals.SIG_LOGIN:
-				updateStatus(UserState.STATUS_LOADING_ROSTER);
+				updateStatus(UserState.STATUS_AVAILABLE);
 				checkState();
 				break;
 			}
@@ -541,17 +535,7 @@ public class AppActivity extends Activity implements
 	public void onBackPressed() {
 		switch (mCurrentView) {
 		case VIEW_CHAT:
-			final Message msg = Message.obtain(null,
-					Signals.SIG_DISABLE_CHATSESSION);
-			final Bundle b = new Bundle();
-			b.putParcelable("session", mSession);
-			msg.setData(b);
-			msg.replyTo = mMessenger;
-			try {
-				mService.send(msg);
-			} catch (final RemoteException e) {
-				Log.e(TAG, "disableChat", e);
-			}
+			sendDisableChatSession();
 			openRoster(null);
 			break;
 		case VIEW_ROSTER:
@@ -568,6 +552,33 @@ public class AppActivity extends Activity implements
 			updateStatus(new UserState(status, string));
 			openRoster(null);
 			break;
+		}
+	}
+
+	private void sendDisableChatSession() {
+		final Message msg = Message.obtain(null,
+				Signals.SIG_DISABLE_CHATSESSION);
+		final Bundle b = new Bundle();
+		b.putParcelable("session", mSession);
+		msg.setData(b);
+		msg.replyTo = mMessenger;
+		try {
+			mService.send(msg);
+		} catch (final RemoteException e) {
+			Log.e(TAG, "disableChat", e);
+		}
+	}
+
+	private void sendCloseChatSession() {
+		final Message msg = Message.obtain(null, Signals.SIG_CLOSE_CHATSESSION);
+		final Bundle b = new Bundle();
+		b.putParcelable("session", mSession);
+		msg.setData(b);
+		msg.replyTo = mMessenger;
+		try {
+			mService.send(msg);
+		} catch (final RemoteException e) {
+			Log.e(TAG, "disableChat", e);
 		}
 	}
 
@@ -610,6 +621,11 @@ public class AppActivity extends Activity implements
 				}
 			}
 			break;
+		default:
+			if (mMenuView != mCurrentView) {
+				inflater.inflate(R.menu.account_settings, menu);
+			}
+			break;
 		}
 		mMenuView = mCurrentView;
 		mMenu = menu;
@@ -634,6 +650,10 @@ public class AppActivity extends Activity implements
 			break;
 		case R.id.menu_add_conference:
 			goAddConference();
+			break;
+		case R.id.menu_close:
+			sendCloseChatSession();
+			openRoster(null);
 			break;
 		}
 		return super.onMenuItemSelected(featureId, item);
@@ -758,9 +778,11 @@ public class AppActivity extends Activity implements
 					@Override
 					public void onItemSelected(AdapterView<?> view,
 							View selectedView, int position, long id) {
-						view.setBackgroundColor(Color
-								.parseColor(getString(new UserState((int) id,
-										null).getStatusColorRessourceID())));
+						findViewById(R.id.status_background)
+								.setBackgroundColor(
+										Color.parseColor(getString(new UserState(
+												(int) id, null)
+												.getStatusColorRessourceID())));
 					}
 
 					@Override
@@ -772,7 +794,8 @@ public class AppActivity extends Activity implements
 		((Spinner) findViewById(R.id.status_spinner))
 				.setSelection(StatusAdapter.statusToPosition(mContactProvider
 						.getMeContact().getUserState().getStatus()));
-		((EditText) findViewById(R.id.status_edit)).setText(mContactProvider.getMeContact().getUserState().getCustomStatusText());
+		((EditText) findViewById(R.id.status_edit)).setText(mContactProvider
+				.getMeContact().getUserState().getCustomStatusText());
 		setActionBarSimpleWithBack();
 		mActionBar.setTitle(R.string.status);
 		mActionBar.setSubtitle(mContactProvider.getMeUserLogin());

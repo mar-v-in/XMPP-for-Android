@@ -8,6 +8,7 @@ package xmpp.client.service.chat.multi;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
@@ -24,7 +25,7 @@ import xmpp.client.service.user.UserServiceProvider;
 import android.util.Log;
 
 public class MultiUserChat extends Chat implements SubjectUpdatedListener,
-		UserServiceProvider {
+		UserServiceProvider, ConnectionProvider {
 	private static final String TAG = MultiUserChat.class.getName();
 
 	private org.jivesoftware.smackx.muc.MultiUserChat mMUC;
@@ -34,40 +35,30 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener,
 	private final MultiUserChatParticipantStatusListener mParticipantStatusListener;
 	private final UserServiceProvider mUserServiceProvider;
 	private final MultiUserChatInfo mMUCInfo;
+	private final ConnectionProvider mConnectionProvider;
+	private boolean mInitDone;
 
 	public MultiUserChat(ConnectionProvider connectionProvider,
 			MultiUserChatInfo mucinfo, InternalChatManager internalChatManager,
 			UserServiceProvider userServiceProvider) {
+		mConnectionProvider = connectionProvider;
 		mMUCInfo = mucinfo;
 		mUserServiceProvider = userServiceProvider;
-		mMUC = new org.jivesoftware.smackx.muc.MultiUserChat(
-				connectionProvider.getConnection(), mucinfo.getJid());
 		mInternalChatManager = internalChatManager;
 		mMessageListener = new MultiUserChatMessageListener(this);
-		mMUC.addMessageListener(mMessageListener);
 		mParticipantListener = new MultiUserChatParticipantListener(this);
-		mMUC.addParticipantListener(mParticipantListener);
 		mParticipantStatusListener = new MultiUserChatParticipantStatusListener(
 				this);
-		mMUC.addParticipantStatusListener(mParticipantStatusListener);
-		mMUC.addSubjectUpdatedListener(this);
-		try {
-			if (mucinfo.getPassword() != null
-					&& !mucinfo.getPassword().isEmpty()) {
-				mMUC.join(mucinfo.getNickname(), mucinfo.getPassword());
-			} else {
-				mMUC.join(mucinfo.getNickname());
-			}
-		} catch (final XMPPException e) {
-			throw new RuntimeException(e);
-		}
+		mInitDone = false;
 	}
 
 	@Override
 	public void close() {
-		mMUC.leave();
-		mMUC.removeMessageListener(mMessageListener);
-		mMUC = null;
+		if (mMUC != null) {
+			mMUC.leave();
+			mMUC.removeMessageListener(mMessageListener);
+			mMUC = null;
+		}
 	}
 
 	@Override
@@ -77,12 +68,20 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener,
 
 	@Override
 	public String getIdentifier() {
-		return mMUC.getRoom();
+		if (mMUC != null) {
+			return mMUC.getRoom();
+		} else {
+			return mMUCInfo.getJid();
+		}
 	}
 
 	@Override
 	public String getSubject() {
-		return mMUC.getSubject();
+		if (mMUC != null) {
+			return mMUC.getSubject();
+		} else {
+			return null;
+		}
 	}
 
 	@Override
@@ -92,9 +91,11 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener,
 
 	public ArrayList<String> getUsers() {
 		final ArrayList<String> list = new ArrayList<String>();
-		for (final Iterator<String> iterator = mMUC.getOccupants(); iterator
-				.hasNext();) {
-			list.add(iterator.next());
+		if (mMUC != null) {
+			for (final Iterator<String> iterator = mMUC.getOccupants(); iterator
+					.hasNext();) {
+				list.add(iterator.next());
+			}
 		}
 		return list;
 	}
@@ -172,6 +173,35 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener,
 	@Override
 	public void subjectUpdated(String subject, String from) {
 		mInternalChatManager.chatUpdated(this);
+	}
+
+	@Override
+	public boolean init() {
+		if (mInitDone)
+			return true;
+		mMUC = new org.jivesoftware.smackx.muc.MultiUserChat(getConnection(),
+				mMUCInfo.getJid());
+		mMUC.addMessageListener(mMessageListener);
+		mMUC.addParticipantListener(mParticipantListener);
+		mMUC.addParticipantStatusListener(mParticipantStatusListener);
+		mMUC.addSubjectUpdatedListener(this);
+		try {
+			if (mMUCInfo.getPassword() != null
+					&& !mMUCInfo.getPassword().isEmpty()) {
+				mMUC.join(mMUCInfo.getNickname(), mMUCInfo.getPassword());
+			} else {
+				mMUC.join(mMUCInfo.getNickname());
+			}
+			mInitDone = true;
+			return true;
+		} catch (final XMPPException e) {
+			return false;
+		}
+	}
+
+	@Override
+	public XMPPConnection getConnection() {
+		return mConnectionProvider.getConnection();
 	}
 
 }
