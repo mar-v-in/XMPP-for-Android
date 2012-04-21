@@ -53,6 +53,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -848,6 +849,11 @@ public class AppActivity extends Activity implements
 	}
 
 	public void openRoster(Bundle savedInstanceState) {
+		View view = findViewById(R.id.text_send);
+		if (view != null) {
+			InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+			mgr.hideSoftInputFromWindow(view.getWindowToken(), 0);
+		}
 		setContentView(R.layout.roster);
 		Log.i(TAG, "openRoster");
 		mCurrentView = VIEW_ROSTER;
