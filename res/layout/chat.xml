@@ -15,8 +15,8 @@
         android:headerDividersEnabled="false"
         android:stackFromBottom="true"
         android:transcriptMode="alwaysScroll" >
+        <!-- Preview: listitem=@layout/chat_entry_incoming_base -->
 
-        <!-- Preview: listitem=@layout/chat_entry_incoming_first -->
 
     </ListView>
     <View android:background="?android:attr/dividerHorizontal"
@@ -36,13 +36,11 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="8dip"
             android:layout_weight="1"
-            android:autoText="true"
-            android:capitalize="sentences"
             android:hint="@string/type_message"
-            android:imeOptions="actionSend|flagNoFullscreen"
+            android:imeOptions="actionSend"
+            android:inputType="text"
             android:minHeight="48dip"
             android:nextFocusRight="@+id/btn_send"
-            android:singleLine="false"
             android:textSize="16sp" >
 
             <requestFocus />

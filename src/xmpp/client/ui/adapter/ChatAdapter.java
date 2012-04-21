@@ -1,9 +1,11 @@
 package xmpp.client.ui.adapter;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import xmpp.client.R;
 import xmpp.client.service.chat.ChatMessage;
+import xmpp.client.service.user.User;
 import xmpp.client.service.user.contact.Contact;
 import xmpp.client.ui.extras.SmileyHandler;
 import xmpp.client.ui.provider.ChatProvider;
@@ -14,10 +16,12 @@ import android.text.Layout.Alignment;
 import android.text.SpannableStringBuilder;
 import android.text.format.DateFormat;
 import android.text.style.AlignmentSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.QuickContactBadge;
 import android.widget.TextView;
 
@@ -34,86 +38,32 @@ public class ChatAdapter extends BaseAdapter {
 		mContactProvider = contactProvider;
 	}
 
-	private View buildEnd(ViewGroup parent) {
-		final LayoutInflater layoutInflater = (LayoutInflater) mContext
-				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		final ChatMessage message = (ChatMessage) getItem(mChatProvider.size() - 1);
-		View view;
-		if (message.getUser().equals(mChatProvider.getMeContact())) {
-			view = layoutInflater.inflate(R.layout.chat_entry_outgoing_end,
-					parent, false);
-		} else {
-			view = layoutInflater.inflate(R.layout.chat_entry_incoming_end,
-					parent, false);
-		}
-		if (checkDrawHeader(mChatProvider.size() - 1)) {
-			final View v = view.findViewById(R.id.contact_divider);
-			if (v != null) {
-				v.setVisibility(View.VISIBLE);
+	private ArrayList<ArrayList<ChatMessage>> getGroupedMessages() {
+		ArrayList<ArrayList<ChatMessage>> list = new ArrayList<ArrayList<ChatMessage>>();
+		User lastUser = null;
+		Date lastDate = null;
+		for (int i = 0; i < mChatProvider.size(); i++) {
+			ChatMessage msg = mChatProvider.getMessage(i);
+			if (lastUser == null || !lastUser.equals(msg.getUser())
+					|| !sameDay(lastDate, msg.getDate())) {
+				lastUser = msg.getUser();
+				lastDate = msg.getDate();
+				list.add(new ArrayList<ChatMessage>());
 			}
+			list.get(list.size() - 1).add(msg);
 		}
-
-		return view;
+		return list;
 	}
 
-	private View buildView(int position, ViewGroup parent) {
-		View view;
-		final boolean drawHeader = checkDrawHeader(position);
-		final ChatMessage message = (ChatMessage) getItem(position);
-		final LayoutInflater layoutInflater = (LayoutInflater) mContext
-				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		if (drawHeader) {
-			if (mChatProvider.getMeContact().contains(message.getUser())) {
-				view = layoutInflater.inflate(
-						R.layout.chat_entry_outgoing_first, parent, false);
-
-			} else {
-				view = layoutInflater.inflate(
-						R.layout.chat_entry_incoming_first, parent, false);
-			}
-			final TextView day = (TextView) view.findViewById(R.id.msg_day);
-			day.setText(DateFormat.format(
-					mContext.getText(R.string.datelayout_daymonth),
-					message.getDate()));
-			final TextView user = (TextView) view.findViewById(R.id.msg_user);
-			user.setText(message.getUser().getDisplayName());
-
-		} else {
-			if (mChatProvider.getMeContact().contains(message.getUser())) {
-				view = layoutInflater.inflate(
-						R.layout.chat_entry_outgoing_next, parent, false);
-
-			} else {
-				view = layoutInflater.inflate(
-						R.layout.chat_entry_incoming_next, parent, false);
-			}
-			if (position > 0 && checkDrawHeader(position - 1)) {
-				final View v = view.findViewById(R.id.contact_divider);
-				if (v != null) {
-					v.setVisibility(View.VISIBLE);
-				}
-			}
-		}
-		return view;
-	}
-
-	private boolean checkDrawHeader(int position) {
-		if (position == 0) {
-			return true;
-		}
-		final ChatMessage message = (ChatMessage) getItem(position);
-		final ChatMessage message2 = (ChatMessage) getItem(position - 1);
-		final Date date = message.getDate();
-		final Date date2 = message2.getDate();
-		return !(message.getUser().equals(message2.getUser())
-				&& date.getDay() == date2.getDay()
-				&& date.getMonth() == date2.getMonth() && date.getYear() == date2
-				.getYear());
+	private static boolean sameDay(Date date1, Date date2) {
+		// TODO Do it without deprecated functions and also compare month and
+		// year
+		return date1.getDate() == date2.getDate();
 	}
 
 	@Override
 	public int getCount() {
-		return mChatProvider.size() + (mChatProvider.size() > 0 ? 1 : 0);
+		return getGroupedMessages().size();
 	}
 
 	@Override
@@ -121,7 +71,7 @@ public class ChatAdapter extends BaseAdapter {
 		if (position == mChatProvider.size()) {
 			return 0;
 		}
-		return mChatProvider.getMessage(position);
+		return getGroupedMessages().get(position);
 	}
 
 	@Override
@@ -130,39 +80,63 @@ public class ChatAdapter extends BaseAdapter {
 	}
 
 	@Override
-	public View getView(int position, View convertView, ViewGroup parent) {
-		if (position == mChatProvider.size()) {
-			return buildEnd(parent);
+	public View getView(int position, View view, ViewGroup parent) {
+		ArrayList<ArrayList<ChatMessage>> msgss = getGroupedMessages();
+		ArrayList<ChatMessage> msgs = msgss.get(position);
+		final LayoutInflater layoutInflater = (LayoutInflater) mContext
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		if (mChatProvider.getMeContact().contains(msgs.get(0).getUser())) {
+			view = layoutInflater.inflate(R.layout.chat_entry_outgoing_base,
+					parent, false);
+		} else {
+			view = layoutInflater.inflate(R.layout.chat_entry_incoming_base,
+					parent, false);
 		}
-		final ChatMessage message = (ChatMessage) getItem(position);
-		final View view = buildView(position, parent);
-		final TextView time = (TextView) view.findViewById(R.id.msg_time);
-		time.setText(DateFormat.getTimeFormat(mContext).format(
-				message.getDate()));
-		final TextView text = (TextView) view.findViewById(R.id.msg_text);
-		text.setText(SmileyHandler.getSmiledText(message.getMessage(), mContext));
-		if (mChatProvider.getMeContact().contains(message.getUser())) {
-			final SpannableStringBuilder builder = new SpannableStringBuilder(
-					text.getText());
-			builder.setSpan(new AlignmentSpan() {
-
-				@Override
-				public Alignment getAlignment() {
-					return Alignment.ALIGN_OPPOSITE;
-				}
-
-			}, 0, builder.length(), 0);
-			text.setText(builder);
+		if (position == msgss.size() - 1) {
+			view.setPadding(0, 0, 0, 10);
 		}
+		TextView user = (TextView) view.findViewById(R.id.msg_user);
+		user.setText(msgs.get(0).getUser().getDisplayName());
+		TextView day = (TextView) view.findViewById(R.id.msg_day);
+		day.setText(DateFormat.format(mContext
+				.getText(R.string.datelayout_daymonth), msgs.get(0).getDate()));
+		LinearLayout container = (LinearLayout) view
+				.findViewById(R.id.lst_msgs);
+		for (ChatMessage message : msgs) {
+			CharSequence seq = SmileyHandler.getSmiledText(
+					message.getMessage(), mContext);
+			View temp = null;
+			if (mChatProvider.getMeContact().contains(message.getUser())) {
+				((SpannableStringBuilder) seq).setSpan(new AlignmentSpan() {
 
-		final QuickContactBadge q = (QuickContactBadge) view
+					@Override
+					public Alignment getAlignment() {
+						return Alignment.ALIGN_OPPOSITE;
+					}
+
+				}, 0, seq.length(), 0);
+				temp = layoutInflater.inflate(
+						R.layout.chat_entry_outgoing_message, parent, false);
+			} else {
+				temp = layoutInflater.inflate(
+						R.layout.chat_entry_incoming_message, parent, false);
+			}
+			TextView time = (TextView) temp.findViewById(R.id.msg_time);
+			time.setText(DateFormat.getTimeFormat(mContext).format(
+					message.getDate()));
+			TextView text = (TextView) temp.findViewById(R.id.msg_text);
+
+			text.setText(seq);
+			container.addView(temp);
+		}
+		QuickContactBadge q = (QuickContactBadge) view
 				.findViewById(R.id.contact_badge);
 
 		if (q != null) {
-			Contact contact = mContactProvider.getContact(message.getUser()
+			Contact contact = mContactProvider.getContact(msgs.get(0).getUser()
 					.getUserLogin());
 			if (contact == null) {
-				contact = mContactProvider.getContact(message.getUser()
+				contact = mContactProvider.getContact(msgs.get(0).getUser()
 						.getFullUserLogin());
 			}
 			String userContact = null;
@@ -175,10 +149,44 @@ public class ChatAdapter extends BaseAdapter {
 			if (contact != null) {
 				q.setImageBitmap(contact.getBitmap(mContext));
 			} else {
-				q.setImageBitmap(message.getUser().getBitmap(mContext));
+				q.setImageBitmap(msgs.get(0).getUser().getBitmap(mContext));
 			}
 		}
 
 		return view;
+		/*
+		 * if (position == mChatProvider.size()) { return buildEnd(parent); }
+		 * final ChatMessage message = (ChatMessage) getItem(position); final
+		 * View view = buildView(position, parent); final TextView time =
+		 * (TextView) view.findViewById(R.id.msg_time);
+		 * time.setText(DateFormat.getTimeFormat(mContext).format(
+		 * message.getDate())); final TextView text = (TextView)
+		 * view.findViewById(R.id.msg_text);
+		 * text.setText(SmileyHandler.getSmiledText(message.getMessage(),
+		 * mContext)); if
+		 * (mChatProvider.getMeContact().contains(message.getUser())) { final
+		 * SpannableStringBuilder builder = new SpannableStringBuilder(
+		 * text.getText()); builder.setSpan(new AlignmentSpan() {
+		 * 
+		 * @Override public Alignment getAlignment() { return
+		 * Alignment.ALIGN_OPPOSITE; }
+		 * 
+		 * }, 0, builder.length(), 0); text.setText(builder); }
+		 * 
+		 * final QuickContactBadge q = (QuickContactBadge) view
+		 * .findViewById(R.id.contact_badge);
+		 * 
+		 * if (q != null) { Contact contact =
+		 * mContactProvider.getContact(message.getUser() .getUserLogin()); if
+		 * (contact == null) { contact =
+		 * mContactProvider.getContact(message.getUser() .getFullUserLogin()); }
+		 * String userContact = null; if (contact != null) { userContact =
+		 * contact.getUserContact(); } if (userContact != null) {
+		 * q.assignContactUri(Uri.parse(userContact)); } if (contact != null) {
+		 * q.setImageBitmap(contact.getBitmap(mContext)); } else {
+		 * q.setImageBitmap(message.getUser().getBitmap(mContext)); } }
+		 * 
+		 * return view;
+		 */
 	}
 }

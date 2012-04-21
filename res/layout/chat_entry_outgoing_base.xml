@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/border_size"
+        android:background="?android:attr/dividerHorizontal" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <LinearLayout
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/listitem_default"
+                android:minHeight="@dimen/contact_badge_size"
+                android:orientation="vertical" >
+
+                <LinearLayout
+                    android:id="@+id/linearLayout3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:weightSum="1" >
+
+                    <TextView
+                        android:id="@+id/msg_day"
+                        android:layout_width="0dip"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/simple_row_margin"
+                        android:layout_weight="1"
+                        android:maxLines="1"
+                        android:textAllCaps="true"
+                        android:textColor="@android:color/secondary_text_dark" />
+
+                    <TextView
+                        android:id="@+id/msg_user"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/simple_row_margin"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/lst_msgs"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" >
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/border_size"
+                android:background="?android:attr/dividerHorizontal" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="@dimen/border_size"
+            android:layout_height="match_parent"
+            android:background="?android:attr/dividerVertical" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <QuickContactBadge
+                android:id="@+id/contact_badge"
+                android:layout_width="@dimen/contact_badge_size"
+                android:layout_height="@dimen/contact_badge_size" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/border_size"
+                android:background="?android:attr/dividerHorizontal" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

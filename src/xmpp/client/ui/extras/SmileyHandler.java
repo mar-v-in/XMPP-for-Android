@@ -25,6 +25,7 @@ public final class SmileyHandler {
 		emoticons.put(";-)", R.drawable.emo_im_winking);
 		emoticons.put("o.O", R.drawable.emo_im_wtf);
 		emoticons.put("O.o", R.drawable.emo_im_wtf);
+		emoticons.put("o.o", R.drawable.emo_im_wtf);
 		emoticons.put(":wtf:", R.drawable.emo_im_wtf);
 		emoticons.put(":/", R.drawable.emo_im_undecided);
 		emoticons.put(":-/", R.drawable.emo_im_undecided);
