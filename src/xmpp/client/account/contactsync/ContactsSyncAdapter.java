@@ -1,4 +1,4 @@
-package xmpp.client.service.account.contactsync;
+package xmpp.client.account.contactsync;
 
 import android.accounts.Account;
 import android.accounts.OperationCanceledException;

@@ -1,4 +1,4 @@
-package xmpp.client.service.account;
+package xmpp.client.account;
 
 import xmpp.client.ui.account.AccountLogin;
 import android.accounts.AbstractAccountAuthenticator;

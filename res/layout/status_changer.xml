@@ -15,6 +15,7 @@
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:scaleType="fitCenter"
+            android:contentDescription="@string/contactpicture_desc"
             android:src="@drawable/ic_contact_picture" />
 
         <Spinner

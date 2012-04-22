@@ -55,5 +55,6 @@
 	<string name="jid_is_required">JID is required</string>
 	<string name="auto_join">Auto Join</string>
 	<string name="status">Status</string>
+	<string name="contactpicture_desc">The User\'s contact picture</string>
 
 </resources>

@@ -47,10 +47,6 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants {
 		}
 		return null;
 	}
-	
-	public boolean isMUC() {
-		return mChatSession.isMUC();
-	}
 
 	@Override
 	public void handleMessage(Message msg) {
@@ -70,6 +66,10 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants {
 		} catch (final Exception e) {
 			Log.e(TAG, "handleMessage", e);
 		}
+	}
+
+	public boolean isMUC() {
+		return mChatSession.isMUC();
 	}
 
 	@Override

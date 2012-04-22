@@ -1,4 +1,4 @@
-package xmpp.client.service.account.contactsync;
+package xmpp.client.account.contactsync;
 
 import java.util.ArrayList;
 

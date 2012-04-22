@@ -36,7 +36,6 @@ import java.util.StringTokenizer;
 import org.apache.harmony.javax.naming.ConfigurationException;
 import org.apache.harmony.javax.naming.Context;
 import org.apache.harmony.javax.naming.NamingException;
-import org.apache.harmony.javax.naming.ldap.LdapContext;
 import org.apache.harmony.jndi.internal.nls.Messages;
 
 /**
@@ -115,11 +114,6 @@ public final class EnvironmentReader {
 			filteredProperties.put(Context.URL_PKG_PREFIXES, propValue);
 		}
 
-		propValue = source.getProperty(LdapContext.CONTROL_FACTORIES);
-		if (null != propValue) {
-			filteredProperties.put(LdapContext.CONTROL_FACTORIES, propValue);
-		}
-
 		return filteredProperties;
 	}
 
@@ -195,8 +189,7 @@ public final class EnvironmentReader {
 				 */
 				dst.put(key, src.get(key));
 			} else if (valueAddToList
-					&& (LdapContext.CONTROL_FACTORIES.equals(key)
-							|| Context.OBJECT_FACTORIES.equals(key)
+					&& (Context.OBJECT_FACTORIES.equals(key)
 							|| Context.STATE_FACTORIES.equals(key) || Context.URL_PKG_PREFIXES
 								.equals(key))) {
 				/*

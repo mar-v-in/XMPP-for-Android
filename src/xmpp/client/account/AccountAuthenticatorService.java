@@ -1,4 +1,4 @@
-package xmpp.client.service.account;
+package xmpp.client.account;
 
 import android.app.Service;
 import android.content.Intent;

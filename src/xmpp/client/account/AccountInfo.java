@@ -1,4 +1,4 @@
-package xmpp.client.service.account;
+package xmpp.client.account;
 
 import android.os.Parcel;
 import android.os.Parcelable;

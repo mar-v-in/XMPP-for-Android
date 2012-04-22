@@ -13,7 +13,7 @@ import org.jivesoftware.smack.packet.Presence;
 
 import xmpp.client.Constants;
 import xmpp.client.R;
-import xmpp.client.service.account.AccountInfo;
+import xmpp.client.account.AccountInfo;
 import xmpp.client.service.bookmark.BookmarkService;
 import xmpp.client.service.bookmark.BookmarkServiceProvider;
 import xmpp.client.service.chat.Chat;

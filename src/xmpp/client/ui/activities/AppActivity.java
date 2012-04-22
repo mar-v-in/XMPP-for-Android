@@ -2,8 +2,8 @@ package xmpp.client.ui.activities;
 
 import xmpp.client.Constants;
 import xmpp.client.R;
+import xmpp.client.account.AccountInfo;
 import xmpp.client.service.Service;
-import xmpp.client.service.account.AccountInfo;
 import xmpp.client.service.chat.ChatSession;
 import xmpp.client.service.chat.multi.MultiUserChatInfo;
 import xmpp.client.service.chat.multi.MultiUserChatSession;
