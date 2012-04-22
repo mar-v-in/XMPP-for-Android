@@ -91,13 +91,13 @@ public class Contact implements Parcelable, Comparable<Contact> {
 		return false;
 	}
 
-	public Bitmap getBitmap(Context mContext) {
+	public Bitmap getBitmap(Context mContext, boolean showIcon) {
 		for (final User user : mUserList) {
 			if (user.getAvatar() != null) {
-				return user.getAvatar();
+				return user.getBitmap(mContext, showIcon);
 			}
 		}
-		return getUser().getBitmap(mContext);
+		return getUser().getBitmap(mContext, showIcon);
 	}
 
 	public GroupList getGroups() {

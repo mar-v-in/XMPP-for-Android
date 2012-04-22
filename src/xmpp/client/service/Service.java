@@ -616,7 +616,7 @@ public class Service extends android.app.Service implements
 		builder.setTicker(message.getUser().getDisplayName() + ": "
 				+ shortenCharSequence(message.getMessage(), 250));
 		builder.setSmallIcon(R.drawable.stat_notify_xmpp);
-		builder.setLargeIcon(message.getUser().getBitmap(this));
+		builder.setLargeIcon(message.getUser().getBitmap(this, false));
 
 		builder.setDefaults(Notification.DEFAULT_ALL);
 		builder.setAutoCancel(true);

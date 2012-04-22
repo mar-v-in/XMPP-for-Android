@@ -77,9 +77,9 @@ public class ChatUserListAdapter extends BaseAdapter {
 				if (contact.getUserContact() != null) {
 					q.assignContactUri(Uri.parse(contact.getUserContact()));
 				}
-				q.setImageBitmap(contact.getBitmap(mContext));
+				q.setImageBitmap(contact.getBitmap(mContext, true));
 			} else {
-				q.setImageBitmap(user.getBitmap(mContext));
+				q.setImageBitmap(user.getBitmap(mContext, true));
 			}
 		}
 

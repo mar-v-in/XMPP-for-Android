@@ -146,9 +146,9 @@ public class ChatAdapter extends BaseAdapter {
 				q.assignContactUri(Uri.parse(userContact));
 			}
 			if (contact != null) {
-				q.setImageBitmap(contact.getBitmap(mContext));
+				q.setImageBitmap(contact.getBitmap(mContext, true));
 			} else {
-				q.setImageBitmap(msgs.get(0).getUser().getBitmap(mContext));
+				q.setImageBitmap(msgs.get(0).getUser().getBitmap(mContext, true));
 			}
 		}
 

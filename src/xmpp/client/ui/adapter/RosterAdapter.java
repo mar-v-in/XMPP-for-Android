@@ -247,7 +247,7 @@ public class RosterAdapter extends BaseAdapter implements Constants {
 		if (contact.getUserContact() != null) {
 			q.assignContactUri(Uri.parse(contact.getUserContact()));
 		}
-		q.setImageBitmap(contact.getBitmap(mContext));
+		q.setImageBitmap(contact.getBitmap(mContext, false));
 
 		if (position == 0) {
 			getSelfItemView(position, rosteritem);

@@ -222,21 +222,26 @@ public class User implements Parcelable, Comparable<User> {
 		return null;
 	}
 
-	public Bitmap getBitmap(Context context) {
+	public Bitmap getBitmap(Context context, boolean showIcon) {
+		Bitmap ava = null;
 		if (mAvatar != null) {
-			return getAvatar();
+			ava = getAvatar();
+		} else {
+			ava = BitmapFactory.decodeResource(context.getResources(),
+					R.drawable.ic_contact_picture);
 		}
-		final Bitmap b = BitmapFactory.decodeResource(context.getResources(),
-				R.drawable.ic_contact_picture);
-		final Bitmap b2 = Bitmap.createBitmap(b.getWidth(), b.getHeight(),
-				Config.ARGB_8888);
-		final Paint paint = new Paint();
-		paint.setColorFilter(new PorterDuffColorFilter(Color
-				.parseColor(intToARGB(getDisplayName().hashCode())),
-				PorterDuff.Mode.OVERLAY));
-		final Canvas c = new Canvas(b2);
-		c.drawBitmap(b, 0, 0, paint);
-		return b;
+		if (showIcon) {
+			final Bitmap icon = BitmapFactory.decodeResource(context
+					.getResources(), getUserState().getStatusIconResourceID());
+			final Bitmap bitmap = Bitmap.createBitmap(ava.getWidth(),
+					ava.getHeight(), Config.ARGB_8888);
+			final Canvas c = new Canvas(bitmap);
+			c.drawBitmap(ava, 0, 0, new Paint());
+			c.drawBitmap(icon, 0, 0, new Paint());
+			return bitmap;
+		} else {
+			return ava;
+		}
 	}
 
 	public String getDisplayName() {
