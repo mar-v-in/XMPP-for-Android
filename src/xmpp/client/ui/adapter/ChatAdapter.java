@@ -84,7 +84,8 @@ public class ChatAdapter extends BaseAdapter {
 		final ArrayList<ChatMessage> msgs = msgss.get(position);
 		final LayoutInflater layoutInflater = (LayoutInflater) mContext
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		if (mChatProvider.getMeContact().contains(msgs.get(0).getUser())) {
+		boolean itsMe = mChatProvider.getMeContact().contains(msgs.get(0).getUser());
+		if (itsMe) {
 			view = layoutInflater.inflate(R.layout.chat_entry_outgoing_base,
 					parent, false);
 		} else {
@@ -105,7 +106,7 @@ public class ChatAdapter extends BaseAdapter {
 			final CharSequence seq = SmileyHandler.getSmiledText(
 					message.getMessage(), mContext);
 			View temp = null;
-			if (mChatProvider.getMeContact().contains(message.getUser())) {
+			if (itsMe) {
 				((SpannableStringBuilder) seq).setSpan(new AlignmentSpan() {
 
 					@Override
@@ -146,9 +147,9 @@ public class ChatAdapter extends BaseAdapter {
 				q.assignContactUri(Uri.parse(userContact));
 			}
 			if (contact != null) {
-				q.setImageBitmap(contact.getBitmap(mContext, true));
+				q.setImageBitmap(contact.getBitmap(mContext, (mChatProvider.isMUC() && !itsMe) ));
 			} else {
-				q.setImageBitmap(msgs.get(0).getUser().getBitmap(mContext, true));
+				q.setImageBitmap(msgs.get(0).getUser().getBitmap(mContext, (mChatProvider.isMUC() && !itsMe)));
 			}
 		}
 
