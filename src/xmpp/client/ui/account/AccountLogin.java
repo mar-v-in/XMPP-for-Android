@@ -1,5 +1,6 @@
 package xmpp.client.ui.account;
 
+import xmpp.client.Constants;
 import xmpp.client.R;
 import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
@@ -11,18 +12,17 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 
-public class AccountLogin extends AccountAuthenticatorActivity {
+public class AccountLogin extends AccountAuthenticatorActivity implements
+		Constants {
 	private static final String TAG = AccountLogin.class.getName();
 	private EditText mUserLogin;
 	private EditText mPassword;
 
 	private boolean doLogin(String user, String pass) {
 		Bundle result = null;
-		final Account account = new Account(user,
-				getString(R.string.account_type));
+		final Account account = new Account(user, ACCOUNT_TYPE);
 		final AccountManager am = AccountManager.get(this);
-		final Account[] accounts = am
-				.getAccountsByType((String) getText(R.string.account_type));
+		final Account[] accounts = am.getAccountsByType(ACCOUNT_TYPE);
 		if (accounts.length == 0) {
 			if (am.addAccountExplicitly(account, pass, null)) {
 				result = new Bundle();
@@ -56,8 +56,7 @@ public class AccountLogin extends AccountAuthenticatorActivity {
 		mPassword = (EditText) findViewById(R.id.password_text);
 
 		final AccountManager am = AccountManager.get(this);
-		final Account[] accounts = am
-				.getAccountsByType((String) getText(R.string.account_type));
+		final Account[] accounts = am.getAccountsByType(ACCOUNT_TYPE);
 		if (accounts.length > 0) {
 			mUserLogin.setText(accounts[0].name);
 			Log.i(TAG,

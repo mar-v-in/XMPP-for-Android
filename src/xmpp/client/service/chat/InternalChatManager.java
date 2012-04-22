@@ -1,6 +1,5 @@
 package xmpp.client.service.chat;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -29,12 +28,34 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes,
 		ConnectionProvider {
 	private static final String TAG = InternalChatManager.class.getName();
 
+	private static Date parseDateString(String datestring) {
+		if (datestring != null && !datestring.isEmpty()) {
+			for (final String dateStringVariant : dateStringVariants) {
+				final SimpleDateFormat sdf = new SimpleDateFormat(
+						dateStringVariant);
+				sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+				try {
+					return sdf.parse(datestring);
+				} catch (final ParseException e) {
+
+				}
+			}
+		}
+		return new Date();
+	}
+
 	private ChatManager mChatManager;
 	private ArrayList<Chat> mChatList;
 	private final UserServiceProvider mUserServiceProvider;
 	private final ChatServiceProvider mChatServiceProvider;
 	private final BookmarkServiceProvider mBookmarkServiceProvider;
+
 	private final ConnectionProvider mConnectionProvider;
+
+	private static String[] dateStringVariants = new String[] {
+			"yyyy-MM-dd'T'HH:mm:ssZ", "yyyy-MM-dd'T'HH:mm:ss.SZ",
+			"yyyy-MM-dd'T'HH:mm:ss.S'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'",
+			"yyyyMMdd'T'HH:mm:ss" };
 
 	public InternalChatManager(UserServiceProvider userServiceProvider,
 			BookmarkServiceProvider bookmarkServiceProvider,
@@ -164,7 +185,7 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes,
 					pe = smackMessage.getExtension("urn:xmpp:delay");// XEP-0203
 				}
 				if (pe != null && pe.toXML() != null) {
-					String xml = pe.toXML();
+					final String xml = pe.toXML();
 					String[] arr = xml.split("stamp='");
 					if (arr.length > 1) {
 						arr = arr[1].split("'");
@@ -181,8 +202,7 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes,
 						}
 					}
 				}
-				Date d = parseDateString(datestring);
-				
+				final Date d = parseDateString(datestring);
 
 				final ChatMessage message = new ChatMessage(d, user,
 						smackMessage.getBody(),
@@ -193,27 +213,6 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes,
 			Log.e(TAG, "processMessage", e);
 		}
 
-	}
-
-	private static String[] dateStringVariants = new String[] {
-			"yyyy-MM-dd'T'HH:mm:ssZ", "yyyy-MM-dd'T'HH:mm:ss.SZ",
-			"yyyy-MM-dd'T'HH:mm:ss.S'Z'", "yyyy-MM-dd'T'HH:mm:ss'Z'",
-			"yyyyMMdd'T'HH:mm:ss" };
-
-	private static Date parseDateString(String datestring) {
-		if (datestring != null && !datestring.isEmpty()) {
-			for (int i = 0; i < dateStringVariants.length; i++) {
-				SimpleDateFormat sdf = new SimpleDateFormat(
-						dateStringVariants[i]);
-				sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-				try {
-					return sdf.parse(datestring);
-				} catch (ParseException e) {
-
-				}
-			}
-		}
-		return new Date();
 	}
 
 }

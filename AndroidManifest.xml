@@ -39,7 +39,7 @@
                 android:resource="@xml/authenticator" />
         </service>
         <service
-            android:name=".service.account.contactsync.ContactsSyncAdapterService"
+            android:name=".account.contactsync.ContactsSyncAdapterService"
             android:exported="true"
             android:process=":contacts" >
             <intent-filter>

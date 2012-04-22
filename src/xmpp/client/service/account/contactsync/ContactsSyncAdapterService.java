@@ -2,8 +2,8 @@ package xmpp.client.service.account.contactsync;
 
 import java.util.ArrayList;
 
+import xmpp.client.Constants;
 import xmpp.client.R;
-import xmpp.client.service.Signals;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
 import xmpp.client.service.user.User;
@@ -37,7 +37,7 @@ import android.provider.ContactsContract.RawContacts.Entity;
 import android.util.Log;
 
 public class ContactsSyncAdapterService extends Service implements
-		SimpleMessageHandlerClient {
+		SimpleMessageHandlerClient, Constants {
 
 	private static final String TAG = ContactsSyncAdapterService.class
 			.getName();
@@ -72,7 +72,7 @@ public class ContactsSyncAdapterService extends Service implements
 
 	void checkState() {
 		if (mService != null) {
-			final Message msg = Message.obtain(null, Signals.SIG_IS_ONLINE);
+			final Message msg = Message.obtain(null, Constants.SIG_IS_ONLINE);
 			msg.replyTo = mMessenger;
 			try {
 				mService.send(msg);
@@ -189,16 +189,16 @@ public class ContactsSyncAdapterService extends Service implements
 		try {
 			final Bundle b = msg.getData();
 			switch (msg.what) {
-			case Signals.SIG_IS_ONLINE:
+			case Constants.SIG_IS_ONLINE:
 				b.setClassLoader(Contact.class.getClassLoader());
 				mContactMe = b.getParcelable("contact");
 
 				final Message msg2 = Message.obtain(null,
-						Signals.SIG_ROSTER_GET_CONTACTS);
+						Constants.SIG_ROSTER_GET_CONTACTS);
 				msg2.replyTo = mMessenger;
 				mService.send(msg2);
 				break;
-			case Signals.SIG_ROSTER_GET_CONTACTS:
+			case Constants.SIG_ROSTER_GET_CONTACTS:
 				b.setClassLoader(ContactList.class.getClassLoader());
 				if (b.containsKey("contacts")) {
 					final Parcelable p = b.getParcelable("contacts");
@@ -208,8 +208,8 @@ public class ContactsSyncAdapterService extends Service implements
 				}
 				doNotify();
 				break;
-			case Signals.SIG_ROSTER_GET_CONTACTS_ERROR:
-			case Signals.SIG_IS_NOT_ONLINE:
+			case Constants.SIG_ROSTER_GET_CONTACTS_ERROR:
+			case Constants.SIG_IS_NOT_ONLINE:
 				doNotify();
 				break;
 			}
@@ -222,10 +222,8 @@ public class ContactsSyncAdapterService extends Service implements
 	private void insertDatabaseUser(User user) {
 		final ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
 		final int rawContactInsertIndex = ops.size();
-		ops.add(ContentProviderOperation
-				.newInsert(RawContacts.CONTENT_URI)
-				.withValue(RawContacts.ACCOUNT_TYPE,
-						getText(R.string.account_type))
+		ops.add(ContentProviderOperation.newInsert(RawContacts.CONTENT_URI)
+				.withValue(RawContacts.ACCOUNT_TYPE, ACCOUNT_TYPE)
 				.withValue(RawContacts.ACCOUNT_NAME, mContactMe.getUserLogin())
 				.withValue(RawContacts.SOURCE_ID, user.getUserLogin()).build());
 
@@ -255,7 +253,7 @@ public class ContactsSyncAdapterService extends Service implements
 				.newInsert(Data.CONTENT_URI)
 				.withValueBackReference(Data.RAW_CONTACT_ID,
 						rawContactInsertIndex)
-				.withValue(Data.MIMETYPE, getText(R.string.contact_mime))
+				.withValue(Data.MIMETYPE, ACCOUNT_MIME)
 				.withValue(ContactsContract.Data.DATA1, user.getUserLogin())
 				.withValue(ContactsContract.Data.DATA2, "d2")
 				.withValue(ContactsContract.Data.DATA3, "d3").build());
@@ -277,8 +275,7 @@ public class ContactsSyncAdapterService extends Service implements
 				.buildUpon()
 				.appendQueryParameter(RawContacts.ACCOUNT_NAME,
 						mContactMe.getUserLogin())
-				.appendQueryParameter(RawContacts.ACCOUNT_TYPE,
-						(String) getText(R.string.account_type))
+				.appendQueryParameter(RawContacts.ACCOUNT_TYPE, ACCOUNT_TYPE)
 				.appendQueryParameter(RawContacts.SOURCE_ID,
 						user.getUserLogin()).build();
 		final Cursor c = getContentResolver().query(
@@ -328,11 +325,9 @@ public class ContactsSyncAdapterService extends Service implements
 				RawContacts.CONTENT_URI, rawContactID);
 		final Uri entityUri = Uri.withAppendedPath(rawContactUri,
 				Entity.CONTENT_DIRECTORY);
-		final Cursor c = getContentResolver().query(
-				entityUri,
+		final Cursor c = getContentResolver().query(entityUri,
 				new String[] { Entity.DATA_ID },
-				Entity.MIMETYPE + " = \"" + getText(R.string.contact_mime)
-						+ "\"", null, null);
+				Entity.MIMETYPE + " = \"" + ACCOUNT_MIME + "\"", null, null);
 		while (c.moveToNext()) {
 			if (!c.isNull(0)) {
 				updateDatabaseUser(rawContactID, c.getLong(0), user);
@@ -343,7 +338,7 @@ public class ContactsSyncAdapterService extends Service implements
 	}
 
 	void updateContact(Contact contact) {
-		final Message msg = Message.obtain(null, Signals.SIG_UPDATE_CONTACT);
+		final Message msg = Message.obtain(null, Constants.SIG_UPDATE_CONTACT);
 		final Bundle b = new Bundle();
 		b.putParcelable("contact", contact);
 		msg.setData(b);
@@ -385,7 +380,7 @@ public class ContactsSyncAdapterService extends Service implements
 	}
 
 	void updateUser(User user) {
-		final Message msg = Message.obtain(null, Signals.SIG_UPDATE_USER);
+		final Message msg = Message.obtain(null, Constants.SIG_UPDATE_USER);
 		final Bundle b = new Bundle();
 		b.putParcelable("user", user);
 		msg.setData(b);

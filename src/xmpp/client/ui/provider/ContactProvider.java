@@ -2,7 +2,7 @@ package xmpp.client.ui.provider;
 
 import java.util.ArrayList;
 
-import xmpp.client.service.Signals;
+import xmpp.client.Constants;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
 import xmpp.client.service.user.User;
@@ -17,7 +17,7 @@ import android.os.Messenger;
 import android.os.Parcelable;
 import android.util.Log;
 
-public class ContactProvider implements SimpleMessageHandlerClient, Signals {
+public class ContactProvider implements SimpleMessageHandlerClient, Constants {
 	private static final String TAG = ContactProvider.class.getName();
 	private ContactList mContactList;
 	private final GroupList mGroupList;
@@ -129,7 +129,7 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 			case SIG_IS_ONLINE:
 				initDone = true;
 				b.setClassLoader(Contact.class.getClassLoader());
-				mContact = (Contact) b.getParcelable("contact");
+				mContact = (Contact) b.getParcelable(FIELD_CONTACT);
 				msg = Message.obtain(null, SIG_ROSTER_GET_CONTACTS);
 				msg.replyTo = mMessenger;
 				mService.send(msg);
@@ -137,7 +137,7 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 			case SIG_ROSTER_GET_CONTACTS:
 				b.setClassLoader(ContactList.class.getClassLoader());
 				if (b.containsKey("contacts")) {
-					final Parcelable p = b.getParcelable("contacts");
+					final Parcelable p = b.getParcelable(FIELD_CONTACT_LIST);
 					if (p instanceof ContactList) {
 						mContactList = (ContactList) p;
 						update();
@@ -151,16 +151,16 @@ public class ContactProvider implements SimpleMessageHandlerClient, Signals {
 					break;
 				}
 				b.setClassLoader(User.class.getClassLoader());
-				if (b.containsKey("type")) {
-					switch (b.getInt("type")) {
-					case Signals.ROSTER_ADDED:
-						add((User) b.getParcelable("entry"));
+				if (b.containsKey(FIELD_TYPE)) {
+					switch (b.getInt(FIELD_TYPE)) {
+					case ROSTER_ADDED:
+						add((User) b.getParcelable(FIELD_USER));
 						break;
-					case Signals.ROSTER_UPDATED:
-						update((User) b.getParcelable("entry"));
+					case ROSTER_UPDATED:
+						update((User) b.getParcelable(FIELD_USER));
 						break;
-					case Signals.ROSTER_DELETED:
-						remove(b.getString("address"));
+					case ROSTER_DELETED:
+						remove(b.getString(FIELD_JID));
 						break;
 					default:
 						break;

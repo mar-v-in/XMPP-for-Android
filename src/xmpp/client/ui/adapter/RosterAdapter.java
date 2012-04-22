@@ -1,5 +1,6 @@
 package xmpp.client.ui.adapter;
 
+import xmpp.client.Constants;
 import xmpp.client.R;
 import xmpp.client.service.chat.multi.MultiUserChatInfo;
 import xmpp.client.service.user.User;
@@ -20,7 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.QuickContactBadge;
 import android.widget.TextView;
 
-public class RosterAdapter extends BaseAdapter {
+public class RosterAdapter extends BaseAdapter implements Constants {
 	@SuppressWarnings("unused")
 	private static final String TAG = RosterAdapter.class.getName();
 	private final Context mContext;
@@ -33,7 +34,7 @@ public class RosterAdapter extends BaseAdapter {
 		mContactProvider = contactProvider;
 		mConferenceProvider = conferenceProvider;
 		mContext = context;
-		activeGroup = mContext.getText(R.string.startup_group_name);
+		activeGroup = GROUP_STARTUP;
 	}
 
 	public void addRosterEntry(User re) {
@@ -48,16 +49,13 @@ public class RosterAdapter extends BaseAdapter {
 
 	@Override
 	public int getCount() {
-		if (activeGroup.equals(mContext.getText(R.string.all_group_name))) {
+		if (activeGroup.equals(GROUP_ALL_CONTACTS)) {
 			return mContactProvider.userSize() + 1;
-		} else if (activeGroup.equals(mContext
-				.getText(R.string.conferences_group_name))) {
+		} else if (activeGroup.equals(GROUP_CONFERENCES)) {
 			return mConferenceProvider.size() + 1;
-		} else if (activeGroup.equals(mContext
-				.getText(R.string.online_group_name))) {
+		} else if (activeGroup.equals(GROUP_ONLINE_CONTACTS)) {
 			return mContactProvider.userOnlineSize() + 1;
-		} else if (activeGroup.equals(mContext
-				.getText(R.string.startup_group_name))) {
+		} else if (activeGroup.equals(GROUP_STARTUP)) {
 			return 1;
 		} else {
 			return mContactProvider.userGroupSize(activeGroup) + 1;
@@ -131,12 +129,10 @@ public class RosterAdapter extends BaseAdapter {
 	}
 
 	public Object getRosterItem(int position) {
-		if (activeGroup.equals(mContext.getText(R.string.all_group_name))
-				|| activeGroup.equals(mContext
-						.getText(R.string.online_group_name))) {
+		if (activeGroup.equals(GROUP_ALL_CONTACTS)
+				|| activeGroup.equals(GROUP_ONLINE_CONTACTS)) {
 			return mContactProvider.getContact(position);
-		} else if (activeGroup.equals(mContext
-				.getText(R.string.conferences_group_name))) {
+		} else if (activeGroup.equals(GROUP_CONFERENCES)) {
 			return mConferenceProvider.getList().get(position);
 		} else {
 			return mContactProvider.getContactInGroup(activeGroup, position);
@@ -195,8 +191,7 @@ public class RosterAdapter extends BaseAdapter {
 			rosteritem = convertView;
 		}
 
-		if (activeGroup == mContext.getText(R.string.conferences_group_name)
-				&& position != 0) {
+		if (activeGroup == GROUP_CONFERENCES && position != 0) {
 			handleConference(position, rosteritem);
 		} else {
 			handleContact(position, rosteritem);

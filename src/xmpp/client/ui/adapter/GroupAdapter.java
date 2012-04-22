@@ -1,5 +1,6 @@
 package xmpp.client.ui.adapter;
 
+import xmpp.client.Constants;
 import xmpp.client.R;
 import xmpp.client.ui.provider.ContactProvider;
 import android.content.Context;
@@ -9,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-public class GroupAdapter extends BaseAdapter {
+public class GroupAdapter extends BaseAdapter implements Constants {
 	// private static final String TAG = GroupAdapter.class.getName();
 
 	ContactProvider mRosterContainer;
@@ -28,13 +29,13 @@ public class GroupAdapter extends BaseAdapter {
 	@Override
 	public Object getItem(int position) {
 		if (position == 0 || position == 4) {
-			return mContext.getText(R.string.divider_group_name);
+			return GROUP_DIVIDER;
 		} else if (position == 1) {
-			return mContext.getText(R.string.all_group_name);
+			return GROUP_ALL_CONTACTS;
 		} else if (position == 2) {
-			return mContext.getText(R.string.online_group_name);
+			return GROUP_ONLINE_CONTACTS;
 		} else if (position == 3) {
-			return mContext.getText(R.string.conferences_group_name);
+			return GROUP_CONFERENCES;
 		} else {
 			return mRosterContainer.getGroups().get(position - 5);
 		}

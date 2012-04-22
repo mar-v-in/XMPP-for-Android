@@ -16,7 +16,6 @@ import android.text.Layout.Alignment;
 import android.text.SpannableStringBuilder;
 import android.text.format.DateFormat;
 import android.text.style.AlignmentSpan;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,9 +25,15 @@ import android.widget.QuickContactBadge;
 import android.widget.TextView;
 
 public class ChatAdapter extends BaseAdapter {
-	Context mContext;
+	private static boolean sameDay(Date date1, Date date2) {
+		// TODO Do it without deprecated functions and also compare month and
+		// year
+		return date1.getDate() == date2.getDate();
+	}
 
+	Context mContext;
 	ChatProvider mChatProvider;
+
 	ContactProvider mContactProvider;
 
 	public ChatAdapter(Context context, ChatProvider chatProvider,
@@ -38,12 +43,17 @@ public class ChatAdapter extends BaseAdapter {
 		mContactProvider = contactProvider;
 	}
 
+	@Override
+	public int getCount() {
+		return getGroupedMessages().size();
+	}
+
 	private ArrayList<ArrayList<ChatMessage>> getGroupedMessages() {
-		ArrayList<ArrayList<ChatMessage>> list = new ArrayList<ArrayList<ChatMessage>>();
+		final ArrayList<ArrayList<ChatMessage>> list = new ArrayList<ArrayList<ChatMessage>>();
 		User lastUser = null;
 		Date lastDate = null;
 		for (int i = 0; i < mChatProvider.size(); i++) {
-			ChatMessage msg = mChatProvider.getMessage(i);
+			final ChatMessage msg = mChatProvider.getMessage(i);
 			if (lastUser == null || !lastUser.equals(msg.getUser())
 					|| !sameDay(lastDate, msg.getDate())) {
 				lastUser = msg.getUser();
@@ -53,17 +63,6 @@ public class ChatAdapter extends BaseAdapter {
 			list.get(list.size() - 1).add(msg);
 		}
 		return list;
-	}
-
-	private static boolean sameDay(Date date1, Date date2) {
-		// TODO Do it without deprecated functions and also compare month and
-		// year
-		return date1.getDate() == date2.getDate();
-	}
-
-	@Override
-	public int getCount() {
-		return getGroupedMessages().size();
 	}
 
 	@Override
@@ -81,8 +80,8 @@ public class ChatAdapter extends BaseAdapter {
 
 	@Override
 	public View getView(int position, View view, ViewGroup parent) {
-		ArrayList<ArrayList<ChatMessage>> msgss = getGroupedMessages();
-		ArrayList<ChatMessage> msgs = msgss.get(position);
+		final ArrayList<ArrayList<ChatMessage>> msgss = getGroupedMessages();
+		final ArrayList<ChatMessage> msgs = msgss.get(position);
 		final LayoutInflater layoutInflater = (LayoutInflater) mContext
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		if (mChatProvider.getMeContact().contains(msgs.get(0).getUser())) {
@@ -95,15 +94,15 @@ public class ChatAdapter extends BaseAdapter {
 		if (position == msgss.size() - 1) {
 			view.setPadding(0, 0, 0, 10);
 		}
-		TextView user = (TextView) view.findViewById(R.id.msg_user);
+		final TextView user = (TextView) view.findViewById(R.id.msg_user);
 		user.setText(msgs.get(0).getUser().getDisplayName());
-		TextView day = (TextView) view.findViewById(R.id.msg_day);
+		final TextView day = (TextView) view.findViewById(R.id.msg_day);
 		day.setText(DateFormat.format(mContext
 				.getText(R.string.datelayout_daymonth), msgs.get(0).getDate()));
-		LinearLayout container = (LinearLayout) view
+		final LinearLayout container = (LinearLayout) view
 				.findViewById(R.id.lst_msgs);
-		for (ChatMessage message : msgs) {
-			CharSequence seq = SmileyHandler.getSmiledText(
+		for (final ChatMessage message : msgs) {
+			final CharSequence seq = SmileyHandler.getSmiledText(
 					message.getMessage(), mContext);
 			View temp = null;
 			if (mChatProvider.getMeContact().contains(message.getUser())) {
@@ -121,15 +120,15 @@ public class ChatAdapter extends BaseAdapter {
 				temp = layoutInflater.inflate(
 						R.layout.chat_entry_incoming_message, parent, false);
 			}
-			TextView time = (TextView) temp.findViewById(R.id.msg_time);
+			final TextView time = (TextView) temp.findViewById(R.id.msg_time);
 			time.setText(DateFormat.getTimeFormat(mContext).format(
 					message.getDate()));
-			TextView text = (TextView) temp.findViewById(R.id.msg_text);
+			final TextView text = (TextView) temp.findViewById(R.id.msg_text);
 
 			text.setText(seq);
 			container.addView(temp);
 		}
-		QuickContactBadge q = (QuickContactBadge) view
+		final QuickContactBadge q = (QuickContactBadge) view
 				.findViewById(R.id.contact_badge);
 
 		if (q != null) {

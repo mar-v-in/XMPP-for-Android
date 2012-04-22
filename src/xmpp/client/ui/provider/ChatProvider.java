@@ -1,6 +1,6 @@
 package xmpp.client.ui.provider;
 
-import xmpp.client.service.Signals;
+import xmpp.client.Constants;
 import xmpp.client.service.chat.ChatMessage;
 import xmpp.client.service.chat.ChatSession;
 import xmpp.client.service.chat.multi.MultiUserChatSession;
@@ -12,7 +12,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
 
-public class ChatProvider implements SimpleMessageHandlerClient {
+public class ChatProvider implements SimpleMessageHandlerClient, Constants {
 	private static final String TAG = ChatProvider.class.getName();
 
 	private ChatSession mChatSession;
@@ -53,10 +53,10 @@ public class ChatProvider implements SimpleMessageHandlerClient {
 		try {
 			final Bundle b = msg.getData();
 			switch (msg.what) {
-			case Signals.SIG_MESSAGE_SENT:
-			case Signals.SIG_MESSAGE_GOT:
+			case SIG_MESSAGE_SENT:
+			case SIG_MESSAGE_GOT:
 				b.setClassLoader(ChatMessage.class.getClassLoader());
-				final ChatMessage message = b.getParcelable("message");
+				final ChatMessage message = b.getParcelable(FIELD_MESSAGE);
 				addMessage(message);
 				if (mListener.isReady()) {
 					mListener.chatProviderChanged(this);

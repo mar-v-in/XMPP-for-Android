@@ -11,6 +11,7 @@ import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Presence;
 
+import xmpp.client.Constants;
 import xmpp.client.R;
 import xmpp.client.service.account.AccountInfo;
 import xmpp.client.service.bookmark.BookmarkService;
@@ -46,9 +47,10 @@ import android.os.Process;
 import android.util.Log;
 
 public class Service extends android.app.Service implements
-		SimpleMessageHandlerClient, Signals, UserServiceProvider,
+		SimpleMessageHandlerClient, Constants, UserServiceProvider,
 		ChatServiceProvider, BookmarkServiceProvider, ConnectionProvider,
 		AvatarServiceProvider {
+
 	private static final String TAG = Service.class.getName();
 
 	private XMPPConnection mConnection;
@@ -100,11 +102,12 @@ public class Service extends android.app.Service implements
 
 	private void addUser(Message msg) {
 		Bundle b = msg.getData();
-		final String uid = b.getString("uid");
-		final User user = mUserService.addUser(uid);
+		final String uid = b.getString(FIELD_JID);
+		final String nick = b.getString(FIELD_NICKNAME);
+		final User user = mUserService.addUser(uid, nick);
 		if (user != null) {
 			b = new Bundle();
-			b.putParcelable("user", user);
+			b.putParcelable(FIELD_USER, user);
 			sendMsg(msg.replyTo, SIG_ROSTER_ADD, b);
 		} else {
 			sendMsg(msg.replyTo, SIG_ROSTER_ADD_ERROR);
@@ -121,7 +124,7 @@ public class Service extends android.app.Service implements
 	private void closeChatSession(Message msg) {
 		final Bundle b = msg.getData();
 		b.setClassLoader(ChatSession.class.getClassLoader());
-		final ChatSession session = b.getParcelable("session");
+		final ChatSession session = b.getParcelable(FIELD_CHAT_SESSION);
 		closeChatSession(session);
 		sendMsg(msg.replyTo, SIG_CLOSE_CHATSESSION);
 	}
@@ -157,7 +160,7 @@ public class Service extends android.app.Service implements
 	private User createMeUser() {
 		final User user = new User();
 		user.setUserLogin(mConnection.getUser());
-		user.setRessource((String) getText(R.string.xmpp_ressource));
+		user.setRessource(XMPP_RESSOURCE);
 		user.setUserState(new UserState(UserState.STATUS_AVAILABLE, null));
 		user.setAvatar(null);
 		return user;
@@ -174,7 +177,7 @@ public class Service extends android.app.Service implements
 	private void disableChatSession(Message msg) {
 		final Bundle b = msg.getData();
 		b.setClassLoader(ChatSession.class.getClassLoader());
-		final ChatSession session = b.getParcelable("session");
+		final ChatSession session = b.getParcelable(FIELD_CHAT_SESSION);
 		disableChatSession(session);
 		sendMsg(msg.replyTo, SIG_DISABLE_CHATSESSION);
 	}
@@ -203,7 +206,7 @@ public class Service extends android.app.Service implements
 		final ContactList contactList = mUserService.getContactList();
 		if (contactList != null) {
 			final Bundle b = new Bundle();
-			b.putParcelable("contacts", contactList);
+			b.putParcelable(FIELD_CONTACT_LIST, contactList);
 			sendMsg(msg.replyTo, SIG_ROSTER_GET_CONTACTS, b);
 		} else {
 			sendMsg(msg.replyTo, SIG_ROSTER_GET_CONTACTS_ERROR);
@@ -212,8 +215,8 @@ public class Service extends android.app.Service implements
 
 	private void getMUCs(Message msg) {
 		final Bundle b = new Bundle();
-		b.putParcelable("mucs", getBookmarkService().getConferenceHandler()
-				.getMultiUserChatInfoList());
+		b.putParcelable(FIELD_MULTI_USER_CHAT_INFO_LIST, getBookmarkService()
+				.getConferenceHandler().getMultiUserChatInfoList());
 		sendMsg(msg.replyTo, SIG_GET_MUCS, b);
 	}
 
@@ -284,7 +287,7 @@ public class Service extends android.app.Service implements
 		Bundle b;
 		b = msg.getData();
 		b.setClassLoader(AccountInfo.class.getClassLoader());
-		res = initXMPP((AccountInfo) b.getParcelable("AccountInfo"));
+		res = initXMPP((AccountInfo) b.getParcelable(FIELD_ACCOUNTINFO));
 		if (res) {
 			sendMsg(msg.replyTo, SIG_INIT);
 		} else {
@@ -342,8 +345,9 @@ public class Service extends android.app.Service implements
 		res = isOnline();
 		if (res) {
 			final Bundle b = new Bundle();
-			b.putParcelable("user", mUserService.getUserMe());
-			b.putParcelable("contact", new Contact(mUserService.getUserMe()));
+			b.putParcelable(FIELD_USER, mUserService.getUserMe());
+			b.putParcelable(FIELD_CONTACT,
+					new Contact(mUserService.getUserMe()));
 			sendMsg(msg.replyTo, SIG_IS_ONLINE, b);
 		} else {
 			sendMsg(msg.replyTo, SIG_IS_NOT_ONLINE);
@@ -373,8 +377,7 @@ public class Service extends android.app.Service implements
 			try {
 				Security.addProvider(new SaslProvider());
 				mConnection.login(mAccountInfo.getUsername(),
-						mAccountInfo.getPassword(),
-						(String) getText(R.string.xmpp_ressource));
+						mAccountInfo.getPassword(), XMPP_RESSOURCE);
 				mConnection.getRoster();
 				mAvatarService = new AvatarService(this);
 				mBookmarkService = new BookmarkService(this);
@@ -451,7 +454,7 @@ public class Service extends android.app.Service implements
 
 	private void openChatSession(Message msg) {
 		Bundle b = msg.getData();
-		final String uid = b.getString("uid");
+		final String uid = b.getString(FIELD_JID);
 		final Contact contact = mUserService.getContact(uid, false);
 		final User user = mUserService.getUser(uid, false);
 		contact.clearUnreadMessages();
@@ -461,15 +464,15 @@ public class Service extends android.app.Service implements
 		}
 		mActiveChatSession = session;
 		b = new Bundle();
-		b.putParcelable("session", session);
-		b.putParcelable("user", user);
-		b.putParcelable("contact", contact);
+		b.putParcelable(FIELD_CHAT_SESSION, session);
+		b.putParcelable(FIELD_USER, user);
+		b.putParcelable(FIELD_CONTACT, contact);
 		sendMsg(msg.replyTo, SIG_OPEN_CHATSESSION, b);
 	}
 
 	private void openMucSession(Message msg) {
 		Bundle b = msg.getData();
-		final String muc = b.getString("muc");
+		final String muc = b.getString(FIELD_JID);
 		ChatSession session = mChatService.getChatSessionFromIdentifier(muc);
 		if (session == null) {
 			session = mChatService.startSession(muc);
@@ -478,8 +481,8 @@ public class Service extends android.app.Service implements
 		mActiveChatSession = session;
 		if (chat.init()) {
 			b = new Bundle();
-			b.putParcelable("session", session);
-			b.putString("subject", chat.getSubject());
+			b.putParcelable(FIELD_CHAT_SESSION, session);
+			b.putString(FIELD_SUBJECT, chat.getSubject());
 			sendMsg(msg.replyTo, SIG_OPEN_MUC_CHATSESSION, b);
 		} else {
 			closeChatSession(session);
@@ -490,8 +493,8 @@ public class Service extends android.app.Service implements
 	public void processMessage(ChatSession session, ChatMessage message) {
 		if (session.equals(mActiveChatSession)) {
 			final Bundle b = new Bundle();
-			b.putParcelable("session", session);
-			b.putParcelable("message", message);
+			b.putParcelable(FIELD_CHAT_SESSION, session);
+			b.putParcelable(FIELD_MESSAGE, message);
 			sendToActive(SIG_MESSAGE_GOT, b);
 		} else {
 			if (session.isMUC()) {
@@ -520,8 +523,8 @@ public class Service extends android.app.Service implements
 	private void sendChatMessage(Message msg) {
 		final Bundle b = msg.getData();
 		b.setClassLoader(ChatSession.class.getClassLoader());
-		final String text = b.getString("text");
-		final ChatSession session = b.getParcelable("session");
+		final String text = b.getString(FIELD_TEXT);
+		final ChatSession session = b.getParcelable(FIELD_CHAT_SESSION);
 		if (session == null) {
 			Log.i(TAG, "session is null!");
 			sendToActive(SIG_SEND_MESSAGE_ERROR);
@@ -553,16 +556,16 @@ public class Service extends android.app.Service implements
 
 	public void sendRosterAdded(User user) {
 		final Bundle b = new Bundle();
-		b.putInt("type", ROSTER_ADDED);
-		b.putString("address", user.getUserLogin());
-		b.putParcelable("entry", user);
+		b.putInt(FIELD_TYPE, ROSTER_ADDED);
+		b.putString(FIELD_JID, user.getUserLogin());
+		b.putParcelable(FIELD_USER, user);
 		sendToActive(SIG_ROSTER_UPDATE, b);
 	}
 
 	public void sendRosterDeleted(String uid) {
 		final Bundle b = new Bundle();
-		b.putInt("type", ROSTER_DELETED);
-		b.putString("address", uid);
+		b.putInt(FIELD_TYPE, ROSTER_DELETED);
+		b.putString(FIELD_JID, uid);
 		sendToActive(SIG_ROSTER_UPDATE, b);
 	}
 
@@ -571,16 +574,16 @@ public class Service extends android.app.Service implements
 			mChatService.updateMUCUser(user);
 		}
 		final Bundle b = new Bundle();
-		b.putInt("type", ROSTER_UPDATED);
-		b.putString("address", user.getUserLogin());
-		b.putParcelable("entry", user);
+		b.putInt(FIELD_TYPE, ROSTER_UPDATED);
+		b.putString(FIELD_JID, user.getUserLogin());
+		b.putParcelable(FIELD_USER, user);
 		sendToActive(SIG_ROSTER_UPDATE, b);
 	}
 
 	public void sendSessionUpdated(ChatSession session) {
 		// TODO Auto-generated method stub
 		final Bundle b = new Bundle();
-		b.putParcelable("session", session);
+		b.putParcelable(FIELD_CHAT_SESSION, session);
 		sendToActive(SIG_CHAT_SESSION_UPDATE, b);
 	}
 
@@ -626,10 +629,12 @@ public class Service extends android.app.Service implements
 
 		final Intent i = new Intent(this, AppActivity.class);
 		if (message.isMUC()) {
-			i.setData(Uri.parse("imto://jabbermuc/"
+			i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
+					+ URI_HOST_JABBER_MUC + URI_PATH_DIVIDER
 					+ Uri.encode(message.getUser().getUserLogin())));
 		} else {
-			i.setData(Uri.parse("imto://jabber/"
+			i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
+					+ URI_HOST_JABBER + URI_PATH_DIVIDER
 					+ Uri.encode(message.getUser().getUserLogin())));
 		}
 		final PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
@@ -693,7 +698,7 @@ public class Service extends android.app.Service implements
 	private void updateContact(Message msg) {
 		final Bundle b = msg.getData();
 		b.setClassLoader(Contact.class.getClassLoader());
-		final Contact contact = b.getParcelable("contact");
+		final Contact contact = b.getParcelable(FIELD_CONTACT);
 		final ContactList contacts = mUserService.getContactList();
 		for (final Contact c : contacts) {
 			if (c.equals(contact)) {
@@ -707,7 +712,7 @@ public class Service extends android.app.Service implements
 	private void updateMeStatus(Message msg) {
 		final Bundle b = msg.getData();
 		b.setClassLoader(UserState.class.getClassLoader());
-		final UserState state = (UserState) b.getParcelable("state");
+		final UserState state = (UserState) b.getParcelable(FIELD_STATE);
 		if (state == null || mUserService == null || state.isTemporaryStatus()) {
 			showNotification(null, (String) state.getStatusText(this));
 			return;
@@ -716,15 +721,14 @@ public class Service extends android.app.Service implements
 		user.setUserState(state);
 		showNotification(null, null);
 		final Presence presence = state.toPresence();
-		presence.setFrom(user.getUserLogin() + "/"
-				+ getText(R.string.xmpp_ressource));
+		presence.setFrom(user.getUserLogin() + "/" + XMPP_RESSOURCE);
 		mConnection.sendPacket(presence);
 	}
 
 	private void updateUser(Message msg) {
 		final Bundle b = msg.getData();
 		b.setClassLoader(User.class.getClassLoader());
-		final User user = b.getParcelable("user");
+		final User user = b.getParcelable(FIELD_USER);
 		mUserService.updateUser(user);
 		sendMsg(msg.replyTo, SIG_UPDATE_USER);
 	}

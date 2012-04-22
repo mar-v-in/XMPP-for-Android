@@ -1,8 +1,8 @@
 package xmpp.client.ui.activities;
 
+import xmpp.client.Constants;
 import xmpp.client.R;
 import xmpp.client.service.Service;
-import xmpp.client.service.Signals;
 import xmpp.client.service.account.AccountInfo;
 import xmpp.client.service.chat.ChatSession;
 import xmpp.client.service.chat.multi.MultiUserChatInfo;
@@ -14,7 +14,6 @@ import xmpp.client.service.user.UserState;
 import xmpp.client.service.user.contact.Contact;
 import xmpp.client.ui.account.AccountLogin;
 import xmpp.client.ui.adapter.ChatAdapter;
-import xmpp.client.ui.adapter.ChatUserListAdapter;
 import xmpp.client.ui.adapter.GroupAdapter;
 import xmpp.client.ui.adapter.RosterAdapter;
 import xmpp.client.ui.adapter.StatusAdapter;
@@ -61,25 +60,9 @@ import android.widget.Toast;
 
 public class AppActivity extends Activity implements
 		SimpleMessageHandlerClient, ContactProviderListener,
-		ChatProviderListener {
-	private static final String URI_HOST_CHANGE_STATUS = "change_status";
-	private static final String URI_HOST_ADD_CONFERENCE = "add_conference";
-	private static final String URI_PATH_DIVIDER = "/";
-	private static final String URI_SCHEME_HOST_DIVIDER = "://";
-	private static final String URI_HOST_ADD_CONTACT = "add_contact";
-	private static final String URI_HOST_JABBER_MUC = "jabbermuc";
-	private static final String URI_HOST_JABBER = "jabber";
-	private static final String URI_SCHEME_XMPP_FOR_ANDROID = "xmpp-for-android";
-	private static final String URI_SCHEME_IMTO = "imto";
+		ChatProviderListener, Constants {
+
 	private static final String TAG = AppActivity.class.getName();
-	private static final int VIEW_ROSTER = 0;
-	private static final int VIEW_CHAT = 1;
-	private static final int VIEW_STATUS = 2;
-	private static final int VIEW_ADD_CONTACT = 3;
-	private static final int VIEW_ADD_CONFERENCE = 4;
-	private static final int VIEW_ACCOUNTS = 5;
-	private static final int VIEW_SETTINGS = 6;
-	private static final int VIEW_ACCOUNT_SETTINGS = 7;
 
 	private int mCurrentView = VIEW_ACCOUNTS;
 	private String mUID;
@@ -110,7 +93,7 @@ public class AppActivity extends Activity implements
 			handleIntent(getIntent());
 			try {
 				final Message msg = Message.obtain(null,
-						Signals.SIG_REGISTER_CLIENT);
+						Constants.SIG_REGISTER_CLIENT);
 				msg.replyTo = mMessenger;
 				mService.send(msg);
 
@@ -191,10 +174,10 @@ public class AppActivity extends Activity implements
 		} else if (mCurrentView == VIEW_CHAT) {
 			if (mUID != null) {
 				final Message msg = Message.obtain(null,
-						Signals.SIG_OPEN_CHATSESSION);
+						Constants.SIG_OPEN_CHATSESSION);
 				msg.replyTo = mMessenger;
 				final Bundle b = new Bundle();
-				b.putString("uid", mUID);
+				b.putString(FIELD_JID, mUID);
 				msg.setData(b);
 				try {
 					mService.send(msg);
@@ -204,10 +187,10 @@ public class AppActivity extends Activity implements
 				setTitle(mUID);
 			} else if (mMUC != null) {
 				final Message msg = Message.obtain(null,
-						Signals.SIG_OPEN_MUC_CHATSESSION);
+						Constants.SIG_OPEN_MUC_CHATSESSION);
 				msg.replyTo = mMessenger;
 				final Bundle b = new Bundle();
-				b.putString("muc", mMUC);
+				b.putString(FIELD_JID, mMUC);
 				msg.setData(b);
 				try {
 					mService.send(msg);
@@ -233,7 +216,7 @@ public class AppActivity extends Activity implements
 
 	void checkState() {
 		if (mService != null) {
-			final Message msg = Message.obtain(null, Signals.SIG_IS_ONLINE);
+			final Message msg = Message.obtain(null, Constants.SIG_IS_ONLINE);
 			msg.replyTo = mMessenger;
 			try {
 				mService.send(msg);
@@ -277,17 +260,16 @@ public class AppActivity extends Activity implements
 
 	public void doLogin() {
 		final AccountManager am = AccountManager.get(this);
-		final Account[] accounts = am
-				.getAccountsByType((String) getText(R.string.account_type));
+		final Account[] accounts = am.getAccountsByType(ACCOUNT_TYPE);
 		if (accounts.length > 0) {
 			final Account account = accounts[0];
 			final String login = account.name;
 			mContactProvider.getMeContact().getUser().setUserLogin(login);
 			updateStatus(UserState.STATUS_INITIALIZING);
 			final String pass = am.getPassword(account);
-			final Message msg = Message.obtain(null, Signals.SIG_INIT);
+			final Message msg = Message.obtain(null, Constants.SIG_INIT);
 			final Bundle b = new Bundle();
-			b.putParcelable("AccountInfo", new AccountInfo(login, pass));
+			b.putParcelable(FIELD_ACCOUNTINFO, new AccountInfo(login, pass));
 			msg.setData(b);
 			msg.replyTo = mMessenger;
 			try {
@@ -302,11 +284,12 @@ public class AppActivity extends Activity implements
 
 	private void doSend() {
 		if (mSession != null && mSendText.getText().length() > 0) {
-			final Message msg = Message.obtain(null, Signals.SIG_SEND_MESSAGE);
+			final Message msg = Message
+					.obtain(null, Constants.SIG_SEND_MESSAGE);
 			msg.replyTo = mMessenger;
 			final Bundle b = new Bundle();
-			b.putParcelable("session", mSession);
-			b.putString("text", mSendText.getText().toString());
+			b.putParcelable(FIELD_CHAT_SESSION, mSession);
+			b.putString(FIELD_TEXT, mSendText.getText().toString());
 			msg.setData(b);
 			try {
 				mService.send(msg);
@@ -322,7 +305,7 @@ public class AppActivity extends Activity implements
 			if (mService != null) {
 				try {
 					final Message msg = Message.obtain(null,
-							Signals.SIG_UNREGISTER_CLIENT);
+							Constants.SIG_UNREGISTER_CLIENT);
 					msg.replyTo = mMessenger;
 					mService.send(msg);
 
@@ -438,11 +421,11 @@ public class AppActivity extends Activity implements
 		try {
 			final Bundle b = msg.getData();
 			switch (msg.what) {
-			case Signals.SIG_OPEN_CHATSESSION:
+			case Constants.SIG_OPEN_CHATSESSION:
 				b.setClassLoader(ChatSession.class.getClassLoader());
-				mSession = b.getParcelable("session");
+				mSession = b.getParcelable(FIELD_CHAT_SESSION);
 				b.setClassLoader(User.class.getClassLoader());
-				mUser = (User) b.getParcelable("user");
+				mUser = (User) b.getParcelable(FIELD_USER);
 				if (mUser.supportsAudio()) {
 					mMenu.findItem(R.id.menu_call).setVisible(true);
 				} else {
@@ -457,12 +440,12 @@ public class AppActivity extends Activity implements
 						mContactProvider);
 				mMessageHolder.setAdapter(mChatAdapter);
 				break;
-			case Signals.SIG_OPEN_MUC_CHATSESSION:
+			case Constants.SIG_OPEN_MUC_CHATSESSION:
 				b.setClassLoader(ChatSession.class.getClassLoader());
-				mSession = b.getParcelable("session");
+				mSession = b.getParcelable(FIELD_CHAT_SESSION);
 				mMenu.findItem(R.id.menu_call).setVisible(false);
 				mActionBar.setTitle(mSession.getSessionID());
-				mActionBar.setSubtitle(b.getString("subject"));
+				mActionBar.setSubtitle(b.getString(FIELD_SUBJECT));
 				mChatProvider = new ChatProvider(
 						mContactProvider.getMeContact(), mSession, this,
 						mMessageHandler);
@@ -470,9 +453,10 @@ public class AppActivity extends Activity implements
 						mContactProvider);
 				mMessageHolder.setAdapter(mChatAdapter);
 				break;
-			case Signals.SIG_CHAT_SESSION_UPDATE:
+			case Constants.SIG_CHAT_SESSION_UPDATE:
 				b.setClassLoader(ChatSession.class.getClassLoader());
-				final ChatSession session1 = b.getParcelable("session");
+				final ChatSession session1 = b
+						.getParcelable(FIELD_CHAT_SESSION);
 				if (session1.equals(mSession)) {
 					mSession = session1;
 					mChatProvider.setSession(mSession);
@@ -482,24 +466,24 @@ public class AppActivity extends Activity implements
 							.getSubject());
 				}
 				break;
-			case Signals.SIG_ROSTER_GET_CONTACTS_ERROR:
+			case Constants.SIG_ROSTER_GET_CONTACTS_ERROR:
 				doUnbindService();
 				finish();
 				break;
-			case Signals.SIG_IS_NOT_ONLINE:
+			case Constants.SIG_IS_NOT_ONLINE:
 				doLogin();
 				break;
-			case Signals.SIG_INIT_ERROR:
-			case Signals.SIG_CONNECT_ERROR:
-			case Signals.SIG_LOGIN_ERROR:
+			case Constants.SIG_INIT_ERROR:
+			case Constants.SIG_CONNECT_ERROR:
+			case Constants.SIG_LOGIN_ERROR:
 				goLogin();
-			case Signals.SIG_INIT:
+			case Constants.SIG_INIT:
 				updateStatus(UserState.STATUS_CONNECTING);
 				break;
-			case Signals.SIG_CONNECT:
+			case Constants.SIG_CONNECT:
 				updateStatus(UserState.STATUS_LOGGING_IN);
 				break;
-			case Signals.SIG_LOGIN:
+			case Constants.SIG_LOGIN:
 				updateStatus(UserState.STATUS_AVAILABLE);
 				checkState();
 				break;
@@ -850,10 +834,10 @@ public class AppActivity extends Activity implements
 	private void parseChatMUC() {
 		if (mService != null) {
 			final Message msg = Message.obtain(null,
-					Signals.SIG_OPEN_MUC_CHATSESSION);
+					Constants.SIG_OPEN_MUC_CHATSESSION);
 			msg.replyTo = mMessenger;
 			final Bundle b = new Bundle();
-			b.putString("muc", mMUC);
+			b.putString(FIELD_JID, mMUC);
 			msg.setData(b);
 			try {
 				mService.send(msg);
@@ -867,10 +851,10 @@ public class AppActivity extends Activity implements
 	private void parseChatUID() {
 		if (mService != null) {
 			final Message msg = Message.obtain(null,
-					Signals.SIG_OPEN_CHATSESSION);
+					Constants.SIG_OPEN_CHATSESSION);
 			msg.replyTo = mMessenger;
 			final Bundle b = new Bundle();
-			b.putString("uid", mUID);
+			b.putString(FIELD_JID, mUID);
 			msg.setData(b);
 			try {
 				mService.send(msg);
@@ -882,9 +866,10 @@ public class AppActivity extends Activity implements
 	}
 
 	private void sendCloseChatSession() {
-		final Message msg = Message.obtain(null, Signals.SIG_CLOSE_CHATSESSION);
+		final Message msg = Message.obtain(null,
+				Constants.SIG_CLOSE_CHATSESSION);
 		final Bundle b = new Bundle();
-		b.putParcelable("session", mSession);
+		b.putParcelable(FIELD_CHAT_SESSION, mSession);
 		msg.setData(b);
 		msg.replyTo = mMessenger;
 		try {
@@ -896,9 +881,9 @@ public class AppActivity extends Activity implements
 
 	private void sendDisableChatSession() {
 		final Message msg = Message.obtain(null,
-				Signals.SIG_DISABLE_CHATSESSION);
+				Constants.SIG_DISABLE_CHATSESSION);
 		final Bundle b = new Bundle();
-		b.putParcelable("session", mSession);
+		b.putParcelable(FIELD_CHAT_SESSION, mSession);
 		msg.setData(b);
 		msg.replyTo = mMessenger;
 		try {
@@ -964,8 +949,8 @@ public class AppActivity extends Activity implements
 		mContactProvider.getMeContact().getUser().setUserState(userState);
 		mRosterAdapter.notifyDataSetChanged();
 		final Bundle b = new Bundle();
-		b.putParcelable("state", userState);
-		final Message msg = Message.obtain(null, Signals.SIG_SET_STATUS);
+		b.putParcelable(FIELD_STATE, userState);
+		final Message msg = Message.obtain(null, Constants.SIG_SET_STATUS);
 		msg.replyTo = mMessenger;
 		msg.setData(b);
 		try {
@@ -975,24 +960,11 @@ public class AppActivity extends Activity implements
 		}
 	}
 
-	private void userAdd(String uid) {
-		final Bundle b = new Bundle();
-		b.putString("uid", uid);
-		final Message msg = Message.obtain(null, Signals.SIG_ROSTER_ADD);
-		msg.replyTo = mMessenger;
-		msg.setData(b);
-		try {
-			mService.send(msg);
-		} catch (final RemoteException e) {
-			Log.i(TAG, "userAdd", e);
-		}
-	}
-
 	protected void userAdd(String uid, String nick) {
 		final Bundle b = new Bundle();
-		b.putString("uid", uid);
-		b.putString("nick", nick);
-		final Message msg = Message.obtain(null, Signals.SIG_ROSTER_ADD);
+		b.putString(FIELD_JID, uid);
+		b.putString(FIELD_NICKNAME, nick);
+		final Message msg = Message.obtain(null, Constants.SIG_ROSTER_ADD);
 		msg.replyTo = mMessenger;
 		msg.setData(b);
 		try {
