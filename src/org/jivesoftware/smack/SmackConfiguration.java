@@ -75,7 +75,7 @@ public final class SmackConfiguration {
 				final Enumeration<URL> configEnum = classLoader
 						.getResources("META-INF/smack-config.xml");
 				while (configEnum.hasMoreElements()) {
-					final URL url = (URL) configEnum.nextElement();
+					final URL url = configEnum.nextElement();
 					InputStream systemStream = null;
 					try {
 						systemStream = url.openStream();

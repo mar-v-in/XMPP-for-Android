@@ -27,57 +27,74 @@ import org.jivesoftware.smackx.jingle.listeners.JingleSessionListener;
 import org.jivesoftware.smackx.jingle.media.PayloadType;
 
 /**
- * A Jingle Transport Manager implementation to be used for NAT Networks.
- * This kind of transport needs that the connected XMPP Server provide a Bridge Service. (http://www.jivesoftware.com/protocol/rtpbridge)
- * To relay the jmf outside the NAT.
- *
+ * A Jingle Transport Manager implementation to be used for NAT Networks. This
+ * kind of transport needs that the connected XMPP Server provide a Bridge
+ * Service. (http://www.jivesoftware.com/protocol/rtpbridge) To relay the jmf
+ * outside the NAT.
+ * 
  * @author Thiago Camargo
  */
-public class BridgedTransportManager extends JingleTransportManager implements JingleSessionListener, CreatedJingleSessionListener {
+public class BridgedTransportManager extends JingleTransportManager implements
+		JingleSessionListener, CreatedJingleSessionListener {
 
-    Connection xmppConnection;
+	Connection xmppConnection;
 
-    public BridgedTransportManager(Connection xmppConnection) {
-        super();
-        this.xmppConnection = xmppConnection;
-    }
+	public BridgedTransportManager(Connection xmppConnection) {
+		super();
+		this.xmppConnection = xmppConnection;
+	}
 
-    /**
-     * Return the correspondent resolver
-     *
-     * @param session correspondent Jingle Session
-     * @return resolver
-     */
-    protected TransportResolver createResolver(JingleSession session) {
-        BridgedResolver bridgedResolver = new BridgedResolver(this.xmppConnection);
-        return bridgedResolver;
-    }
+	/**
+	 * Return the correspondent resolver
+	 * 
+	 * @param session
+	 *            correspondent Jingle Session
+	 * @return resolver
+	 */
+	@Override
+	protected TransportResolver createResolver(JingleSession session) {
+		final BridgedResolver bridgedResolver = new BridgedResolver(
+				xmppConnection);
+		return bridgedResolver;
+	}
 
-    // Implement a Session Listener to relay candidates after establishment
+	// Implement a Session Listener to relay candidates after establishment
 
-    public void sessionEstablished(PayloadType pt, TransportCandidate rc, TransportCandidate lc, JingleSession jingleSession) {
-        RTPBridge rtpBridge = RTPBridge.relaySession(lc.getConnection(), lc.getSessionId(), lc.getPassword(), rc, lc);
-    }
+	@Override
+	public void sessionClosed(String reason, JingleSession jingleSession) {
+	}
 
-    public void sessionDeclined(String reason, JingleSession jingleSession) {
-    }
+	@Override
+	public void sessionClosedOnError(XMPPException e,
+			JingleSession jingleSession) {
+	}
 
-    public void sessionRedirected(String redirection, JingleSession jingleSession) {
-    }
+	@Override
+	public void sessionCreated(JingleSession jingleSession) {
+		jingleSession.addListener(this);
+	}
 
-    public void sessionClosed(String reason, JingleSession jingleSession) {
-    }
+	@Override
+	public void sessionDeclined(String reason, JingleSession jingleSession) {
+	}
 
-    public void sessionClosedOnError(XMPPException e, JingleSession jingleSession) {
-    }
+	@Override
+	public void sessionEstablished(PayloadType pt, TransportCandidate rc,
+			TransportCandidate lc, JingleSession jingleSession) {
+		final RTPBridge rtpBridge = RTPBridge.relaySession(lc.getConnection(),
+				lc.getSessionId(), lc.getPassword(), rc, lc);
+	}
 
-    public void sessionMediaReceived(JingleSession jingleSession, String participant) {
-        // Do Nothing
-    }
+	@Override
+	public void sessionMediaReceived(JingleSession jingleSession,
+			String participant) {
+		// Do Nothing
+	}
 
-    // Session Created
+	// Session Created
 
-    public void sessionCreated(JingleSession jingleSession) {
-        jingleSession.addListener(this);
-    }
+	@Override
+	public void sessionRedirected(String redirection,
+			JingleSession jingleSession) {
+	}
 }

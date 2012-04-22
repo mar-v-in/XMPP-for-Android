@@ -206,20 +206,19 @@ public class MessageEventManager {
 						.getExtension("x", "jabber:x:event");
 				if (messageEvent.isMessageEventRequest()) {
 					// Fire event for requests of message events
-					for (final Iterator<String> it = messageEvent.getEventTypes(); it
-							.hasNext();) {
+					for (final Iterator<String> it = messageEvent
+							.getEventTypes(); it.hasNext();) {
 						fireMessageEventRequestListeners(message.getFrom(),
 								message.getPacketID(),
-								((String) it.next())
-										.concat("NotificationRequested"));
+								it.next().concat("NotificationRequested"));
 					}
 				} else {
 					// Fire event for notifications of message events
-					for (final Iterator<String> it = messageEvent.getEventTypes(); it
-							.hasNext();) {
+					for (final Iterator<String> it = messageEvent
+							.getEventTypes(); it.hasNext();) {
 						fireMessageEventNotificationListeners(
 								message.getFrom(), messageEvent.getPacketID(),
-								((String) it.next()).concat("Notification"));
+								it.next().concat("Notification"));
 					}
 				}
 

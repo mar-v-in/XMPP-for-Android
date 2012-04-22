@@ -19,173 +19,187 @@
  */
 package org.jivesoftware.smackx.jingle.media;
 
-import org.jivesoftware.smackx.jingle.JingleSession;
-import org.jivesoftware.smackx.jingle.nat.TransportCandidate;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jivesoftware.smackx.jingle.JingleSession;
+import org.jivesoftware.smackx.jingle.nat.TransportCandidate;
+
 /**
- * Public Abstract Class provides a clear interface between Media Session and Jingle API.
+ * Public Abstract Class provides a clear interface between Media Session and
+ * Jingle API.
  * <p/>
- * When a Jingle Session is fully stablished, we will have a Payload Type and two transport candidates defined for it.
- * Smack Jingle API don't implement Media Transmit and Receive methods.
- * But provides an interface to let the user implements it using another API. For instance: JMF.
+ * When a Jingle Session is fully stablished, we will have a Payload Type and
+ * two transport candidates defined for it. Smack Jingle API don't implement
+ * Media Transmit and Receive methods. But provides an interface to let the user
+ * implements it using another API. For instance: JMF.
  * <p/>
- * <i>The Class that implements this one, must have the support to transmit and receive the jmf.</i>
- * <i>This interface let the user choose his own jmf API.</i>
- *
+ * <i>The Class that implements this one, must have the support to transmit and
+ * receive the jmf.</i> <i>This interface let the user choose his own jmf
+ * API.</i>
+ * 
  * @author Thiago Camargo
  */
 public abstract class JingleMediaSession {
 
-    // Payload Type of the Session
-    private PayloadType payloadType;
-    // Local Transport details
-    private TransportCandidate local;
-    // Remote Transport details
-    private TransportCandidate remote;
-    // Media Locator
-    private String mediaLocator;
-    // Media Received Listener
-    private List<MediaReceivedListener> mediaReceivedListeners = new ArrayList<MediaReceivedListener>();
-    // Jingle Session
-    private JingleSession jingleSession;
+	// Payload Type of the Session
+	private final PayloadType payloadType;
+	// Local Transport details
+	private final TransportCandidate local;
+	// Remote Transport details
+	private final TransportCandidate remote;
+	// Media Locator
+	private String mediaLocator;
+	// Media Received Listener
+	private final List<MediaReceivedListener> mediaReceivedListeners = new ArrayList<MediaReceivedListener>();
+	// Jingle Session
+	private final JingleSession jingleSession;
 
-    /**
-     * Creates a new JingleMediaSession Instance to handle Media methods.
-     *
-     * @param payloadType  Payload Type of the transmittion
-     * @param remote       Remote accepted Transport Candidate
-     * @param local        Local accepted Transport Candidate
-     * @param mediaLocator Media Locator of the capture device
-     */
-    public JingleMediaSession(PayloadType payloadType, TransportCandidate remote,
-            TransportCandidate local, String mediaLocator, JingleSession jingleSession) {
-        this.local = local;
-        this.remote = remote;
-        this.payloadType = payloadType;
-        this.mediaLocator = mediaLocator;
-        this.jingleSession = jingleSession;
-    }
+	/**
+	 * Creates a new JingleMediaSession Instance to handle Media methods.
+	 * 
+	 * @param payloadType
+	 *            Payload Type of the transmittion
+	 * @param remote
+	 *            Remote accepted Transport Candidate
+	 * @param local
+	 *            Local accepted Transport Candidate
+	 * @param mediaLocator
+	 *            Media Locator of the capture device
+	 */
+	public JingleMediaSession(PayloadType payloadType,
+			TransportCandidate remote, TransportCandidate local,
+			String mediaLocator, JingleSession jingleSession) {
+		this.local = local;
+		this.remote = remote;
+		this.payloadType = payloadType;
+		this.mediaLocator = mediaLocator;
+		this.jingleSession = jingleSession;
+	}
 
-    /**
-     * Returns the PayloadType of the Media Session
-     *
-     * @return
-     */
-    public PayloadType getPayloadType() {
-        return payloadType;
-    }
+	/**
+	 * Adds a Media Received Listener
+	 * 
+	 * @param mediaReceivedListener
+	 */
+	public void addMediaReceivedListener(
+			MediaReceivedListener mediaReceivedListener) {
+		mediaReceivedListeners.add(mediaReceivedListener);
+	}
 
-    /**
-     * Returns the Media Session local Candidate
-     *
-     * @return
-     */
-    public TransportCandidate getLocal() {
-        return local;
-    }
+	/**
+	 * Gets associated JingleSession
+	 * 
+	 * @return associated JingleSession
+	 */
+	public JingleSession getJingleSession() {
+		return jingleSession;
+	}
 
-    /**
-     * Returns the Media Session remote Candidate
-     *
-     * @return
-     */
-    public TransportCandidate getRemote() {
-        return remote;
-    }
+	/**
+	 * Returns the Media Session local Candidate
+	 * 
+	 * @return
+	 */
+	public TransportCandidate getLocal() {
+		return local;
+	}
 
-    /**
-     * Return the media locator or null if not defined
-     *
-     * @return media locator
-     */
-    public String getMediaLocator() {
-        return mediaLocator;
-    }
+	/**
+	 * Return the media locator or null if not defined
+	 * 
+	 * @return media locator
+	 */
+	public String getMediaLocator() {
+		return mediaLocator;
+	}
 
-    /**
-     * Set the media locator
-     *
-     * @param mediaLocator media locator or null to use default
-     */
-    public void setMediaLocator(String mediaLocator) {
-        this.mediaLocator = mediaLocator;
-    }
+	/**
+	 * Returns the PayloadType of the Media Session
+	 * 
+	 * @return
+	 */
+	public PayloadType getPayloadType() {
+		return payloadType;
+	}
 
-    /**
-     * Adds a Media Received Listener
-     *
-     * @param mediaReceivedListener
-     */
-    public void addMediaReceivedListener(MediaReceivedListener mediaReceivedListener) {
-        mediaReceivedListeners.add(mediaReceivedListener);
-    }
+	/**
+	 * Returns the Media Session remote Candidate
+	 * 
+	 * @return
+	 */
+	public TransportCandidate getRemote() {
+		return remote;
+	}
 
-    /**
-     * Removes a Media Received Listener
-     *
-     * @param mediaReceivedListener
-     */
-    public void removeMediaReceivedListener(MediaReceivedListener mediaReceivedListener) {
-        mediaReceivedListeners.remove(mediaReceivedListener);
-    }
+	/**
+	 * Initialize the RTP Channel preparing to transmit and receive.
+	 */
+	public abstract void initialize();
 
-    /**
-     * Removes all Media Received Listeners
-     */
-    public void removeAllMediaReceivedListener() {
-        mediaReceivedListeners.clear();
-    }
+	/**
+	 * Called when new Media is received.
+	 */
+	public void mediaReceived(String participant) {
+		for (final MediaReceivedListener mediaReceivedListener : mediaReceivedListeners) {
+			mediaReceivedListener.mediaReceived(participant);
+		}
+	}
 
-    /**
-     * Initialize the RTP Channel preparing to transmit and receive.
-     */
-    public abstract void initialize();
+	/**
+	 * Removes all Media Received Listeners
+	 */
+	public void removeAllMediaReceivedListener() {
+		mediaReceivedListeners.clear();
+	}
 
-    /**
-     * Starts a RTP / UDP / TCP Transmission to the remote Candidate
-     */
-    public abstract void startTrasmit();
+	/**
+	 * Removes a Media Received Listener
+	 * 
+	 * @param mediaReceivedListener
+	 */
+	public void removeMediaReceivedListener(
+			MediaReceivedListener mediaReceivedListener) {
+		mediaReceivedListeners.remove(mediaReceivedListener);
+	}
 
-    /**
-     * Starts a RTP / UDP / TCP Receiver from the remote Candidate to local Candidate
-     */
-    public abstract void startReceive();
+	/**
+	 * Set the media locator
+	 * 
+	 * @param mediaLocator
+	 *            media locator or null to use default
+	 */
+	public void setMediaLocator(String mediaLocator) {
+		this.mediaLocator = mediaLocator;
+	}
 
-    /**
-     * Set transmit activity. If the active is true, the instance should trasmit.
-     * If it is set to false, the instance should pause transmit.
-     *
-     * @param active
-     */
-    public abstract void setTrasmit(boolean active);
+	/**
+	 * Set transmit activity. If the active is true, the instance should
+	 * trasmit. If it is set to false, the instance should pause transmit.
+	 * 
+	 * @param active
+	 */
+	public abstract void setTrasmit(boolean active);
 
-    /**
-     * Stops a RTP / UDP / TCP Transmission to the remote Candidate
-     */
-    public abstract void stopTrasmit();
+	/**
+	 * Starts a RTP / UDP / TCP Receiver from the remote Candidate to local
+	 * Candidate
+	 */
+	public abstract void startReceive();
 
-    /**
-     * Stops a RTP / UDP / TCP Receiver from the remote Candidate to local Candidate
-     */
-    public abstract void stopReceive();
+	/**
+	 * Starts a RTP / UDP / TCP Transmission to the remote Candidate
+	 */
+	public abstract void startTrasmit();
 
-    /**
-     * Called when new Media is received.
-     */
-    public void mediaReceived(String participant) {
-        for (MediaReceivedListener mediaReceivedListener : mediaReceivedListeners) {
-            mediaReceivedListener.mediaReceived(participant);
-        }
-    }
+	/**
+	 * Stops a RTP / UDP / TCP Receiver from the remote Candidate to local
+	 * Candidate
+	 */
+	public abstract void stopReceive();
 
-    /**
-     * Gets associated JingleSession
-     * @return associated JingleSession
-     */
-    public JingleSession getJingleSession() {
-        return jingleSession;
-    }
+	/**
+	 * Stops a RTP / UDP / TCP Transmission to the remote Candidate
+	 */
+	public abstract void stopTrasmit();
 }

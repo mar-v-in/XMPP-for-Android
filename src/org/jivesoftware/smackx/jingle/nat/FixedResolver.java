@@ -23,64 +23,70 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.jingle.JingleSession;
 
 /**
- * The FixedResolver is a resolver where
- * the external address and port are previously known when the object is
- * initialized.
- *
+ * The FixedResolver is a resolver where the external address and port are
+ * previously known when the object is initialized.
+ * 
  * @author Alvaro Saurin <alvaro.saurin@gmail.com>
  */
 public class FixedResolver extends TransportResolver {
 
-    TransportCandidate fixedCandidate;
+	TransportCandidate fixedCandidate;
 
-    /**
-     * Constructor.
-     */
-    public FixedResolver(String ip, int port) {
-        super();
-        setFixedCandidate(ip, port);
-    }
+	/**
+	 * Constructor.
+	 */
+	public FixedResolver(String ip, int port) {
+		super();
+		setFixedCandidate(ip, port);
+	}
 
-    /**
-     * Create a basic resolver, where we provide the IP and port.
-     *
-     * @param ip   an IP address
-     * @param port a port
-     */
-    public void setFixedCandidate(String ip, int port) {
-        fixedCandidate = new TransportCandidate.Fixed(ip, port);
-    }
+	@Override
+	public void cancel() throws XMPPException {
+		// Nothing to do here
+	}
 
-    /**
-     * Resolve the IP address.
-     */
-    public synchronized void resolve(JingleSession session) throws XMPPException {
-        if (!isResolving()) {
-            setResolveInit();
+	/**
+	 * Initialize the resolver.
+	 * 
+	 * @throws XMPPException
+	 */
+	@Override
+	public void initialize() throws XMPPException {
+		setInitialized();
+	}
 
-            clearCandidates();
+	/**
+	 * Resolve the IP address.
+	 */
+	@Override
+	public synchronized void resolve(JingleSession session)
+			throws XMPPException {
+		if (!isResolving()) {
+			setResolveInit();
 
-            if (fixedCandidate.getLocalIp() == null)
-                fixedCandidate.setLocalIp(fixedCandidate.getIp());
+			clearCandidates();
 
-            if (fixedCandidate != null) {
-                addCandidate(fixedCandidate);
-            }
+			if (fixedCandidate.getLocalIp() == null) {
+				fixedCandidate.setLocalIp(fixedCandidate.getIp());
+			}
 
-            setResolveEnd();
-        }
-    }
+			if (fixedCandidate != null) {
+				addCandidate(fixedCandidate);
+			}
 
-    /**
-     * Initialize the resolver.
-     *
-     * @throws XMPPException
-     */
-    public void initialize() throws XMPPException {
-        setInitialized();
-    }
+			setResolveEnd();
+		}
+	}
 
-    public void cancel() throws XMPPException {
-        // Nothing to do here
-    }
+	/**
+	 * Create a basic resolver, where we provide the IP and port.
+	 * 
+	 * @param ip
+	 *            an IP address
+	 * @param port
+	 *            a port
+	 */
+	public void setFixedCandidate(String ip, int port) {
+		fixedCandidate = new TransportCandidate.Fixed(ip, port);
+	}
 }

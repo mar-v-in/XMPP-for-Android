@@ -24,9 +24,9 @@ package org.jivesoftware.smackx.jingle.media;
  */
 public interface MediaReceivedListener {
 
-    /**
-     * Called when new Media is received.
-     */
-    public void mediaReceived(String participant);
+	/**
+	 * Called when new Media is received.
+	 */
+	public void mediaReceived(String participant);
 
 }

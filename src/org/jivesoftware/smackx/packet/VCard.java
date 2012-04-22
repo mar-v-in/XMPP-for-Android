@@ -111,11 +111,12 @@ public class VCard extends IQ {
 					public void addTagContent() {
 						appendEmptyTag(code);
 
-						final Iterator<Entry<String, String>> it = addr.entrySet().iterator();
+						final Iterator<Entry<String, String>> it = addr
+								.entrySet().iterator();
 						while (it.hasNext()) {
-							final Entry<String, String> entry = (Entry<String, String>) it.next();
-							appendTag((String) entry.getKey(), StringUtils
-									.escapeForXML((String) entry.getValue()));
+							final Entry<String, String> entry = it.next();
+							appendTag(entry.getKey(),
+									StringUtils.escapeForXML(entry.getValue()));
 						}
 					}
 				});

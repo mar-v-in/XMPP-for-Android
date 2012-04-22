@@ -376,7 +376,7 @@ public class FormField {
 		}
 		// Loop through all the values and append them to the string buffer
 		for (final Iterator<Option> i = getOptions(); i.hasNext();) {
-			buf.append(((Option) i.next()).toXML());
+			buf.append(i.next().toXML());
 		}
 		buf.append("</field>");
 		return buf.toString();

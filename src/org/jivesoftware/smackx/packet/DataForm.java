@@ -65,7 +65,7 @@ public class DataForm implements PacketExtension {
 			// Loop through all the form items and append them to the string
 			// buffer
 			for (final Iterator<FormField> i = getFields(); i.hasNext();) {
-				final FormField field = (FormField) i.next();
+				final FormField field = i.next();
 				buf.append(field.toXML());
 			}
 			buf.append("</item>");
@@ -104,7 +104,7 @@ public class DataForm implements PacketExtension {
 			// Loop through all the form items and append them to the string
 			// buffer
 			for (final Iterator<FormField> i = getFields(); i.hasNext();) {
-				final FormField field = (FormField) i.next();
+				final FormField field = i.next();
 				buf.append(field.toXML());
 			}
 			buf.append("</reported>");
@@ -312,12 +312,12 @@ public class DataForm implements PacketExtension {
 		// Loop through all the items returned from a search and append them to
 		// the string buffer
 		for (final Iterator<Item> i = getItems(); i.hasNext();) {
-			final Item item = (Item) i.next();
+			final Item item = i.next();
 			buf.append(item.toXML());
 		}
 		// Loop through all the form fields and append them to the string buffer
 		for (final Iterator<FormField> i = getFields(); i.hasNext();) {
-			final FormField field = (FormField) i.next();
+			final FormField field = i.next();
 			buf.append(field.toXML());
 		}
 		buf.append("</").append(getElementName()).append(">");

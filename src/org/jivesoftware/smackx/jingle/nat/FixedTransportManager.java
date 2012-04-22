@@ -1,7 +1,6 @@
 package org.jivesoftware.smackx.jingle.nat;
 
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smackx.jingle.ContentNegotiator;
 import org.jivesoftware.smackx.jingle.JingleSession;
 import org.jivesoftware.smackx.jingle.listeners.CreatedJingleSessionListener;
 import org.jivesoftware.smackx.jingle.listeners.JingleSessionListener;
@@ -29,40 +28,53 @@ import org.jivesoftware.smackx.jingle.media.PayloadType;
 
 /**
  * A Fixed Jingle Transport Manager implementation.
- *  
+ * 
  */
-public class FixedTransportManager extends JingleTransportManager implements JingleSessionListener, CreatedJingleSessionListener {
-    
-    FixedResolver resolver;
-    
-    public FixedTransportManager(FixedResolver inResolver) {
-        resolver = inResolver;
-    }
+public class FixedTransportManager extends JingleTransportManager implements
+		JingleSessionListener, CreatedJingleSessionListener {
 
-    protected TransportResolver createResolver(JingleSession session) {
-        return resolver;
-    }
-    
-    public void sessionEstablished(PayloadType pt, TransportCandidate rc, TransportCandidate lc, JingleSession jingleSession) {
-    }
+	FixedResolver resolver;
 
-    public void sessionDeclined(String reason, JingleSession jingleSession) {
-    }
+	public FixedTransportManager(FixedResolver inResolver) {
+		resolver = inResolver;
+	}
 
-    public void sessionRedirected(String redirection, JingleSession jingleSession) {
-    }
+	@Override
+	protected TransportResolver createResolver(JingleSession session) {
+		return resolver;
+	}
 
-    public void sessionClosed(String reason, JingleSession jingleSession) {
-    }
+	@Override
+	public void sessionClosed(String reason, JingleSession jingleSession) {
+	}
 
-    public void sessionClosedOnError(XMPPException e, JingleSession jingleSession) {
-    }
+	@Override
+	public void sessionClosedOnError(XMPPException e,
+			JingleSession jingleSession) {
+	}
 
-    public void sessionMediaReceived(JingleSession jingleSession, String participant) {
-        // Do Nothing
-    }
-    
-    public void sessionCreated(JingleSession jingleSession) {
-        jingleSession.addListener(this);
-    }
+	@Override
+	public void sessionCreated(JingleSession jingleSession) {
+		jingleSession.addListener(this);
+	}
+
+	@Override
+	public void sessionDeclined(String reason, JingleSession jingleSession) {
+	}
+
+	@Override
+	public void sessionEstablished(PayloadType pt, TransportCandidate rc,
+			TransportCandidate lc, JingleSession jingleSession) {
+	}
+
+	@Override
+	public void sessionMediaReceived(JingleSession jingleSession,
+			String participant) {
+		// Do Nothing
+	}
+
+	@Override
+	public void sessionRedirected(String redirection,
+			JingleSession jingleSession) {
+	}
 }

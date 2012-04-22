@@ -19,10 +19,6 @@
  */
 package org.jivesoftware.smackx.jingle.nat;
 
-import org.jivesoftware.smack.Connection;
-import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smackx.jingle.JingleSession;
-
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -30,121 +26,134 @@ import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.Random;
 
+import org.jivesoftware.smack.Connection;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smackx.jingle.JingleSession;
+
 /**
- * Bridged Resolver use a RTPBridge Service to add a relayed candidate.
- * A very reliable solution for NAT Traversal.
+ * Bridged Resolver use a RTPBridge Service to add a relayed candidate. A very
+ * reliable solution for NAT Traversal.
  * <p/>
- * The resolver verify is the XMPP Server that the client is connected offer this service.
- * If the server supports, a candidate is requested from the service.
- * The resolver adds this candidate
+ * The resolver verify is the XMPP Server that the client is connected offer
+ * this service. If the server supports, a candidate is requested from the
+ * service. The resolver adds this candidate
  */
 public class BridgedResolver extends TransportResolver {
 
-    Connection connection;
+	public static String getLocalHost() {
+		Enumeration ifaces = null;
 
-    Random random = new Random();
+		try {
+			ifaces = NetworkInterface.getNetworkInterfaces();
+		} catch (final SocketException e) {
+			e.printStackTrace();
+		}
 
-    long sid;
+		while (ifaces.hasMoreElements()) {
 
-    /**
-     * Constructor.
-     * A Bridged Resolver need a Connection to connect to a RTP Bridge.
-     */
-    public BridgedResolver(Connection connection) {
-        super();
-        this.connection = connection;
-    }
+			final NetworkInterface iface = (NetworkInterface) ifaces
+					.nextElement();
+			final Enumeration iaddresses = iface.getInetAddresses();
 
-    /**
-     * Resolve Bridged Candidate.
-     * <p/>
-     * The BridgedResolver takes the IP addresse and ports of a jmf proxy service.
-     */
-    public synchronized void resolve(JingleSession session) throws XMPPException {
+			while (iaddresses.hasMoreElements()) {
+				final InetAddress iaddress = (InetAddress) iaddresses
+						.nextElement();
+				if (!iaddress.isLoopbackAddress()
+						&& !iaddress.isLinkLocalAddress()
+						&& !iaddress.isSiteLocalAddress()
+						&& !(iaddress instanceof Inet6Address)) {
+					return iaddress.getHostAddress();
+				}
+			}
+		}
 
-        setResolveInit();
+		try {
+			return InetAddress.getLocalHost().getHostAddress();
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
 
-        clearCandidates();
+		return "127.0.0.1";
 
-        sid = Math.abs(random.nextLong());
+	}
 
-        RTPBridge rtpBridge = RTPBridge.getRTPBridge(connection, String.valueOf(sid));
+	Connection connection;
 
-        String localIp = getLocalHost();
+	Random random = new Random();
 
-        TransportCandidate localCandidate = new TransportCandidate.Fixed(
-                rtpBridge.getIp(), rtpBridge.getPortA());
-        localCandidate.setLocalIp(localIp);
+	long sid;
 
-        TransportCandidate remoteCandidate = new TransportCandidate.Fixed(
-                rtpBridge.getIp(), rtpBridge.getPortB());
-        remoteCandidate.setLocalIp(localIp);
+	/**
+	 * Constructor. A Bridged Resolver need a Connection to connect to a RTP
+	 * Bridge.
+	 */
+	public BridgedResolver(Connection connection) {
+		super();
+		this.connection = connection;
+	}
 
-        localCandidate.setSymmetric(remoteCandidate);
-        remoteCandidate.setSymmetric(localCandidate);
+	@Override
+	public void cancel() throws XMPPException {
+		// Nothing to do here
+	}
 
-        localCandidate.setPassword(rtpBridge.getPass());
-        remoteCandidate.setPassword(rtpBridge.getPass());
+	@Override
+	public void initialize() throws XMPPException {
 
-        localCandidate.setSessionId(rtpBridge.getSid());
-        remoteCandidate.setSessionId(rtpBridge.getSid());
+		clearCandidates();
 
-        localCandidate.setConnection(this.connection);
-        remoteCandidate.setConnection(this.connection);
+		if (!RTPBridge.serviceAvailable(connection)) {
+			setInitialized();
+			throw new XMPPException("No RTP Bridge service available");
+		}
+		setInitialized();
 
-        addCandidate(localCandidate);
+	}
 
-        setResolveEnd();
-    }
+	/**
+	 * Resolve Bridged Candidate.
+	 * <p/>
+	 * The BridgedResolver takes the IP addresse and ports of a jmf proxy
+	 * service.
+	 */
+	@Override
+	public synchronized void resolve(JingleSession session)
+			throws XMPPException {
 
-    public void initialize() throws XMPPException {
+		setResolveInit();
 
-        clearCandidates();
+		clearCandidates();
 
-        if (!RTPBridge.serviceAvailable(connection)) {
-            setInitialized();
-            throw new XMPPException("No RTP Bridge service available");
-        }
-        setInitialized();
+		sid = Math.abs(random.nextLong());
 
-    }
+		final RTPBridge rtpBridge = RTPBridge.getRTPBridge(connection,
+				String.valueOf(sid));
 
-    public void cancel() throws XMPPException {
-        // Nothing to do here
-    }
+		final String localIp = getLocalHost();
 
-    public static String getLocalHost() {
-        Enumeration ifaces = null;
+		final TransportCandidate localCandidate = new TransportCandidate.Fixed(
+				rtpBridge.getIp(), rtpBridge.getPortA());
+		localCandidate.setLocalIp(localIp);
 
-        try {
-            ifaces = NetworkInterface.getNetworkInterfaces();
-        }
-        catch (SocketException e) {
-            e.printStackTrace();
-        }
+		final TransportCandidate remoteCandidate = new TransportCandidate.Fixed(
+				rtpBridge.getIp(), rtpBridge.getPortB());
+		remoteCandidate.setLocalIp(localIp);
 
-        while (ifaces.hasMoreElements()) {
+		localCandidate.setSymmetric(remoteCandidate);
+		remoteCandidate.setSymmetric(localCandidate);
 
-            NetworkInterface iface = (NetworkInterface) ifaces.nextElement();
-            Enumeration iaddresses = iface.getInetAddresses();
+		localCandidate.setPassword(rtpBridge.getPass());
+		remoteCandidate.setPassword(rtpBridge.getPass());
 
-            while (iaddresses.hasMoreElements()) {
-                InetAddress iaddress = (InetAddress) iaddresses.nextElement();
-                if (!iaddress.isLoopbackAddress() && !iaddress.isLinkLocalAddress() && !iaddress.isSiteLocalAddress() && !(iaddress instanceof Inet6Address)) {
-                    return iaddress.getHostAddress();
-                }
-            }
-        }
+		localCandidate.setSessionId(rtpBridge.getSid());
+		remoteCandidate.setSessionId(rtpBridge.getSid());
 
-        try {
-            return InetAddress.getLocalHost().getHostAddress();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+		localCandidate.setConnection(connection);
+		remoteCandidate.setConnection(connection);
 
-        return "127.0.0.1";
+		addCandidate(localCandidate);
 
-    }
+		setResolveEnd();
+	}
 
 }

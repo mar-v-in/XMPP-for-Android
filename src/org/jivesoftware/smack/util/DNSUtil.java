@@ -93,7 +93,8 @@ public class DNSUtil {
 	 * Create a cache to hold the 100 most recently accessed DNS lookups for a
 	 * period of 10 minutes.
 	 */
-	private static Map<String, HostAddress> cache = new Cache<String, HostAddress>(100, 1000 * 60 * 10);
+	private static Map<String, HostAddress> cache = new Cache<String, HostAddress>(
+			100, 1000 * 60 * 10);
 
 	private static DirContext context;
 

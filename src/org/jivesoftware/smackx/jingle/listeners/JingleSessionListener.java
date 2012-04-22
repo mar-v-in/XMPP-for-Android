@@ -26,60 +26,78 @@ import org.jivesoftware.smackx.jingle.nat.TransportCandidate;
 
 /**
  * Interface for listening for session events.
+ * 
  * @author Thiago Camargo
  */
 public interface JingleSessionListener extends JingleListener {
-    /**
-     * Notification that the session has been established. Arguments specify
-     * the payload type and transport to use.
-     *
-     * @param pt            the Payload tyep to use
-     * @param remoteCandidate            the remote candidate to use for connecting to the remote
-     *                      service.
-     * @param localCandidate            the local candidate where we must listen for connections
-     * @param jingleSession Session that called the method
-     */
-    public void sessionEstablished(PayloadType pt, TransportCandidate remoteCandidate,
-                                   TransportCandidate localCandidate, JingleSession jingleSession);
+	/**
+	 * Notification that the session was closed normally.
+	 * 
+	 * @param reason
+	 *            the reason (if any).
+	 * @param jingleSession
+	 *            Session that called the method
+	 */
+	public void sessionClosed(String reason, JingleSession jingleSession);
 
-    /**
-     * Notification that the session was declined.
-     *
-     * @param reason        the reason (if any).
-     * @param jingleSession Session that called the method
-     */
-    public void sessionDeclined(String reason, JingleSession jingleSession);
+	/**
+	 * Notification that the session was closed due to an exception.
+	 * 
+	 * @param e
+	 *            the exception.
+	 * @param jingleSession
+	 *            session that called the method
+	 */
+	public void sessionClosedOnError(XMPPException e,
+			JingleSession jingleSession);
 
-    /**
-     * Notification that the session was redirected.
-     *
-     * @param redirection
-     * @param jingleSession session that called the method
-     */
-    public void sessionRedirected(String redirection, JingleSession jingleSession);
+	/**
+	 * Notification that the session was declined.
+	 * 
+	 * @param reason
+	 *            the reason (if any).
+	 * @param jingleSession
+	 *            Session that called the method
+	 */
+	public void sessionDeclined(String reason, JingleSession jingleSession);
 
-    /**
-     * Notification that the session was closed normally.
-     *
-     * @param reason        the reason (if any).
-     * @param jingleSession Session that called the method
-     */
-    public void sessionClosed(String reason, JingleSession jingleSession);
+	/**
+	 * Notification that the session has been established. Arguments specify the
+	 * payload type and transport to use.
+	 * 
+	 * @param pt
+	 *            the Payload tyep to use
+	 * @param remoteCandidate
+	 *            the remote candidate to use for connecting to the remote
+	 *            service.
+	 * @param localCandidate
+	 *            the local candidate where we must listen for connections
+	 * @param jingleSession
+	 *            Session that called the method
+	 */
+	public void sessionEstablished(PayloadType pt,
+			TransportCandidate remoteCandidate,
+			TransportCandidate localCandidate, JingleSession jingleSession);
 
-    /**
-     * Notification that the session was closed due to an exception.
-     *
-     * @param e             the exception.
-     * @param jingleSession session that called the method
-     */
-    public void sessionClosedOnError(XMPPException e, JingleSession jingleSession);
+	/**
+	 * Notification that the Media has arrived for this session.
+	 * 
+	 * @param jingleSession
+	 *            session that called the method
+	 * @param participant
+	 *            description of the participant
+	 */
+	public void sessionMediaReceived(JingleSession jingleSession,
+			String participant);
 
-    /**
-     * Notification that the Media has arrived for this session.
-     *
-     * @param jingleSession session that called the method
-     * @param participant description of the participant
-     */
-    public void sessionMediaReceived(JingleSession jingleSession, String participant);
-        
+	/**
+	 * Notification that the session was redirected.
+	 * 
+	 * @param redirection
+	 * @param jingleSession
+	 *            session that called the method
+	 */
+	public void sessionRedirected(String redirection,
+			JingleSession jingleSession);
+
 }

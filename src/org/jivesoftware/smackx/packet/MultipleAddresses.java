@@ -21,7 +21,6 @@
 package org.jivesoftware.smackx.packet;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.jivesoftware.smack.packet.PacketExtension;
@@ -171,8 +170,7 @@ public class MultipleAddresses implements PacketExtension {
 	 */
 	public List<Address> getAddressesOfType(String type) {
 		final List<Address> answer = new ArrayList<Address>(addresses.size());
-		for (final Iterator<Address> it = addresses.iterator(); it.hasNext();) {
-			final Address address = it.next();
+		for (final Address address : addresses) {
 			if (address.getType().equals(type)) {
 				answer.add(address);
 			}
@@ -207,8 +205,7 @@ public class MultipleAddresses implements PacketExtension {
 		buf.append("<").append(getElementName());
 		buf.append(" xmlns=\"").append(getNamespace()).append("\">");
 		// Loop through all the addresses and append them to the string buffer
-		for (final Iterator<Address> i = addresses.iterator(); i.hasNext();) {
-			final Address address = i.next();
+		for (final Address address : addresses) {
 			buf.append(address.toXML());
 		}
 		buf.append("</").append(getElementName()).append(">");

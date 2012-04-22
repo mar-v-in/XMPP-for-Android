@@ -157,8 +157,9 @@ public class RosterExchange implements PacketExtension {
 	 */
 	public Iterator<RemoteRosterEntry> getRosterEntries() {
 		synchronized (remoteRosterEntries) {
-			final List<RemoteRosterEntry> entries = Collections.unmodifiableList(new ArrayList<RemoteRosterEntry>(
-					remoteRosterEntries));
+			final List<RemoteRosterEntry> entries = Collections
+					.unmodifiableList(new ArrayList<RemoteRosterEntry>(
+							remoteRosterEntries));
 			return entries.iterator();
 		}
 	}
@@ -188,9 +189,9 @@ public class RosterExchange implements PacketExtension {
 		buf.append("<").append(getElementName()).append(" xmlns=\"")
 				.append(getNamespace()).append("\">");
 		// Loop through all roster entries and append them to the string buffer
-		for (final Iterator<RemoteRosterEntry> i = getRosterEntries(); i.hasNext();) {
-			final RemoteRosterEntry remoteRosterEntry = i
-					.next();
+		for (final Iterator<RemoteRosterEntry> i = getRosterEntries(); i
+				.hasNext();) {
+			final RemoteRosterEntry remoteRosterEntry = i.next();
 			buf.append(remoteRosterEntry.toXML());
 		}
 		buf.append("</").append(getElementName()).append(">");

@@ -30,7 +30,6 @@ import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.PrivateDataManager;
 
-
 /**
  * Provides methods to manage bookmarks in accordance with JEP-0048. Methods for
  * managing URLs and Conferences are provided. </p> It should be noted that some

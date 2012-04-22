@@ -39,244 +39,284 @@ import de.javawi.jstun.test.demo.ice.ICENegociator;
 import de.javawi.jstun.util.UtilityException;
 
 /**
- * ICE Resolver for Jingle transport method that results in sending data between two entities using the Interactive Connectivity Establishment (ICE) methodology. (XEP-0176)
- * The goal of this resolver is to make possible to establish and manage out-of-band connections between two XMPP entities, even if they are behind Network Address Translators (NATs) or firewalls.
- * To use this resolver you must have a STUN Server and be in a non STUN blocked network. Or use a XMPP server with public IP detection Service.
- *
+ * ICE Resolver for Jingle transport method that results in sending data between
+ * two entities using the Interactive Connectivity Establishment (ICE)
+ * methodology. (XEP-0176) The goal of this resolver is to make possible to
+ * establish and manage out-of-band connections between two XMPP entities, even
+ * if they are behind Network Address Translators (NATs) or firewalls. To use
+ * this resolver you must have a STUN Server and be in a non STUN blocked
+ * network. Or use a XMPP server with public IP detection Service.
+ * 
  * @author Thiago Camargo
  */
 public class ICEResolver extends TransportResolver {
 
-	private static final SmackLogger LOGGER = SmackLogger.getLogger(ICEResolver.class);
+	private static final SmackLogger LOGGER = SmackLogger
+			.getLogger(ICEResolver.class);
 
-    Connection connection;
-    Random random = new Random();
-    long sid;
-    String server;
-    int port;
-    static Map<String, ICENegociator> negociatorsMap = new HashMap<String, ICENegociator>();
-    //ICENegociator iceNegociator = null;
+	Connection connection;
+	Random random = new Random();
+	long sid;
+	String server;
+	int port;
+	static Map<String, ICENegociator> negociatorsMap = new HashMap<String, ICENegociator>();
 
-    public ICEResolver(Connection connection, String server, int port) {
-        super();
-        this.connection = connection;
-        this.server = server;
-        this.port = port;
-        this.setType(Type.ice);
-    }
+	// ICENegociator iceNegociator = null;
 
-    public void initialize() throws XMPPException {
-        if (!isResolving() && !isResolved()) {
-            LOGGER.debug("Initialized");
+	public ICEResolver(Connection connection, String server, int port) {
+		super();
+		this.connection = connection;
+		this.server = server;
+		this.port = port;
+		setType(Type.ice);
+	}
 
-            // Negotiation with a STUN server for a set of interfaces is quite slow, but the results
-            // never change over then instance of a JVM.  To increase connection performance considerably
-            // we now cache established/initialized negotiators for each STUN server, so that subsequent uses
-            // of the STUN server are much, much faster.
-            if (negociatorsMap.get(server) == null) {
-            	ICENegociator iceNegociator = new ICENegociator(server, port, (short) 1);
-            	negociatorsMap.put(server, iceNegociator);
-            	
-            	// gather candidates
-            	iceNegociator.gatherCandidateAddresses();
-            	// priorize candidates
-            	iceNegociator.prioritizeCandidates();
-            }
+	@Override
+	public void cancel() throws XMPPException {
 
-        }
-        this.setInitialized();
-    }
+	}
 
-    public void cancel() throws XMPPException {
+	@Override
+	public void initialize() throws XMPPException {
+		if (!isResolving() && !isResolved()) {
+			LOGGER.debug("Initialized");
 
-    }
+			// Negotiation with a STUN server for a set of interfaces is quite
+			// slow, but the results
+			// never change over then instance of a JVM. To increase connection
+			// performance considerably
+			// we now cache established/initialized negotiators for each STUN
+			// server, so that subsequent uses
+			// of the STUN server are much, much faster.
+			if (negociatorsMap.get(server) == null) {
+				final ICENegociator iceNegociator = new ICENegociator(server,
+						port, (short) 1);
+				negociatorsMap.put(server, iceNegociator);
 
-    /**
-     * Resolve the IP and obtain a valid transport method.
-     */
-    public synchronized void resolve(JingleSession session) throws XMPPException {
-        this.setResolveInit();
+				// gather candidates
+				iceNegociator.gatherCandidateAddresses();
+				// priorize candidates
+				iceNegociator.prioritizeCandidates();
+			}
 
-        for (TransportCandidate candidate : this.getCandidatesList()) {
-            if (candidate instanceof ICECandidate) {
-                ICECandidate iceCandidate = (ICECandidate) candidate;
-                iceCandidate.removeCandidateEcho();
-            }
-        }
+		}
+		setInitialized();
+	}
 
-        this.clear();
+	/**
+	 * Resolve the IP and obtain a valid transport method.
+	 */
+	@Override
+	public synchronized void resolve(JingleSession session)
+			throws XMPPException {
+		setResolveInit();
 
-        // Create a transport candidate for each ICE negotiator candidate we have.
-        ICENegociator iceNegociator = negociatorsMap.get(server);
-        for (Candidate candidate : iceNegociator.getSortedCandidates())
-            try {
-                Candidate.CandidateType type = candidate.getCandidateType();
-                ICECandidate.Type iceType = ICECandidate.Type.local;
-                if (type.equals(Candidate.CandidateType.ServerReflexive))
-                    iceType = ICECandidate.Type.srflx;
-                else if (type.equals(Candidate.CandidateType.PeerReflexive))
-                    iceType = ICECandidate.Type.prflx;
-                else if (type.equals(Candidate.CandidateType.Relayed))
-                    iceType = ICECandidate.Type.relay;
-                else
-                    iceType = ICECandidate.Type.host;
+		for (final TransportCandidate candidate : getCandidatesList()) {
+			if (candidate instanceof ICECandidate) {
+				final ICECandidate iceCandidate = (ICECandidate) candidate;
+				iceCandidate.removeCandidateEcho();
+			}
+		}
 
-               // JBW/GW - 17JUL08: Figure out the zero-based NIC number for this candidate.
-                short nicNum = 0;
+		clear();
+
+		// Create a transport candidate for each ICE negotiator candidate we
+		// have.
+		final ICENegociator iceNegociator = negociatorsMap.get(server);
+		for (final Candidate candidate : iceNegociator.getSortedCandidates()) {
+			try {
+				final Candidate.CandidateType type = candidate
+						.getCandidateType();
+				ICECandidate.Type iceType = ICECandidate.Type.local;
+				if (type.equals(Candidate.CandidateType.ServerReflexive)) {
+					iceType = ICECandidate.Type.srflx;
+				} else if (type.equals(Candidate.CandidateType.PeerReflexive)) {
+					iceType = ICECandidate.Type.prflx;
+				} else if (type.equals(Candidate.CandidateType.Relayed)) {
+					iceType = ICECandidate.Type.relay;
+				} else {
+					iceType = ICECandidate.Type.host;
+				}
+
+				// JBW/GW - 17JUL08: Figure out the zero-based NIC number for
+				// this candidate.
+				short nicNum = 0;
 				try {
-					Enumeration<NetworkInterface> nics = NetworkInterface.getNetworkInterfaces();
+					final Enumeration<NetworkInterface> nics = NetworkInterface
+							.getNetworkInterfaces();
 					short i = 0;
-					NetworkInterface nic = NetworkInterface.getByInetAddress(candidate.getAddress().getInetAddress());
-					while(nics.hasMoreElements()) {
-						NetworkInterface checkNIC = nics.nextElement();
+					final NetworkInterface nic = NetworkInterface
+							.getByInetAddress(candidate.getAddress()
+									.getInetAddress());
+					while (nics.hasMoreElements()) {
+						final NetworkInterface checkNIC = nics.nextElement();
 						if (checkNIC.equals(nic)) {
 							nicNum = i;
 							break;
 						}
 						i++;
 					}
-				} catch (SocketException e1) {
+				} catch (final SocketException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-                
-                TransportCandidate transportCandidate = new ICECandidate(candidate.getAddress().getInetAddress().getHostAddress(), 1, nicNum, String.valueOf(Math.abs(random.nextLong())), candidate.getPort(), "1", candidate.getPriority(), iceType);
-                transportCandidate.setLocalIp(candidate.getBase().getAddress().getInetAddress().getHostAddress());
-                transportCandidate.setPort(getFreePort());
-                try {
-                    transportCandidate.addCandidateEcho(session);
-                }
-                catch (SocketException e) {
-                    e.printStackTrace();
-                }
-                this.addCandidate(transportCandidate);
 
-                LOGGER.debug("Candidate addr: " + candidate.getAddress().getInetAddress() + "|" + candidate.getBase().getAddress().getInetAddress() + " Priority:" + candidate.getPriority());
+				final TransportCandidate transportCandidate = new ICECandidate(
+						candidate.getAddress().getInetAddress()
+								.getHostAddress(), 1, nicNum,
+						String.valueOf(Math.abs(random.nextLong())),
+						candidate.getPort(), "1", candidate.getPriority(),
+						iceType);
+				transportCandidate.setLocalIp(candidate.getBase().getAddress()
+						.getInetAddress().getHostAddress());
+				transportCandidate.setPort(getFreePort());
+				try {
+					transportCandidate.addCandidateEcho(session);
+				} catch (final SocketException e) {
+					e.printStackTrace();
+				}
+				addCandidate(transportCandidate);
 
-            }
-            catch (UtilityException e) {
-                e.printStackTrace();
-            }
-            catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
+				LOGGER.debug("Candidate addr: "
+						+ candidate.getAddress().getInetAddress() + "|"
+						+ candidate.getBase().getAddress().getInetAddress()
+						+ " Priority:" + candidate.getPriority());
 
-        // Get a Relay Candidate from XMPP Server
+			} catch (final UtilityException e) {
+				e.printStackTrace();
+			} catch (final UnknownHostException e) {
+				e.printStackTrace();
+			}
+		}
 
-        if (RTPBridge.serviceAvailable(connection)) {
-//            try {
+		// Get a Relay Candidate from XMPP Server
 
-                String localIp;
-                int network;
-                
-                
-                // JBW/GW - 17JUL08: ICENegotiator.getPublicCandidate() always returned null in JSTUN 1.7.0, and now the API doesn't exist in JSTUN 1.7.1
-//                if (iceNegociator.getPublicCandidate() != null) {
-//                    localIp = iceNegociator.getPublicCandidate().getBase().getAddress().getInetAddress().getHostAddress();
-//                    network = iceNegociator.getPublicCandidate().getNetwork();
-//                }
-//                else {
-                {
-                    localIp = BridgedResolver.getLocalHost();
-                    network = 0;
-                }
+		if (RTPBridge.serviceAvailable(connection)) {
+			// try {
 
-                sid = Math.abs(random.nextLong());
+			String localIp;
+			int network;
 
-                RTPBridge rtpBridge = RTPBridge.getRTPBridge(connection, String.valueOf(sid));
+			// JBW/GW - 17JUL08: ICENegotiator.getPublicCandidate() always
+			// returned null in JSTUN 1.7.0, and now the API doesn't exist in
+			// JSTUN 1.7.1
+			// if (iceNegociator.getPublicCandidate() != null) {
+			// localIp =
+			// iceNegociator.getPublicCandidate().getBase().getAddress().getInetAddress().getHostAddress();
+			// network = iceNegociator.getPublicCandidate().getNetwork();
+			// }
+			// else {
+			{
+				localIp = BridgedResolver.getLocalHost();
+				network = 0;
+			}
 
-                TransportCandidate localCandidate = new ICECandidate(
-                        rtpBridge.getIp(), 1, network, String.valueOf(Math.abs(random.nextLong())), rtpBridge.getPortA(), "1", 0, ICECandidate.Type.relay);
-                localCandidate.setLocalIp(localIp);
+			sid = Math.abs(random.nextLong());
 
-                TransportCandidate remoteCandidate = new ICECandidate(
-                        rtpBridge.getIp(), 1, network, String.valueOf(Math.abs(random.nextLong())), rtpBridge.getPortB(), "1", 0, ICECandidate.Type.relay);
-                remoteCandidate.setLocalIp(localIp);
+			final RTPBridge rtpBridge = RTPBridge.getRTPBridge(connection,
+					String.valueOf(sid));
 
-                localCandidate.setSymmetric(remoteCandidate);
-                remoteCandidate.setSymmetric(localCandidate);
+			final TransportCandidate localCandidate = new ICECandidate(
+					rtpBridge.getIp(), 1, network, String.valueOf(Math
+							.abs(random.nextLong())), rtpBridge.getPortA(),
+					"1", 0, ICECandidate.Type.relay);
+			localCandidate.setLocalIp(localIp);
 
-                localCandidate.setPassword(rtpBridge.getPass());
-                remoteCandidate.setPassword(rtpBridge.getPass());
+			final TransportCandidate remoteCandidate = new ICECandidate(
+					rtpBridge.getIp(), 1, network, String.valueOf(Math
+							.abs(random.nextLong())), rtpBridge.getPortB(),
+					"1", 0, ICECandidate.Type.relay);
+			remoteCandidate.setLocalIp(localIp);
 
-                localCandidate.setSessionId(rtpBridge.getSid());
-                remoteCandidate.setSessionId(rtpBridge.getSid());
+			localCandidate.setSymmetric(remoteCandidate);
+			remoteCandidate.setSymmetric(localCandidate);
 
-                localCandidate.setConnection(this.connection);
-                remoteCandidate.setConnection(this.connection);
+			localCandidate.setPassword(rtpBridge.getPass());
+			remoteCandidate.setPassword(rtpBridge.getPass());
 
-                addCandidate(localCandidate);
+			localCandidate.setSessionId(rtpBridge.getSid());
+			remoteCandidate.setSessionId(rtpBridge.getSid());
 
-//            }
-//            catch (UtilityException e) {
-//                e.printStackTrace();
-//            }
-//            catch (UnknownHostException e) {
-//                e.printStackTrace();
-//            }
+			localCandidate.setConnection(connection);
+			remoteCandidate.setConnection(connection);
 
-            // Get Public Candidate From XMPP Server
+			addCandidate(localCandidate);
 
- // JBW/GW - 17JUL08 - ICENegotiator.getPublicCandidate() always returned null in JSTUN 1.7.0, and now it doesn't exist in JSTUN 1.7.1
- //          if (iceNegociator.getPublicCandidate() == null) {
-            if (true) {
+			// }
+			// catch (UtilityException e) {
+			// e.printStackTrace();
+			// }
+			// catch (UnknownHostException e) {
+			// e.printStackTrace();
+			// }
 
-                String publicIp = RTPBridge.getPublicIP(connection);
+			// Get Public Candidate From XMPP Server
 
-                if (publicIp != null && !publicIp.equals("")) {
+			// JBW/GW - 17JUL08 - ICENegotiator.getPublicCandidate() always
+			// returned null in JSTUN 1.7.0, and now it doesn't exist in JSTUN
+			// 1.7.1
+			// if (iceNegociator.getPublicCandidate() == null) {
+			if (true) {
 
-                    Enumeration ifaces = null;
+				final String publicIp = RTPBridge.getPublicIP(connection);
 
-                    try {
-                        ifaces = NetworkInterface.getNetworkInterfaces();
-                    }
-                    catch (SocketException e) {
-                        e.printStackTrace();
-                    }
+				if (publicIp != null && !publicIp.equals("")) {
 
-                    // If detect this address in local machine, don't use it.
+					Enumeration ifaces = null;
 
-                    boolean found = false;
+					try {
+						ifaces = NetworkInterface.getNetworkInterfaces();
+					} catch (final SocketException e) {
+						e.printStackTrace();
+					}
 
-                    while (ifaces.hasMoreElements() && !false) {
+					// If detect this address in local machine, don't use it.
 
-                        NetworkInterface iface = (NetworkInterface) ifaces.nextElement();
-                        Enumeration iaddresses = iface.getInetAddresses();
+					boolean found = false;
 
-                        while (iaddresses.hasMoreElements()) {
-                            InetAddress iaddress = (InetAddress) iaddresses.nextElement();
-                            if (iaddress.getHostAddress().indexOf(publicIp) > -1) {
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
+					while (ifaces.hasMoreElements() && !false) {
 
-                    if (!found) {
-                        try {
-                            TransportCandidate publicCandidate = new ICECandidate(
-                                    publicIp, 1, 0, String.valueOf(Math.abs(random.nextLong())), getFreePort(), "1", 0, ICECandidate.Type.srflx);
-                            publicCandidate.setLocalIp(InetAddress.getLocalHost().getHostAddress());
+						final NetworkInterface iface = (NetworkInterface) ifaces
+								.nextElement();
+						final Enumeration iaddresses = iface.getInetAddresses();
 
-                            try {
-                                publicCandidate.addCandidateEcho(session);
-                            }
-                            catch (SocketException e) {
-                                e.printStackTrace();
-                            }
+						while (iaddresses.hasMoreElements()) {
+							final InetAddress iaddress = (InetAddress) iaddresses
+									.nextElement();
+							if (iaddress.getHostAddress().indexOf(publicIp) > -1) {
+								found = true;
+								break;
+							}
+						}
+					}
 
-                            addCandidate(publicCandidate);
-                        }
-                        catch (UnknownHostException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
+					if (!found) {
+						try {
+							final TransportCandidate publicCandidate = new ICECandidate(
+									publicIp, 1, 0, String.valueOf(Math
+											.abs(random.nextLong())),
+									getFreePort(), "1", 0,
+									ICECandidate.Type.srflx);
+							publicCandidate.setLocalIp(InetAddress
+									.getLocalHost().getHostAddress());
 
-        }
+							try {
+								publicCandidate.addCandidateEcho(session);
+							} catch (final SocketException e) {
+								e.printStackTrace();
+							}
 
-        this.setResolveEnd();
-    }
+							addCandidate(publicCandidate);
+						} catch (final UnknownHostException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+
+		}
+
+		setResolveEnd();
+	}
 
 }

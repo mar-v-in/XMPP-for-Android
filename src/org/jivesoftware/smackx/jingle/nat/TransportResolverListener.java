@@ -20,48 +20,52 @@
 package org.jivesoftware.smackx.jingle.nat;
 
 /**
- * Transport resolver Interface 
+ * Transport resolver Interface
  */
 public abstract interface TransportResolverListener {
-    /**
-     * Resolver listener.
-     */
-    public interface Resolver extends TransportResolverListener {
-        /**
-         * The resolution process has been started.
-         */
-        public void init();
+	/**
+	 * Resolver checker.
+	 */
+	public interface Checker extends TransportResolverListener {
+		/**
+		 * A transport candidate has been checked.
+		 * 
+		 * @param cand
+		 *            The transport candidate that has been checked.
+		 * @param result
+		 *            True if the candidate is usable.
+		 */
+		public void candidateChecked(TransportCandidate cand, boolean result);
 
-        /**
-         * A transport candidate has been added
-         *
-         * @param cand The transport candidate.
-         */
-        public void candidateAdded(TransportCandidate cand);
+		/**
+		 * A transport candidate is being checked.
+		 * 
+		 * @param cand
+		 *            The transport candidate that is being checked.
+		 */
+		public void candidateChecking(TransportCandidate cand);
+	}
 
-        /**
-         * All the transport candidates have been obtained.
-         */
-        public void end();
-    }
+	/**
+	 * Resolver listener.
+	 */
+	public interface Resolver extends TransportResolverListener {
+		/**
+		 * A transport candidate has been added
+		 * 
+		 * @param cand
+		 *            The transport candidate.
+		 */
+		public void candidateAdded(TransportCandidate cand);
 
-    /**
-     * Resolver checker.
-     */
-    public interface Checker extends TransportResolverListener {
-        /**
-         * A transport candidate has been checked.
-         *
-         * @param cand The transport candidate that has been checked.
-         * @param result True if the candidate is usable.
-         */
-        public void candidateChecked(TransportCandidate cand, boolean result);
+		/**
+		 * All the transport candidates have been obtained.
+		 */
+		public void end();
 
-        /**
-         * A transport candidate is being checked.
-         *
-         * @param cand The transport candidate that is being checked.
-         */
-        public void candidateChecking(TransportCandidate cand);
-    }
+		/**
+		 * The resolution process has been started.
+		 */
+		public void init();
+	}
 }

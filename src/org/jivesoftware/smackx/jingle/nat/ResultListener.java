@@ -22,11 +22,11 @@ package org.jivesoftware.smackx.jingle.nat;
 
 /**
  * Listener for ECHO Test Results
- *
+ * 
  * @author Thiago Camargo
  */
 public interface ResultListener {
 
-    public void testFinished(TestResult result, TransportCandidate candidate);
+	public void testFinished(TestResult result, TransportCandidate candidate);
 
 }

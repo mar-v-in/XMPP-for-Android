@@ -207,7 +207,7 @@ public class JarUtils {
 				final AttributeTypeAndValue a = (AttributeTypeAndValue) it
 						.next();
 				if (Arrays.equals(a.getType().getOid(), MESSAGE_DIGEST_OID)) {
-					//existingDigest = a.attributeValue;
+					// existingDigest = a.attributeValue;
 				}
 			}
 			if (existingDigest != null) {

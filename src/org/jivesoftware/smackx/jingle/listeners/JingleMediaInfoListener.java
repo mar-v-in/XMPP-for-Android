@@ -21,31 +21,32 @@ package org.jivesoftware.smackx.jingle.listeners;
 
 /**
  * Interface for listening to jmf info events.
+ * 
  * @author Thiago Camargo
  */
 public interface JingleMediaInfoListener extends JingleListener {
-    /**
-     * The other end is busy.
-     */
-    public void mediaInfoBusy();
+	/**
+	 * The other end is busy.
+	 */
+	public void mediaInfoBusy();
 
-    /**
-     * We are on hold.
-     */
-    public void mediaInfoHold();
+	/**
+	 * We are on hold.
+	 */
+	public void mediaInfoHold();
 
-    /**
-     * The jmf is muted.
-     */
-    public void mediaInfoMute();
+	/**
+	 * The jmf is muted.
+	 */
+	public void mediaInfoMute();
 
-    /**
-     * We are queued.
-     */
-    public void mediaInfoQueued();
+	/**
+	 * We are queued.
+	 */
+	public void mediaInfoQueued();
 
-    /**
-     * We are ringing.
-     */
-    public void mediaInfoRinging();
+	/**
+	 * We are ringing.
+	 */
+	public void mediaInfoRinging();
 }

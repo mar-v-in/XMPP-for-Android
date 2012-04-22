@@ -161,7 +161,7 @@ public class OfflineMessageManager {
 		final DiscoverItems items = ServiceDiscoveryManager.getInstanceFor(
 				connection).discoverItems(null, namespace);
 		for (final Iterator<Item> it = items.getItems(); it.hasNext();) {
-			final DiscoverItems.Item item = (DiscoverItems.Item) it.next();
+			final DiscoverItems.Item item = it.next();
 			answer.add(new OfflineMessageHeader(item));
 		}
 		return answer.iterator();

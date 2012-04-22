@@ -54,37 +54,36 @@ package org.jivesoftware.smackx.jingle.nat;
 
 /**
  * Result of an ECHO Test
- *
+ * 
  * @author Thiago Camargo
  */
 public class TestResult {
 
-    private boolean result = false;
-    private String ip = null;
-    private int port = 0;
+	private boolean result = false;
+	private String ip = null;
+	private int port = 0;
 
-    public boolean isReachable() {
-        return result;
-    }
+	public String getIp() {
+		return ip;
+	}
 
-    public void setResult(boolean result) {
-        this.result = result;
-    }
+	public int getPort() {
+		return port;
+	}
 
-    public String getIp() {
-        return ip;
-    }
+	public boolean isReachable() {
+		return result;
+	}
 
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
 
-    public int getPort() {
-        return port;
-    }
+	public void setPort(int port) {
+		this.port = port;
+	}
 
-    public void setPort(int port) {
-        this.port = port;
-    }
+	public void setResult(boolean result) {
+		this.result = result;
+	}
 }
-

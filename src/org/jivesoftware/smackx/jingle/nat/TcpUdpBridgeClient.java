@@ -62,114 +62,122 @@ import java.net.Socket;
 import org.jivesoftware.smackx.jingle.SmackLogger;
 
 /**
- * A Simple and Experimental Bridge.
- * It Creates a TCP Socket That Connects to another TCP Socket Listener and forwards every packets received to an UDP Listener.
- * And forwards every packets received in UDP Socket, to the TCP Server
+ * A Simple and Experimental Bridge. It Creates a TCP Socket That Connects to
+ * another TCP Socket Listener and forwards every packets received to an UDP
+ * Listener. And forwards every packets received in UDP Socket, to the TCP
+ * Server
  */
 public class TcpUdpBridgeClient {
 
-	private static final SmackLogger LOGGER = SmackLogger.getLogger(TcpUdpBridgeClient.class);
+	private static final SmackLogger LOGGER = SmackLogger
+			.getLogger(TcpUdpBridgeClient.class);
 
 	private String remoteTcpHost = null;
-    private String remoteUdpHost = null;
-    private int remoteTcpPort = -1;
-    private int remoteUdpPort = -1;
-    private int localUdpPort = -1;
+	private String remoteUdpHost = null;
+	private int remoteTcpPort = -1;
+	private int remoteUdpPort = -1;
+	private int localUdpPort = -1;
 
-    private DatagramSocket localUdpSocket;
-    private Socket localTcpSocket;
+	private DatagramSocket localUdpSocket;
+	private Socket localTcpSocket;
 
-    public TcpUdpBridgeClient(String remoteTcpHost, String remoteUdpHost, int remoteTcpPort, int remoteUdpPort) {
-        this.remoteTcpHost = remoteTcpHost;
-        this.remoteUdpHost = remoteUdpHost;
-        this.remoteTcpPort = remoteTcpPort;
-        this.remoteUdpPort = remoteUdpPort;
+	public TcpUdpBridgeClient(String remoteTcpHost, String remoteUdpHost,
+			int remoteTcpPort, int remoteUdpPort) {
+		this.remoteTcpHost = remoteTcpHost;
+		this.remoteUdpHost = remoteUdpHost;
+		this.remoteTcpPort = remoteTcpPort;
+		this.remoteUdpPort = remoteUdpPort;
 
-        try {
-            localTcpSocket = new Socket(remoteTcpHost, remoteTcpPort);
-            localUdpSocket = new DatagramSocket(0);
-            localUdpPort = localUdpSocket.getLocalPort();
-            LOGGER.debug("UDP: " + localUdpSocket.getLocalPort());
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        startBridge();
-    }
+		try {
+			localTcpSocket = new Socket(remoteTcpHost, remoteTcpPort);
+			localUdpSocket = new DatagramSocket(0);
+			localUdpPort = localUdpSocket.getLocalPort();
+			LOGGER.debug("UDP: " + localUdpSocket.getLocalPort());
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+		startBridge();
+	}
 
-    public void startBridge() {
+	public Socket getLocalTcpSocket() {
+		return localTcpSocket;
+	}
 
+	public DatagramSocket getLocalUdpSocket() {
+		return localUdpSocket;
+	}
 
-        final Thread process = new Thread(new Runnable() {
+	public void startBridge() {
 
-            public void run() {
-                try {
-                    OutputStream out = localTcpSocket.getOutputStream();
+		final Thread process = new Thread(new Runnable() {
 
-                    while (true) {
+			@Override
+			public void run() {
+				try {
+					final OutputStream out = localTcpSocket.getOutputStream();
 
-                        byte b[] = new byte[500];
-                        DatagramPacket p = new DatagramPacket(b, 500);
+					while (true) {
 
-                        localUdpSocket.receive(p);
-                        if (p.getLength() == 0) continue;
+						final byte b[] = new byte[500];
+						final DatagramPacket p = new DatagramPacket(b, 500);
 
-                        LOGGER.debug("UDP Client Received and Sending to TCP Server:"+new String(p.getData(),0,p.getLength(),"UTF-8"));
+						localUdpSocket.receive(p);
+						if (p.getLength() == 0) {
+							continue;
+						}
 
-                        out.write(p.getData(), 0, p.getLength());
-                        out.flush();
-                        LOGGER.debug("Client Flush");
+						LOGGER.debug("UDP Client Received and Sending to TCP Server:"
+								+ new String(p.getData(), 0, p.getLength(),
+										"UTF-8"));
 
-                    }
+						out.write(p.getData(), 0, p.getLength());
+						out.flush();
+						LOGGER.debug("Client Flush");
 
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+					}
 
-        });
+				} catch (final IOException e) {
+					e.printStackTrace();
+				}
+			}
 
-        new Thread(new Runnable() {
+		});
 
-            public void run() {
-                try {
-                                       
-                    InputStream in = localTcpSocket.getInputStream();
-                    InetAddress remoteHost = InetAddress.getByName(remoteUdpHost);
-                    process.start();                    
+		new Thread(new Runnable() {
 
-                    while (true) {
-                        byte b[] = new byte[500];
+			@Override
+			public void run() {
+				try {
 
-                        int s = in.read(b);
-                        //if (s == -1) continue;
+					final InputStream in = localTcpSocket.getInputStream();
+					final InetAddress remoteHost = InetAddress
+							.getByName(remoteUdpHost);
+					process.start();
 
-                        LOGGER.debug("TCP Client:" +new String(b,0,s,"UTF-8"));
+					while (true) {
+						final byte b[] = new byte[500];
 
-                        DatagramPacket udpPacket = new DatagramPacket(b, s);
+						final int s = in.read(b);
+						// if (s == -1) continue;
 
-                        udpPacket.setAddress(remoteHost);
-                        udpPacket.setPort(remoteUdpPort);
+						LOGGER.debug("TCP Client:"
+								+ new String(b, 0, s, "UTF-8"));
 
-                        localUdpSocket.send(udpPacket);
+						final DatagramPacket udpPacket = new DatagramPacket(b,
+								s);
 
-                    }
+						udpPacket.setAddress(remoteHost);
+						udpPacket.setPort(remoteUdpPort);
 
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+						localUdpSocket.send(udpPacket);
 
-        }).start();
-    }
+					}
 
-    public Socket getLocalTcpSocket() {
-        return localTcpSocket;
-    }
+				} catch (final IOException e) {
+					e.printStackTrace();
+				}
+			}
 
-    public DatagramSocket getLocalUdpSocket() {
-        return localUdpSocket;
-    }
+		}).start();
+	}
 }

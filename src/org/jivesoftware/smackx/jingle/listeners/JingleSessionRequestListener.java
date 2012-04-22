@@ -23,14 +23,15 @@ import org.jivesoftware.smackx.jingle.JingleSessionRequest;
 
 /**
  * Interface to listener Jingle session requests.
- *
+ * 
  * @author Alvaro Saurin
  */
 public interface JingleSessionRequestListener extends JingleListener {
-    /**
-     * A request to start a session has been recieved from another user.
-     *
-     * @param request The request from the other user.
-     */
-    public void sessionRequested(JingleSessionRequest request);
+	/**
+	 * A request to start a session has been recieved from another user.
+	 * 
+	 * @param request
+	 *            The request from the other user.
+	 */
+	public void sessionRequested(JingleSessionRequest request);
 }

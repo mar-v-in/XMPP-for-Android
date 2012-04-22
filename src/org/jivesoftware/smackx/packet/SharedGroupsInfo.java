@@ -1,7 +1,6 @@
 package org.jivesoftware.smackx.packet;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.jivesoftware.smack.packet.IQ;
@@ -58,8 +57,8 @@ public class SharedGroupsInfo extends IQ {
 	public String getChildElementXML() {
 		final StringBuilder buf = new StringBuilder();
 		buf.append("<sharedgroup xmlns=\"http://www.jivesoftware.org/protocol/sharedgroup\">");
-		for (final Iterator<String> it = groups.iterator(); it.hasNext();) {
-			buf.append("<group>").append(it.next()).append("</group>");
+		for (final String string : groups) {
+			buf.append("<group>").append(string).append("</group>");
 		}
 		buf.append("</sharedgroup>");
 		return buf.toString();

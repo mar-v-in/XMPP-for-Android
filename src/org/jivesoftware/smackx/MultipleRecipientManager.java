@@ -78,7 +78,8 @@ public class MultipleRecipientManager {
 	 * Create a cache to hold the 100 most recently accessed elements for a
 	 * period of 24 hours.
 	 */
-	private static Cache<String, String> services = new Cache<String, String>(100, 24 * 60 * 60 * 1000);
+	private static Cache<String, String> services = new Cache<String, String>(
+			100, 24 * 60 * 60 * 1000);
 
 	/**
 	 * Returns the address of the multiple recipients service. To obtain such
@@ -203,16 +204,12 @@ public class MultipleRecipientManager {
 			// Send reply to multiple recipients
 			final List<String> to = new ArrayList<String>();
 			final List<String> cc = new ArrayList<String>();
-			for (final Iterator<?> it = info.getTOAddresses().iterator(); it
-					.hasNext();) {
-				final String jid = ((MultipleAddresses.Address) it.next())
-						.getJid();
+			for (final Object name : info.getTOAddresses()) {
+				final String jid = ((MultipleAddresses.Address) name).getJid();
 				to.add(jid);
 			}
-			for (final Iterator<?> it = info.getCCAddresses().iterator(); it
-					.hasNext();) {
-				final String jid = ((MultipleAddresses.Address) it.next())
-						.getJid();
+			for (final Object name : info.getCCAddresses()) {
+				final String jid = ((MultipleAddresses.Address) name).getJid();
 				cc.add(jid);
 			}
 			// Add original sender as a 'to' address (if not already present)
@@ -266,8 +263,8 @@ public class MultipleRecipientManager {
 	 *             if server does not support JEP-33: Extended Stanza Addressing
 	 *             and some JEP-33 specific features were requested.
 	 */
-	public static void send(Connection connection, Packet packet, List<String> to,
-			List<String> cc, List<?> bcc) throws XMPPException {
+	public static void send(Connection connection, Packet packet,
+			List<String> to, List<String> cc, List<?> bcc) throws XMPPException {
 		send(connection, packet, to, cc, bcc, null, null, false);
 	}
 
@@ -303,9 +300,9 @@ public class MultipleRecipientManager {
 	 *             if server does not support JEP-33: Extended Stanza Addressing
 	 *             and some JEP-33 specific features were requested.
 	 */
-	public static void send(Connection connection, Packet packet, List<String> to,
-			List<String> cc, List<?> bcc, String replyTo, String replyRoom, boolean noReply)
-			throws XMPPException {
+	public static void send(Connection connection, Packet packet,
+			List<String> to, List<String> cc, List<?> bcc, String replyTo,
+			String replyRoom, boolean noReply) throws XMPPException {
 		final String serviceAddress = getMultipleRecipienServiceAddress(connection);
 		if (serviceAddress != null) {
 			// Send packet to target users using multiple recipient service
@@ -329,27 +326,26 @@ public class MultipleRecipientManager {
 	}
 
 	private static void sendThroughService(Connection connection,
-			Packet packet, List<String> to, List<String> cc, List<?> bcc, String replyTo,
-			String replyRoom, boolean noReply, String serviceAddress) {
+			Packet packet, List<String> to, List<String> cc, List<?> bcc,
+			String replyTo, String replyRoom, boolean noReply,
+			String serviceAddress) {
 		// Create multiple recipient extension
 		final MultipleAddresses multipleAddresses = new MultipleAddresses();
 		if (to != null) {
-			for (final Iterator<String> it = to.iterator(); it.hasNext();) {
-				final String jid = it.next();
+			for (final String jid : to) {
 				multipleAddresses.addAddress(MultipleAddresses.TO, jid, null,
 						null, false, null);
 			}
 		}
 		if (cc != null) {
-			for (final Iterator<String> it = cc.iterator(); it.hasNext();) {
-				final String jid = it.next();
+			for (final String jid : cc) {
 				multipleAddresses.addAddress(MultipleAddresses.CC, jid, null,
 						null, false, null);
 			}
 		}
 		if (bcc != null) {
-			for (final Iterator<?> it = bcc.iterator(); it.hasNext();) {
-				final String jid = (String) it.next();
+			for (final Object name : bcc) {
+				final String jid = (String) name;
 				multipleAddresses.addAddress(MultipleAddresses.BCC, jid, null,
 						null, false, null);
 			}
@@ -377,22 +373,20 @@ public class MultipleRecipientManager {
 	private static void sendToIndividualRecipients(Connection connection,
 			Packet packet, List<String> to, List<String> cc, List<?> bcc) {
 		if (to != null) {
-			for (final Iterator<String> it = to.iterator(); it.hasNext();) {
-				final String jid = it.next();
+			for (final String jid : to) {
 				packet.setTo(jid);
 				connection.sendPacket(new PacketCopy(packet.toXML()));
 			}
 		}
 		if (cc != null) {
-			for (final Iterator<String> it = cc.iterator(); it.hasNext();) {
-				final String jid = it.next();
+			for (final String jid : cc) {
 				packet.setTo(jid);
 				connection.sendPacket(new PacketCopy(packet.toXML()));
 			}
 		}
 		if (bcc != null) {
-			for (final Iterator<?> it = bcc.iterator(); it.hasNext();) {
-				final String jid = (String) it.next();
+			for (final Object name : bcc) {
+				final String jid = (String) name;
 				packet.setTo(jid);
 				connection.sendPacket(new PacketCopy(packet.toXML()));
 			}

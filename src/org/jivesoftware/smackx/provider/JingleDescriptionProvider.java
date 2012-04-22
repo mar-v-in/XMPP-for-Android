@@ -30,114 +30,124 @@ import org.xmlpull.v1.XmlPullParser;
  * 
  * @author Alvaro Saurin <alvaro.saurin@gmail.com>
  */
-public abstract class JingleDescriptionProvider implements PacketExtensionProvider {
+public abstract class JingleDescriptionProvider implements
+		PacketExtensionProvider {
 
-    /**
-     * Default constructor
-     */
-    public JingleDescriptionProvider() {
-        super();
-    }
+	/**
+	 * Jingle audio
+	 */
+	public static class Audio extends JingleDescriptionProvider {
 
-    /**
-     * Parse a iq/jingle/description/payload-type element.
-     * 
-     * @param parser
-     *            the input to parse
-     * @return a payload type element
-     * @throws Exception
-     */
-    protected PayloadType parsePayload(final XmlPullParser parser) throws Exception {
-        int ptId = 0;
-        String ptName;
-        int ptChannels = 0;
+		/**
+		 * Default constructor
+		 */
+		public Audio() {
+			super();
+		}
 
-        try {
-            ptId = Integer.parseInt(parser.getAttributeValue("", "id"));
-        } catch (Exception e) {
-        }
+		/**
+		 * Get a new instance of this object.
+		 */
+		@Override
+		protected JingleDescription getInstance() {
+			return new JingleDescription.Audio();
+		}
 
-        ptName = parser.getAttributeValue("", "name");
+		/**
+		 * Parse an audio payload type.
+		 */
+		@Override
+		public PayloadType parsePayload(final XmlPullParser parser)
+				throws Exception {
+			final PayloadType pte = super.parsePayload(parser);
+			final PayloadType.Audio pt = new PayloadType.Audio(pte);
+			int ptClockRate = 0;
 
-        try {
-            ptChannels = Integer.parseInt(parser.getAttributeValue("", "channels"));
-        } catch (Exception e) {
-        }
+			try {
+				ptClockRate = Integer.parseInt(parser.getAttributeValue("",
+						"clockrate"));
+			} catch (final Exception e) {
+			}
+			pt.setClockRate(ptClockRate);
 
-        return new PayloadType(ptId, ptName, ptChannels);
-    }
+			return pt;
+		}
+	}
 
-    /**
-     * Parse a iq/jingle/description element.
-     * 
-     * @param parser
-     *            the input to parse
-     * @return a description element
-     * @throws Exception
-     */
-    public PacketExtension parseExtension(final XmlPullParser parser) throws Exception {
-        boolean done = false;
-        JingleDescription desc = getInstance();
+	/**
+	 * Default constructor
+	 */
+	public JingleDescriptionProvider() {
+		super();
+	}
 
-        while (!done) {
-            int eventType = parser.next();
-            String name = parser.getName();
+	/**
+	 * Return a new instance of this class. Subclasses must overwrite this
+	 * method.
+	 */
+	protected abstract JingleDescription getInstance();
 
-            if (eventType == XmlPullParser.START_TAG) {
-                if (name.equals(PayloadType.NODENAME)) {
-                    desc.addPayloadType(parsePayload(parser));
-                } else {
-                    throw new Exception("Unknow element \"" + name + "\" in content.");
-                }
-            } else if (eventType == XmlPullParser.END_TAG) {
-                if (name.equals(JingleDescription.NODENAME)) {
-                    done = true;
-                }
-            }
-        }
-        return desc;
-    }
+	/**
+	 * Parse a iq/jingle/description element.
+	 * 
+	 * @param parser
+	 *            the input to parse
+	 * @return a description element
+	 * @throws Exception
+	 */
+	@Override
+	public PacketExtension parseExtension(final XmlPullParser parser)
+			throws Exception {
+		boolean done = false;
+		final JingleDescription desc = getInstance();
 
-    /**
-     * Return a new instance of this class. Subclasses must overwrite this
-     * method.
-     */
-    protected abstract JingleDescription getInstance();
+		while (!done) {
+			final int eventType = parser.next();
+			final String name = parser.getName();
 
-    /**
-     * Jingle audio
-     */
-    public static class Audio extends JingleDescriptionProvider {
+			if (eventType == XmlPullParser.START_TAG) {
+				if (name.equals(PayloadType.NODENAME)) {
+					desc.addPayloadType(parsePayload(parser));
+				} else {
+					throw new Exception("Unknow element \"" + name
+							+ "\" in content.");
+				}
+			} else if (eventType == XmlPullParser.END_TAG) {
+				if (name.equals(JingleDescription.NODENAME)) {
+					done = true;
+				}
+			}
+		}
+		return desc;
+	}
 
-        /**
-         * Default constructor
-         */
-        public Audio() {
-            super();
-        }
+	/**
+	 * Parse a iq/jingle/description/payload-type element.
+	 * 
+	 * @param parser
+	 *            the input to parse
+	 * @return a payload type element
+	 * @throws Exception
+	 */
+	protected PayloadType parsePayload(final XmlPullParser parser)
+			throws Exception {
+		int ptId = 0;
+		String ptName;
+		int ptChannels = 0;
 
-        /**
-         * Parse an audio payload type.
-         */
-        public PayloadType parsePayload(final XmlPullParser parser) throws Exception {
-            PayloadType pte = super.parsePayload(parser);
-            PayloadType.Audio pt = new PayloadType.Audio(pte);
-            int ptClockRate = 0;
+		try {
+			ptId = Integer.parseInt(parser.getAttributeValue("", "id"));
+		} catch (final Exception e) {
+		}
 
-            try {
-                ptClockRate = Integer.parseInt(parser.getAttributeValue("", "clockrate"));
-            } catch (Exception e) {
-            }
-            pt.setClockRate(ptClockRate);
+		ptName = parser.getAttributeValue("", "name");
 
-            return pt;
-        }
+		try {
+			ptChannels = Integer.parseInt(parser.getAttributeValue("",
+					"channels"));
+		} catch (final Exception e) {
+		}
 
-        /**
-         * Get a new instance of this object.
-         */
-        protected JingleDescription getInstance() {
-            return new JingleDescription.Audio();
-        }
-    }
+		return new PayloadType(ptId, ptName, ptChannels);
+	}
 }

@@ -90,8 +90,8 @@ public class DefaultPrivateData implements PrivateData {
 		if (map == null) {
 			return Collections.EMPTY_LIST.iterator();
 		}
-		return Collections.unmodifiableMap(new HashMap<String, String>(map)).keySet()
-				.iterator();
+		return Collections.unmodifiableMap(new HashMap<String, String>(map))
+				.keySet().iterator();
 	}
 
 	/**

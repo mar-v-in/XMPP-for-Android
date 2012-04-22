@@ -24,11 +24,12 @@ import org.jivesoftware.smackx.jingle.JingleSession;
 
 /**
  * A Basic Jingle Transport Manager implementation.
- *  
+ * 
  */
-public class BasicTransportManager extends JingleTransportManager{
+public class BasicTransportManager extends JingleTransportManager {
 
-    protected TransportResolver createResolver(JingleSession session) {
-        return new BasicResolver();
-    }
+	@Override
+	protected TransportResolver createResolver(JingleSession session) {
+		return new BasicResolver();
+	}
 }

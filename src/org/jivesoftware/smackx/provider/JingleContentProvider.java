@@ -31,28 +31,31 @@ import org.xmlpull.v1.XmlPullParser;
  */
 public class JingleContentProvider implements PacketExtensionProvider {
 
-    /**
-     * Creates a new provider. ProviderManager requires that every
-     * PacketExtensionProvider has a public, no-argument constructor
-     */
-    public JingleContentProvider() {
-        super();
-    }
+	/**
+	 * Creates a new provider. ProviderManager requires that every
+	 * PacketExtensionProvider has a public, no-argument constructor
+	 */
+	public JingleContentProvider() {
+		super();
+	}
 
-    /**
-     * Parse a JingleContent extension.
-     */
-    public PacketExtension parseExtension(final XmlPullParser parser) throws Exception {
-        PacketExtension result = null;
+	/**
+	 * Parse a JingleContent extension.
+	 */
+	@Override
+	public PacketExtension parseExtension(final XmlPullParser parser)
+			throws Exception {
+		PacketExtension result = null;
 
-        String elementName = parser.getName();
-        String creator = parser.getAttributeValue("", JingleContent.CREATOR);
-        String name = parser.getAttributeValue("", JingleContent.NAME);
+		final String elementName = parser.getName();
+		final String creator = parser.getAttributeValue("",
+				JingleContent.CREATOR);
+		final String name = parser.getAttributeValue("", JingleContent.NAME);
 
-        // Try to get an Audio content info
-        result = new JingleContent(creator, name);
+		// Try to get an Audio content info
+		result = new JingleContent(creator, name);
 
-        return result;
-    }
+		return result;
+	}
 
 }
