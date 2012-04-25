@@ -7,6 +7,7 @@ import xmpp.client.service.user.User;
 import xmpp.client.service.user.UserList;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 public class ContactList extends ArrayList<Contact> implements Parcelable {
 
@@ -48,25 +49,42 @@ public class ContactList extends ArrayList<Contact> implements Parcelable {
 	}
 
 	public synchronized void add(User user) {
+		Log.d("ContactProvider", user.getFullUserLogin() + ":" + user.getDisplayName());
 		for (final Contact contact : this) {
-			if (contact.getUserName().equalsIgnoreCase(user.getUserName())) {
+			if (contact.getUserName().equalsIgnoreCase(user.getDisplayName())) {
+				if (user.isMUCUser()) Log.d("ContactProvider", user.getDisplayName() + "="
+						+ contact.getUserName());
 				contact.add(user);
 				return;
 			}
 			if (user.isMUCUser()) {
 				final String jid = user.getAdditionalInformation(0);
-				if (jid != null && contact.contains(jid)) {
+				if (jid != null && contact.contains(jid, false)) {
+
+					if (user.isMUCUser()) Log.d("ContactProvider", user.getDisplayName() + "="
+							+ contact.getUserName());
 					contact.add(user);
 					return;
 				}
 			}
 		}
+		Log.d("ContactProvider", user.getDisplayName() + "=new");
 		add(new Contact(user));
 	}
 
+	@Deprecated
 	public synchronized boolean contains(String uid) {
 		for (final Contact contact : this) {
-			if (contact.contains(uid)) {
+			if (contact.contains(uid, false)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public synchronized boolean contains(User user) {
+		for (final Contact contact : this) {
+			if (contact.contains(user)) {
 				return true;
 			}
 		}
@@ -79,9 +97,19 @@ public class ContactList extends ArrayList<Contact> implements Parcelable {
 		return 0;
 	}
 
+	@Deprecated
 	public synchronized Contact get(String uid) {
 		for (final Contact contact : this) {
-			if (contact.contains(uid)) {
+			if (contact.contains(uid, false)) {
+				return contact;
+			}
+		}
+		return null;
+	}
+
+	public synchronized Contact get(User user) {
+		for (final Contact contact : this) {
+			if (contact.contains(user)) {
 				return contact;
 			}
 		}
@@ -127,7 +155,7 @@ public class ContactList extends ArrayList<Contact> implements Parcelable {
 
 	public synchronized void removeUser(String address) {
 		for (final Contact contact : this) {
-			if (contact.contains(address)) {
+			if (contact.contains(address, false)) {
 				contact.remove(address);
 				return;
 			}

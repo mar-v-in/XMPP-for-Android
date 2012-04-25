@@ -645,7 +645,7 @@ public class Service extends android.app.Service implements
 		builder.setContentText(message.getMessage());
 
 		mNM.notify(R.string.app_name
-				+ message.getUser().getUserLogin().hashCode(),
+				+ message.getUser().getFullUserLogin().hashCode(),
 				builder.getNotification());
 
 	}

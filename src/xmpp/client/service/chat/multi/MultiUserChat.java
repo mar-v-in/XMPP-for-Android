@@ -146,7 +146,7 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener,
 
 	public void processMessage(MultiUserChat mChat, Message msg) {
 		try {
-			setupUser(StringUtils.parseResource(msg.getFrom()));
+			setupUser(msg.getFrom(), null);
 		} catch (final Exception e) {
 			Log.d(TAG, "setupUser", e);
 		}
@@ -154,20 +154,27 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener,
 	}
 
 	public void processParticipantJoined(String participant) {
-		setupUser(participant);
-		final Presence presence = mMUC.getOccupantPresence(participant);
-		getUserService().presenceChanged(presence);
+		processStatusMessage(StringUtils.parseResource(participant) + " joined.");
+		final Presence presence = new Presence(Presence.Type.available, null,
+				0, null);
+		presence.setFrom(getIdentifier() + "/" + participant);
+		processParticipantPresence(presence);
 	}
 
 	public void processParticipantLeft(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant) + " left.");
 		final Presence presence = new Presence(Presence.Type.unavailable, null,
 				0, null);
-		presence.setFrom(participant);
-		getUserService().presenceChanged(presence);
+		presence.setFrom(getIdentifier() + "/" + participant);
+		processParticipantPresence(presence);
 	}
 
 	public void processParticipantPresence(Presence presence) {
-		getUserService().presenceChanged(presence);
+		if (getUserService().getUserByFullUserLogin(presence.getFrom()) == null) {
+			setupUser(presence.getFrom(), presence);
+		} else {
+			getUserService().presenceChanged(presence);
+		}
 	}
 
 	@Override
@@ -181,28 +188,120 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener,
 		}
 	}
 
-	private User setupUser(String participant) {
-		Log.d(TAG, participant);
-		final Presence presence = mMUC.getOccupantPresence(participant);
-		final Occupant occupant = mMUC.getOccupant(participant);
-		final ArrayList<String> info = new ArrayList<String>();
-		if (occupant != null) {
-			info.add(0, occupant.getJid());
-			info.add(1, occupant.getAffiliation());
-			info.add(2, occupant.getRole());
-			return getUserService().setupUser(
-					new User(getIdentifier(), occupant.getNick(), info,
-							presence));
-		} else {
-			return getUserService().setupUser(
-					new User(getIdentifier(), participant, info, new Presence(
-							Presence.Type.unavailable)));
+	private User setupUser(String participant, Presence presence) {
+		try {
+			if (isMe(participant))
+				return getUserService().getUserMe();
+			participant = StringUtils.parseResource(participant);
+			Log.d(TAG, participant);
+			if (presence == null) {
+				presence = mMUC.getOccupantPresence(participant);
+			}
+			final Occupant occupant = mMUC.getOccupant(participant);
+			final ArrayList<String> info = new ArrayList<String>();
+			if (occupant != null) {
+				info.add(0, occupant.getJid());
+				info.add(1, occupant.getAffiliation());
+				info.add(2, occupant.getRole());
+			}
+			if (presence != null) {
+				return getUserService().setupUser(
+						new User(getIdentifier(), participant, info, presence));
+			} else {
+				return getUserService().setupUser(
+						new User(getIdentifier(), participant, info,
+								new Presence(Presence.Type.unavailable)));
+			}
+		} catch (Exception e) {
+			Log.d(TAG, "setupUser", e);
 		}
+		return null;
 	}
 
 	@Override
 	public void subjectUpdated(String subject, String from) {
 		mInternalChatManager.chatUpdated(this);
+	}
+
+	private void processStatusMessage(String msg) {
+		Message message = new Message();
+		message.setFrom(getIdentifier());
+		message.setBody(msg);
+		processMessage(this, message);
+	}
+
+	public void processParticipantKicked(String participant, String actor,
+			String reason) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " kicked "
+				+ StringUtils.parseResource(participant)
+				+ ((reason != null && !reason.isEmpty()) ? (" (Reason: "
+						+ reason + ")") : "") + ".");
+	}
+
+	public void processParticipantBanned(String participant, String actor,
+			String reason) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " banned "
+				+ StringUtils.parseResource(participant)
+				+ ((reason != null && !reason.isEmpty()) ? (" (Reason: "
+						+ reason + ")") : "") + ".");
+	}
+
+	public void processParticipantAdminRevoked(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " lost Admin.");
+	}
+
+	public void processParticipantAdminGranted(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " got Admin.");
+	}
+
+	public void processParticipantMembershipGranted(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " got Membership.");
+	}
+
+	public void processParticipantMembershipRevoked(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " lost Membership.");
+	}
+
+	public void processParticipantModeratorGranted(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " got Moderator.");
+	}
+
+	public void processParticipantModeratorRevoked(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " lost Moderator.");
+	}
+
+	public void processParticipantNicknameChanged(String participant,
+			String newNickname) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " changed Nickname to " + newNickname + ".");
+	}
+
+	public void processParticipantOwnershipGranted(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " got Ownership.");
+	}
+
+	public void processParticipantOwnershipRevoked(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " lost Ownership.");
+	}
+
+	public void processParticipantVoiceGranted(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " got Voice.");
+	}
+
+	public void processParticipantVoiceRevoked(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " lost Voice.");
 	}
 
 }

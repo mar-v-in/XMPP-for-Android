@@ -8,6 +8,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 public class Contact implements Parcelable, Comparable<Contact> {
 
@@ -57,10 +58,11 @@ public class Contact implements Parcelable, Comparable<Contact> {
 		return getUsers().get(0).compareTo(another.getUsers().get(0));
 	}
 
-	public boolean contains(String address) {
+	public boolean contains(String address, boolean fullcheck) {
 		for (final User user : getUsers()) {
-			if (user.getUserLogin().equalsIgnoreCase(address)
-					|| user.getFullUserLogin().equalsIgnoreCase(address)) {
+			if ((!fullcheck && user.getUserLogin().equalsIgnoreCase(address))
+					|| (fullcheck && user.getFullUserLogin().equalsIgnoreCase(
+							address))) {
 				return true;
 			}
 		}
@@ -68,7 +70,13 @@ public class Contact implements Parcelable, Comparable<Contact> {
 	}
 
 	public boolean contains(User user) {
-		return contains(user.getUserLogin());
+		for (final User user2 : getUsers()) {
+			if (user2.equals(user)) {
+				Log.d("ContactProvider", user.getFullUserLogin() + "==" + user2.getFullUserLogin() + ":" + getUserName());
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override
@@ -84,8 +92,9 @@ public class Contact implements Parcelable, Comparable<Contact> {
 		return false;
 	}
 
+	@Deprecated
 	public boolean equals(User o) {
-		if (contains(o.getUserLogin())) {
+		if (contains(o)) {
 			return true;
 		}
 		return false;

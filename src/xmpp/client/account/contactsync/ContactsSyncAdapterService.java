@@ -1,6 +1,8 @@
 package xmpp.client.account.contactsync;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import xmpp.client.Constants;
 import xmpp.client.R;
@@ -18,6 +20,7 @@ import android.content.ContentProviderOperation;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.content.OperationApplicationException;
 import android.content.ServiceConnection;
 import android.content.SyncResult;
 import android.database.Cursor;
@@ -133,22 +136,40 @@ public class ContactsSyncAdapterService extends Service implements
 	}
 
 	public void doSync(ContactList p) {
+		HashMap<String, Long> localContacts = new HashMap<String, Long>();
+		Uri rawContactUri = RawContacts.CONTENT_URI
+				.buildUpon()
+				.appendQueryParameter(RawContacts.ACCOUNT_NAME,
+						mContactMe.getUserLogin())
+				.appendQueryParameter(RawContacts.ACCOUNT_TYPE, ACCOUNT_TYPE)
+				.build();
+		Cursor c1 = getContentResolver().query(rawContactUri,
+				new String[] { BaseColumns._ID, RawContacts.SOURCE_ID }, null,
+				null, null);
+		while (c1.moveToNext()) {
+			localContacts.put(c1.getString(1), c1.getLong(0));
+		}
+		c1.close();
+		ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
 		for (final Contact contact : p) {
-			boolean updateOnly = true;
 			for (final User user : contact.getUsers()) {
 				if (user.isInvisible()) {
 					break;
 				}
-				final boolean insert = manageDatabaseUser(user);
-				if (insert) {
-					updateOnly = false;
+				if (!localContacts.containsKey(user.getUserLogin())) {
+					int back = insertDatabaseUser(ops, user);
+				} else {
+					updateDatabaseUser(ops,
+							localContacts.get(user.getUserLogin()), user);
 				}
-				updateUser(user);
 			}
-			if (!updateOnly) { // TODO
-				contact.setUserContact(combineDatabaseContact(contact));
-				updateContact(contact);
-			}
+		}
+		try {
+			getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops);
+		} catch (RemoteException e) {
+			Log.e(TAG, "sync", e);
+		} catch (OperationApplicationException e) {
+			Log.e(TAG, "sync", e);
 		}
 	}
 
@@ -219,8 +240,8 @@ public class ContactsSyncAdapterService extends Service implements
 
 	}
 
-	private void insertDatabaseUser(User user) {
-		final ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
+	private int insertDatabaseUser(ArrayList<ContentProviderOperation> ops,
+			User user) {
 		final int rawContactInsertIndex = ops.size();
 		ops.add(ContentProviderOperation.newInsert(RawContacts.CONTENT_URI)
 				.withValue(RawContacts.ACCOUNT_TYPE, ACCOUNT_TYPE)
@@ -254,50 +275,14 @@ public class ContactsSyncAdapterService extends Service implements
 				.withValueBackReference(Data.RAW_CONTACT_ID,
 						rawContactInsertIndex)
 				.withValue(Data.MIMETYPE, ACCOUNT_MIME)
-				.withValue(ContactsContract.Data.DATA1, user.getUserLogin())
-				.withValue(ContactsContract.Data.DATA2, "d2")
-				.withValue(ContactsContract.Data.DATA3, "d3").build());
+				.withValue(Data.DATA1, user.getUserLogin())
+				.withValue(Data.DATA2, "Chat " + user.getUserLogin()).build());
 
-		try {
-			getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops);
-		} catch (final Exception e) {
-			Log.e(TAG, "insertUser", e);
-		}
+		return rawContactInsertIndex;
 	}
 
 	@Override
 	public boolean isReady() {
-		return true;
-	}
-
-	boolean manageDatabaseUser(User user) {
-		final Uri rawContactUri = RawContacts.CONTENT_URI
-				.buildUpon()
-				.appendQueryParameter(RawContacts.ACCOUNT_NAME,
-						mContactMe.getUserLogin())
-				.appendQueryParameter(RawContacts.ACCOUNT_TYPE, ACCOUNT_TYPE)
-				.appendQueryParameter(RawContacts.SOURCE_ID,
-						user.getUserLogin()).build();
-		final Cursor c = getContentResolver().query(
-				rawContactUri,
-				new String[] { BaseColumns._ID, RawContacts.SOURCE_ID,
-						RawContacts.CONTACT_ID }, null, null, null);
-		if (c.getCount() == 0) {
-			insertDatabaseUser(user);
-		} else {
-			while (c.moveToNext()) {
-				if (c.getString(1) != null
-						&& c.getString(1).equalsIgnoreCase(user.getUserLogin())) {
-					prepareDatabaseUpdate(user, c.getLong(0));
-					user.setUserContact(ContentUris.withAppendedId(
-							Contacts.CONTENT_URI, c.getLong(0)).toString());
-					c.close();
-					return false;
-				}
-			}
-			insertDatabaseUser(user);
-		}
-		c.close();
 		return true;
 	}
 
@@ -320,23 +305,6 @@ public class ContactsSyncAdapterService extends Service implements
 		doUnbindService();
 	}
 
-	private void prepareDatabaseUpdate(User user, long rawContactID) {
-		final Uri rawContactUri = ContentUris.withAppendedId(
-				RawContacts.CONTENT_URI, rawContactID);
-		final Uri entityUri = Uri.withAppendedPath(rawContactUri,
-				Entity.CONTENT_DIRECTORY);
-		final Cursor c = getContentResolver().query(entityUri,
-				new String[] { Entity.DATA_ID },
-				Entity.MIMETYPE + " = \"" + ACCOUNT_MIME + "\"", null, null);
-		while (c.moveToNext()) {
-			if (!c.isNull(0)) {
-				updateDatabaseUser(rawContactID, c.getLong(0), user);
-				break;
-			}
-		}
-		c.close();
-	}
-
 	void updateContact(Contact contact) {
 		final Message msg = Message.obtain(null, Constants.SIG_UPDATE_CONTACT);
 		final Bundle b = new Bundle();
@@ -350,33 +318,39 @@ public class ContactsSyncAdapterService extends Service implements
 		}
 	}
 
-	private void updateDatabaseUser(long rawContactID, long dataID, User user) {
-		final ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
-		ops.add(ContentProviderOperation
-				.newInsert(ContactsContract.StatusUpdates.CONTENT_URI)
-				.withValue(ContactsContract.StatusUpdates.DATA_ID, dataID)
-				.withValue(ContactsContract.StatusUpdates.IM_HANDLE,
-						user.getUserLogin())
-				.withValue(ContactsContract.StatusUpdates.IM_ACCOUNT,
-						mContactMe.getUserLogin())
-				.withValue(ContactsContract.StatusUpdates.PROTOCOL,
-						ContactsContract.CommonDataKinds.Im.PROTOCOL_JABBER)
-				.withValue(ContactsContract.StatusUpdates.PRESENCE,
-						user.getUserState().getStatus())
-				.withValue(ContactsContract.StatusUpdates.STATUS,
-						user.getUserState().getStatusText(this))
-				.withValue(ContactsContract.StatusUpdates.STATUS_RES_PACKAGE,
-						"xmpp.client")
-				.withValue(ContactsContract.StatusUpdates.STATUS_ICON,
-						R.drawable.ic_launcher)
-				.withValue(ContactsContract.StatusUpdates.STATUS_LABEL,
-						R.string.app_name).build());
-
-		try {
-			getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops);
-		} catch (final Exception e) {
-			Log.e(TAG, "updateDatabaseContact", e);
+	private void updateDatabaseUser(ArrayList<ContentProviderOperation> ops,
+			long rawContactID, User user) {
+		Uri rawContactUri = ContentUris.withAppendedId(RawContacts.CONTENT_URI,
+				rawContactID);
+		Uri entityUri = Uri.withAppendedPath(rawContactUri,
+				Entity.CONTENT_DIRECTORY);
+		Cursor c = getContentResolver().query(entityUri, new String[] {
+				RawContacts.SOURCE_ID, Entity.DATA_ID, Entity.MIMETYPE,
+				Entity.DATA1 }, null, null, null);
+		while (c.moveToNext()) {
+			if (!c.isNull(1) && c.getString(2).equals(ACCOUNT_MIME)) {
+				ops.add(ContentProviderOperation
+						.newInsert(ContactsContract.StatusUpdates.CONTENT_URI)
+						.withValue(ContactsContract.StatusUpdates.DATA_ID, c.getLong(1))
+						.withValue(ContactsContract.StatusUpdates.IM_HANDLE,
+								user.getUserLogin())
+						.withValue(ContactsContract.StatusUpdates.IM_ACCOUNT,
+								mContactMe.getUserLogin())
+						.withValue(ContactsContract.StatusUpdates.PROTOCOL,
+								ContactsContract.CommonDataKinds.Im.PROTOCOL_JABBER)
+						.withValue(ContactsContract.StatusUpdates.PRESENCE,
+								user.getUserState().getStatus())
+						.withValue(ContactsContract.StatusUpdates.STATUS,
+								user.getUserState().getStatusText(this))
+						.withValue(ContactsContract.StatusUpdates.STATUS_RES_PACKAGE,
+								"xmpp.client")
+						.withValue(ContactsContract.StatusUpdates.STATUS_ICON,
+								R.drawable.ic_launcher)
+						.withValue(ContactsContract.StatusUpdates.STATUS_LABEL,
+								R.string.app_name).build());
+			}
 		}
+		c.close();
 	}
 
 	void updateUser(User user) {

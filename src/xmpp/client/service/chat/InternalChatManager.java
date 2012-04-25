@@ -10,8 +10,10 @@ import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Message.Type;
 import org.jivesoftware.smack.packet.PacketExtension;
+import org.jivesoftware.smack.util.StringUtils;
 
 import xmpp.client.service.ConnectionProvider;
 import xmpp.client.service.bookmark.BookmarkService;
@@ -174,6 +176,17 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes,
 				if (smackMessage.getType() == Type.groupchat
 						&& chat.isMe(smackMessage.getFrom())) {
 					user = getUserService().getUserMe();
+				} else if (smackMessage.getType() == Type.groupchat) {
+					Log.d(TAG, smackMessage.getFrom());
+					user = getUserService().getUserByFullUserLogin(
+							smackMessage.getFrom());
+					if (user == null) {
+						user = getUserService().setupUser(
+								new User(chat.getIdentifier(), StringUtils
+										.parseResource(smackMessage.getFrom()),
+										new ArrayList<String>(), new Presence(
+												Presence.Type.unavailable)));
+					}
 				} else {
 					user = getUserService().getUser(smackMessage.getFrom(),
 							false);

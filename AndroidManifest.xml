@@ -27,7 +27,7 @@
             android:process=":service"
             android:stopWithTask="false" />
         <service
-            android:name=".service.account.AccountAuthenticatorService"
+            android:name=".account.AccountAuthenticatorService"
             android:exported="true"
             android:process=":auth" >
             <intent-filter>

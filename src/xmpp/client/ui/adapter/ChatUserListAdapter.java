@@ -66,8 +66,7 @@ public class ChatUserListAdapter extends BaseAdapter {
 		if (user != null) {
 			Log.d("xmpp...", user.getDisplayName());
 			Log.d("xmpp...", mChatProvider.getUsers().size() + "");
-			final Contact contact = mContactProvider.getContact(user
-					.getFullUserLogin());
+			final Contact contact = mContactProvider.getContact(user);
 
 			final QuickContactBadge q = (QuickContactBadge) view
 					.findViewById(R.id.user_badge);

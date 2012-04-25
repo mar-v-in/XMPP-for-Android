@@ -1,5 +1,6 @@
 package xmpp.client.service.user;
 
+import java.io.ObjectInputStream.GetField;
 import java.util.Collection;
 
 import org.jivesoftware.smack.Roster;
@@ -105,19 +106,14 @@ public class UserService implements RosterListener, UserServiceProvider {
 	}
 
 	public Contact getContact(String uid, boolean addIfNotExists) {
-		uid = StringUtils.parseBareAddress(uid);
-		if (!mContactList.contains(uid)) {
-			if (addIfNotExists) {
-				getUser(uid, true);
-			} else {
-				return new Contact(getUser(uid, false));
-			}
-		}
-		return mContactList.get(uid);
+		return getContact(getUser(uid, addIfNotExists), addIfNotExists);
 	}
 
 	public Contact getContact(User user, boolean addIfNotExists) {
-		return getContact(user.getUserLogin(), addIfNotExists);
+		if (!mContactList.contains(user)) {
+			return new Contact(user);
+		}
+		return mContactList.get(user);
 	}
 
 	public ContactList getContactList() {
@@ -138,25 +134,38 @@ public class UserService implements RosterListener, UserServiceProvider {
 				StringUtils.parseBareAddress(uid))) {
 			return mUserMe;
 		}
-		for (int i = 0; i < mUserList.size(); i++) {
-			final User user = mUserList.get(i);
-			if (user != null && user.getFullUserLogin().equalsIgnoreCase(uid)) {
-				return user;
-			}
-		}
-		for (int i = 0; i < mUserList.size(); i++) {
-			final User user = mUserList.get(i);
-			if (user != null
-					&& user.getUserLogin().equalsIgnoreCase(
-							StringUtils.parseBareAddress(uid))) {
-				return user;
-			}
-		}
+		User u = getUserByFullUserLogin(uid);
+		if (u != null)
+			return u;
+		u = getUserByLogin(uid);
+		if (u != null)
+			return u;
 		if (setupIfNotExists) {
 			return setupUser(uid, addIfNotExists);
 		} else {
 			return null;
 		}
+	}
+
+	private User getUserByLogin(String userLogin) {
+		for (int i = 0; i < mUserList.size(); i++) {
+			final User user = mUserList.get(i);
+			if (user.getUserLogin().equalsIgnoreCase(
+					StringUtils.parseBareAddress(userLogin))) {
+				return user;
+			}
+		}
+		return null;
+	}
+
+	public User getUserByFullUserLogin(String fullUserLogin) {
+		for (int i = 0; i < mUserList.size(); i++) {
+			final User user = mUserList.get(i);
+			if (user.getFullUserLogin().equalsIgnoreCase(fullUserLogin)) {
+				return user;
+			}
+		}
+		return null;
 	}
 
 	UserList getUserList() {
@@ -204,18 +213,7 @@ public class UserService implements RosterListener, UserServiceProvider {
 	}
 
 	public User setupUser(User user) {
-		User user2 = getUser(user.getFullUserLogin(), false, false);
-		if (user2 != null
-				&& !user2.getFullUserLogin().equalsIgnoreCase(
-						user.getFullUserLogin())) {
-			user2 = null;
-		}
-		if (user2 != null && user2.getUserState() == UserState.Invalid) {
-			mUserList.remove(user2);
-			mContactList.removeUser(user2.getFullUserLogin());
-			mService.sendRosterDeleted(user2.getFullUserLogin());
-			user2 = null;
-		}
+		User user2 = getUserByFullUserLogin(user.getFullUserLogin());
 		if (user2 == null) {
 			mUserList.add(user);
 			mContactList.add(user);

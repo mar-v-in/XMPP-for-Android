@@ -89,12 +89,13 @@ public class ContactProvider implements SimpleMessageHandlerClient, Constants {
 		return null;
 	}
 
+	@Deprecated
 	public Contact getContact(String address) {
-		if (mContact.contains(address)) {
+		if (mContact.contains(address, true)) {
 			return mContact;
 		}
 		for (final Contact contact : mContactList) {
-			if (contact.contains(address)) {
+			if (contact.contains(address, false)) {
 				return contact;
 			}
 		}
@@ -154,7 +155,8 @@ public class ContactProvider implements SimpleMessageHandlerClient, Constants {
 				if (b.containsKey(FIELD_TYPE)) {
 					switch (b.getInt(FIELD_TYPE)) {
 					case ROSTER_ADDED:
-						add((User) b.getParcelable(FIELD_USER));
+						User u = b.getParcelable(FIELD_USER);
+						add(u);
 						break;
 					case ROSTER_UPDATED:
 						update((User) b.getParcelable(FIELD_USER));
@@ -208,7 +210,7 @@ public class ContactProvider implements SimpleMessageHandlerClient, Constants {
 
 	public void update(User user) {
 		for (final Contact contact : mContactList) {
-			if (contact.contains(user.getUserLogin())) {
+			if (contact.contains(user.getUserLogin(), false)) {
 				contact.remove(user.getUserLogin());
 				contact.add(user);
 				break;
@@ -227,5 +229,9 @@ public class ContactProvider implements SimpleMessageHandlerClient, Constants {
 
 	public int userSize() {
 		return mContactList.sizeVisible();
+	}
+
+	public Contact getContact(User user) {
+		return mContactList.get(user);
 	}
 }

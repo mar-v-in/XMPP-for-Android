@@ -196,8 +196,7 @@ public class User implements Parcelable, Comparable<User> {
 		if (o == null) {
 			return false;
 		}
-		if (o.getUserLogin().equalsIgnoreCase(getUserLogin())
-				&& o.getRessource().equalsIgnoreCase(getRessource())) {
+		if (o.getFullUserLogin().equalsIgnoreCase(getFullUserLogin())) {
 			return true;
 		}
 
@@ -314,11 +313,6 @@ public class User implements Parcelable, Comparable<User> {
 
 	public UserState getUserState() {
 		return mUserState;
-	}
-
-	@Override
-	public int hashCode() {
-		return (User.class.getName() + getUserLogin()).hashCode();
 	}
 
 	public boolean isInvisible() {
