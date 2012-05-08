@@ -4,6 +4,6 @@ public enum MessageType {
 	SingleUserChat,
 	MultiUserChat,
 	UserState,
-	BasicInfo,
+	Info,
 	Unknown
 }

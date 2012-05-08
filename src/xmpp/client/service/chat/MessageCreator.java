@@ -37,7 +37,9 @@ public class MessageCreator implements UserServiceProvider {
 		String user = smackMessage.getFrom();
 		String text = smackMessage.getBody();
 		final Date date = parseDateString(getDateString(smackMessage));
-		if (chat.getChatType() == ChatCodes.CHAT_MULTI) {
+		if ((chat.getChatType() == ChatCodes.CHAT_MULTI && (user.equals(chat.getIdentifier())))) {
+			return new InfoMessage(date, text, user);
+		} else if (chat.getChatType() == ChatCodes.CHAT_MULTI) {
 			return new xmpp.client.service.chat.multi.MultiChatMessage(date, text, user);
 		} else if (chat.getChatType() == ChatCodes.CHAT_SINGLE) {
 			return new xmpp.client.service.chat.single.SingleChatMessage(date, text, user);

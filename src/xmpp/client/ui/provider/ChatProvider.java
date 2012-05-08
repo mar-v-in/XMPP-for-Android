@@ -1,6 +1,9 @@
 package xmpp.client.ui.provider;
 
 import xmpp.client.Constants;
+import xmpp.client.service.chat.Chat;
+import xmpp.client.service.chat.ChatCodes;
+import xmpp.client.service.chat.ChatMessage;
 import xmpp.client.service.chat.ChatSession;
 import xmpp.client.service.chat.multi.MultiChatSession;
 import xmpp.client.service.handlers.SimpleMessageHandler;
@@ -11,7 +14,8 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
 
-public class ChatProvider implements SimpleMessageHandlerClient, Constants {
+public class ChatProvider implements SimpleMessageHandlerClient, Constants,
+		ChatCodes {
 	private static final String TAG = ChatProvider.class.getName();
 
 	private ChatSession mChatSession;
@@ -26,11 +30,6 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants {
 		messageHandler.addClient(this);
 	}
 
-	public void addMessage(xmpp.client.service.chat.ChatMessage chatMessage) {
-		mChatSession.addMessage(chatMessage);
-
-	}
-
 	public Contact getMeContact() {
 		return mMeContact;
 	}
@@ -40,8 +39,7 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants {
 	}
 
 	public UserList getUsers() {
-		if (mChatSession.isMUC()
-				&& (mChatSession instanceof MultiChatSession)) {
+		if (mChatSession.isMUC() && (mChatSession instanceof MultiChatSession)) {
 			return ((MultiChatSession) mChatSession).getUsers();
 		}
 		return null;
@@ -54,9 +52,19 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants {
 			switch (msg.what) {
 			case SIG_MESSAGE_SENT:
 			case SIG_MESSAGE_GOT:
-				b.setClassLoader(xmpp.client.service.chat.ChatMessage.class.getClassLoader());
-				final xmpp.client.service.chat.ChatMessage chatMessage = b.getParcelable(FIELD_MESSAGE);
-				addMessage(chatMessage);
+				b.setClassLoader(xmpp.client.service.chat.ChatMessage.class
+						.getClassLoader());
+				final xmpp.client.service.chat.ChatMessage chatMessage = b
+						.getParcelable(FIELD_MESSAGE);
+				processMessage(null, chatMessage);
+				if (mListener.isReady()) {
+					mListener.chatProviderChanged(this);
+				}
+				break;
+			case SIG_CHAT_SESSION_UPDATE:
+				b.setClassLoader(ChatSession.class.getClassLoader());
+				ChatSession newSession = b.getParcelable(FIELD_CHAT_SESSION);
+				chatSessionUpdated(newSession);
 				if (mListener.isReady()) {
 					mListener.chatProviderChanged(this);
 				}
@@ -64,6 +72,12 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants {
 			}
 		} catch (final Exception e) {
 			Log.e(TAG, "handleMessage", e);
+		}
+	}
+
+	public void chatSessionUpdated(ChatSession newSession) {
+		if (newSession.getIdentifier().equals(mChatSession.getIdentifier())) {
+			mChatSession = newSession;
 		}
 	}
 
@@ -86,6 +100,10 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants {
 
 	public int size() {
 		return mChatSession.getMessageList().size();
+	}
+
+	public void processMessage(Chat chat, ChatMessage chatMessage) {
+		mChatSession.addMessage(chatMessage);
 	}
 
 }

@@ -67,24 +67,23 @@ public class ChatAdapter extends BaseAdapter {
 		for (int i = 0; i < mChatProvider.size(); i++) {
 			final xmpp.client.service.chat.ChatMessage msg = mChatProvider
 					.getMessage(i);
-			if (mChatProvider.isMUC()) {
-				MultiChatMessage m = (MultiChatMessage) msg;
-				if (lastUser == null || !lastUser.equals(m.getFrom())
-						|| !sameDay(lastDate, m.getDate())) {
-					lastUser = m.getFrom();
-					lastDate = m.getDate();
+			switch (msg.getType()) {
+			case MultiUserChat:
+			case SingleUserChat:
+				if (lastUser == null || !lastUser.equals(msg.getFrom())
+						|| !sameDay(lastDate, msg.getDate())) {
+					lastUser = msg.getFrom();
+					lastDate = msg.getDate();
 					list.add(new ArrayList<xmpp.client.service.chat.ChatMessage>());
 				}
 				list.get(list.size() - 1).add(msg);
-			} else {
-				SingleChatMessage m = (SingleChatMessage) msg;
-				if (lastUser == null || !lastUser.equals(m.getFrom())
-						|| !sameDay(lastDate, m.getDate())) {
-					lastUser = m.getFrom();
-					lastDate = m.getDate();
-					list.add(new ArrayList<xmpp.client.service.chat.ChatMessage>());
-				}
+				break;
+			case Info:
+				list.add(new ArrayList<xmpp.client.service.chat.ChatMessage>());
 				list.get(list.size() - 1).add(msg);
+				break;
+			default:
+				break;
 			}
 		}
 		return list;
@@ -113,8 +112,8 @@ public class ChatAdapter extends BaseAdapter {
 		final boolean itsMe = itsLast ? false : mContactProvider
 				.getMeUserLogin().equals(msgs.get(0).getFrom());
 		final boolean itsStatus = itsLast
-				|| (msgs.get(0).getType() == MessageType.BasicInfo || msgs.get(
-						0).getType() == MessageType.UserState);
+				|| (msgs.get(0).getType() == MessageType.Info || msgs.get(0)
+						.getType() == MessageType.UserState);
 		if (viewCache.containsKey(position)
 				&& !(itsLastChat && cachedSize != mChatProvider.size())) {
 			view = viewCache.get(position);
@@ -153,16 +152,18 @@ public class ChatAdapter extends BaseAdapter {
 			if (userContact != null) {
 				q.assignContactUri(Uri.parse(userContact));
 			}
-			
+
 			if (contact != null) {
 				user.setText(contact.getUserName());
 				q.setImageBitmap(contact.getBitmap(mContext,
 						(mChatProvider.isMUC() && !itsMe)));
 			} else {
 				user.setText(msgs.get(0).getFrom());
-				/*q.setImageBitmap(msgs.get(0).getUser()
-						.getBitmap(mContext, (mChatProvider.isMUC() && !itsMe)));*/
-				
+				/*
+				 * q.setImageBitmap(msgs.get(0).getUser() .getBitmap(mContext,
+				 * (mChatProvider.isMUC() && !itsMe)));
+				 */
+
 			}
 		} else if (!itsLast) {
 			final TextView status = (TextView) view
