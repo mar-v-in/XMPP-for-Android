@@ -17,6 +17,7 @@ import xmpp.client.ui.adapter.ChatAdapter;
 import xmpp.client.ui.adapter.GroupAdapter;
 import xmpp.client.ui.adapter.RosterAdapter;
 import xmpp.client.ui.adapter.StatusAdapter;
+import xmpp.client.ui.fragments.ContactListFragment;
 import xmpp.client.ui.provider.ChatProvider;
 import xmpp.client.ui.provider.ChatProviderListener;
 import xmpp.client.ui.provider.ConferenceProvider;
@@ -27,6 +28,8 @@ import android.accounts.AccountManager;
 import android.app.ActionBar;
 import android.app.ActionBar.OnNavigationListener;
 import android.app.Activity;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -64,29 +67,16 @@ public class AppActivity extends Activity implements
 
 	private static final String TAG = AppActivity.class.getName();
 
-	private int mCurrentView = VIEW_ACCOUNTS;
+	private FragmentManager fragmentManager;
+
+	private int currentView = VIEW_ACCOUNTS;
 	private String mUID;
 	private String mMUC;
 
 	boolean doCheck = true;
 
-	OnItemClickListener itemClickListener = new OnItemClickListener() {
-
-		@Override
-		public void onItemClick(AdapterView<?> arg0, View view, int item,
-				long id) {
-			if (item == 0) {
-				goStatusChange();
-			} else if (mCurrentNavigation == 3) {
-				goConference(((MultiChatInfo) mRosterAdapter.getItem(item))
-						.getJid());
-			} else {
-				goChat(((Contact) mRosterAdapter.getItem(item)).getUserLogin());
-			}
-		}
-	};
-	private ActionBar mActionBar;
-	private final ServiceConnection mConnection = new ServiceConnection() {
+	private ActionBar actionBar;
+	private final ServiceConnection connection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			mService = new Messenger(service);
@@ -94,7 +84,7 @@ public class AppActivity extends Activity implements
 			try {
 				final Message msg = Message.obtain(null,
 						Constants.SIG_REGISTER_CLIENT);
-				msg.replyTo = mMessenger;
+				msg.replyTo = messenger;
 				mService.send(msg);
 
 				if (doCheck) {
@@ -113,40 +103,38 @@ public class AppActivity extends Activity implements
 		}
 	};
 
-	int mCurrentNavigation = 2;
+	int currentNavigation = 2;
 
-	GroupAdapter mGroupAdapter;
+	GroupAdapter groupAdapter;
 
-	boolean mIsBound;
+	boolean isBound;
 
-	ListView mListView;
-
-	private SimpleMessageHandler mMessageHandler;
-	private Messenger mMessenger;
-	private final OnNavigationListener mNavigationListener = new OnNavigationListener() {
+	private SimpleMessageHandler messageHandler;
+	private Messenger messenger;
+	private final OnNavigationListener navigationListener = new OnNavigationListener() {
 
 		@Override
 		public boolean onNavigationItemSelected(int itemPosition, long itemId) {
-			mCurrentNavigation = itemPosition;
-			mRosterAdapter.setActiveGroup((String) mGroupAdapter
-					.getItem(mCurrentNavigation));
+			currentNavigation = itemPosition;
+			rosterAdapter.setActiveGroup((String) groupAdapter
+					.getItem(currentNavigation));
 			onCreateOptionsMenu(mMenu);
 			return true;
 		}
 	};
 
-	private RosterAdapter mRosterAdapter;
+	private RosterAdapter rosterAdapter;
 
-	private ContactProvider mContactProvider;
+	private ContactProvider contactProvider;
 
 	private Messenger mService = null;
 
-	private ListView mMessageHolder;
-	private EditText mSendText;
-	private User mUser;
+	private ListView messageHolder;
+	private EditText sendText;
+	private User user;
 	private Menu mMenu;
-	private ChatProvider mChatProvider;
-	private ChatAdapter mChatAdapter;
+	private ChatProvider chatProvider;
+	private ChatAdapter chatAdapter;
 	private final OnClickListener sendClickListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
@@ -154,28 +142,30 @@ public class AppActivity extends Activity implements
 		}
 	};
 
-	private ChatSession mSession;
-	private ConferenceProvider mConferenceProvider;
-	private int mMenuView = -1;
+	private ChatSession session;
+	private ConferenceProvider conferenceProvider;
+	private int menuView = -1;
 
 	public void afterInit() {
-		mGroupAdapter = new GroupAdapter(this, mContactProvider);
-		if (mCurrentView == VIEW_ROSTER) {
-			mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-			mActionBar.setDisplayShowTitleEnabled(false);
-			mActionBar.setDisplayShowCustomEnabled(true);
-			mActionBar.setListNavigationCallbacks(mGroupAdapter,
-					mNavigationListener);
-			mActionBar.setSelectedNavigationItem(mCurrentNavigation);
-			mRosterAdapter = new RosterAdapter(mListView.getContext(),
-					mContactProvider, mConferenceProvider);
-			mListView.setAdapter(mRosterAdapter);
-			mRosterAdapter.notifyDataSetChanged();
-		} else if (mCurrentView == VIEW_CHAT) {
+		groupAdapter = new GroupAdapter(this, contactProvider);
+		if (currentView == VIEW_ROSTER) {
+			actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+			actionBar.setDisplayShowTitleEnabled(false);
+			actionBar.setDisplayShowCustomEnabled(true);
+			actionBar.setListNavigationCallbacks(groupAdapter,
+					navigationListener);
+			actionBar.setSelectedNavigationItem(currentNavigation);
+			rosterAdapter = new RosterAdapter(this, contactProvider,
+					conferenceProvider);
+			((ContactListFragment) fragmentManager
+					.findFragmentById(R.id.main))
+					.setListAdapter(rosterAdapter);
+			rosterAdapter.notifyDataSetChanged();
+		} else if (currentView == VIEW_CHAT) {
 			if (mUID != null) {
 				final Message msg = Message.obtain(null,
 						Constants.SIG_OPEN_CHATSESSION);
-				msg.replyTo = mMessenger;
+				msg.replyTo = messenger;
 				final Bundle b = new Bundle();
 				b.putString(FIELD_JID, mUID);
 				msg.setData(b);
@@ -188,7 +178,7 @@ public class AppActivity extends Activity implements
 			} else if (mMUC != null) {
 				final Message msg = Message.obtain(null,
 						Constants.SIG_OPEN_MUC_CHATSESSION);
-				msg.replyTo = mMessenger;
+				msg.replyTo = messenger;
 				final Bundle b = new Bundle();
 				b.putString(FIELD_JID, mMUC);
 				msg.setData(b);
@@ -204,8 +194,8 @@ public class AppActivity extends Activity implements
 
 	@Override
 	public void chatProviderChanged(ChatProvider chatProvider) {
-		if (mChatAdapter != null) {
-			mChatAdapter.notifyDataSetChanged();
+		if (chatAdapter != null) {
+			chatAdapter.notifyDataSetChanged();
 		}
 	}
 
@@ -217,7 +207,7 @@ public class AppActivity extends Activity implements
 	void checkState() {
 		if (mService != null) {
 			final Message msg = Message.obtain(null, Constants.SIG_IS_ONLINE);
-			msg.replyTo = mMessenger;
+			msg.replyTo = messenger;
 			try {
 				mService.send(msg);
 			} catch (final RemoteException e) {
@@ -234,11 +224,11 @@ public class AppActivity extends Activity implements
 		if (contactProvider.isReady()) {
 
 		}
-		if (mRosterAdapter != null) {
-			mRosterAdapter.notifyDataSetChanged();
+		if (rosterAdapter != null) {
+			rosterAdapter.notifyDataSetChanged();
 		}
-		if (mGroupAdapter != null) {
-			mGroupAdapter.notifyDataSetChanged();
+		if (groupAdapter != null) {
+			groupAdapter.notifyDataSetChanged();
 		}
 	}
 
@@ -253,9 +243,13 @@ public class AppActivity extends Activity implements
 
 	void doBindService() {
 		startService(new Intent(AppActivity.this, Service.class));
-		bindService(new Intent(AppActivity.this, Service.class), mConnection,
+		bindService(new Intent(AppActivity.this, Service.class), connection,
 				Context.BIND_ABOVE_CLIENT);
-		mIsBound = true;
+		isBound = true;
+	}
+	
+	public int getCurrentNavigation() {
+		return currentNavigation;
 	}
 
 	public void doLogin() {
@@ -264,14 +258,14 @@ public class AppActivity extends Activity implements
 		if (accounts.length > 0) {
 			final Account account = accounts[0];
 			final String login = account.name;
-			mContactProvider.getMeContact().getUser().setUserLogin(login);
+			contactProvider.getMeContact().getUser().setUserLogin(login);
 			updateStatus(UserState.STATUS_INITIALIZING);
 			final String pass = am.getPassword(account);
 			final Message msg = Message.obtain(null, Constants.SIG_INIT);
 			final Bundle b = new Bundle();
 			b.putParcelable(FIELD_ACCOUNTINFO, new AccountInfo(login, pass));
 			msg.setData(b);
-			msg.replyTo = mMessenger;
+			msg.replyTo = messenger;
 			try {
 				mService.send(msg);
 			} catch (final RemoteException e) {
@@ -283,13 +277,13 @@ public class AppActivity extends Activity implements
 	}
 
 	private void doSend() {
-		if (mSession != null && mSendText.getText().length() > 0) {
+		if (session != null && sendText.getText().length() > 0) {
 			final Message msg = Message
 					.obtain(null, Constants.SIG_SEND_MESSAGE);
-			msg.replyTo = mMessenger;
+			msg.replyTo = messenger;
 			final Bundle b = new Bundle();
-			b.putParcelable(FIELD_CHAT_SESSION, mSession);
-			b.putString(FIELD_TEXT, mSendText.getText().toString());
+			b.putParcelable(FIELD_CHAT_SESSION, session);
+			b.putString(FIELD_TEXT, sendText.getText().toString());
 			msg.setData(b);
 			try {
 				mService.send(msg);
@@ -297,16 +291,16 @@ public class AppActivity extends Activity implements
 				Log.e(TAG, "doSend", e);
 			}
 		}
-		mSendText.setText("");
+		sendText.setText("");
 	}
 
 	void doUnbindService() {
-		if (mIsBound) {
+		if (isBound) {
 			if (mService != null) {
 				try {
 					final Message msg = Message.obtain(null,
 							Constants.SIG_UNREGISTER_CLIENT);
-					msg.replyTo = mMessenger;
+					msg.replyTo = messenger;
 					mService.send(msg);
 
 				} catch (final RemoteException e) {
@@ -314,8 +308,8 @@ public class AppActivity extends Activity implements
 				}
 			}
 
-			unbindService(mConnection);
-			mIsBound = false;
+			unbindService(connection);
+			isBound = false;
 		}
 	}
 
@@ -333,14 +327,14 @@ public class AppActivity extends Activity implements
 		handleIntent(i);
 	}
 
-	private void goChat(String userLogin) {
+	public void goChat(String userLogin) {
 		final Intent i = new Intent(AppActivity.this, AppActivity.class);
 		i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
 				+ URI_HOST_JABBER + URI_PATH_DIVIDER + Uri.encode(userLogin)));
 		handleIntent(i);
 	}
 
-	private void goConference(String muc) {
+	public void goConference(String muc) {
 		final Intent i = new Intent(AppActivity.this, AppActivity.class);
 		i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
 				+ URI_HOST_JABBER_MUC + URI_PATH_DIVIDER + Uri.encode(muc)));
@@ -351,7 +345,7 @@ public class AppActivity extends Activity implements
 		startActivity(new Intent(AppActivity.this, AccountLogin.class));
 	}
 
-	private void goStatusChange() {
+	public void goStatusChange() {
 		final Intent i = new Intent(AppActivity.this, AppActivity.class);
 		i.setData(Uri.parse(URI_SCHEME_XMPP_FOR_ANDROID
 				+ URI_SCHEME_HOST_DIVIDER + URI_HOST_CHANGE_STATUS));
@@ -359,7 +353,7 @@ public class AppActivity extends Activity implements
 	}
 
 	public void handleIntent(Intent intent) {
-		int mNewView = mCurrentView;
+		int mNewView = currentView;
 		mMUC = null;
 		mUID = null;
 		if (intent.getData() != null) {
@@ -390,7 +384,7 @@ public class AppActivity extends Activity implements
 		} else {
 			mNewView = VIEW_ROSTER;
 		}
-		if (mCurrentView != mNewView) {
+		if (currentView != mNewView) {
 			switch (mNewView) {
 			case VIEW_CHAT:
 				openChat();
@@ -423,46 +417,44 @@ public class AppActivity extends Activity implements
 			switch (msg.what) {
 			case Constants.SIG_OPEN_CHATSESSION:
 				b.setClassLoader(ChatSession.class.getClassLoader());
-				mSession = b.getParcelable(FIELD_CHAT_SESSION);
+				session = b.getParcelable(FIELD_CHAT_SESSION);
 				b.setClassLoader(User.class.getClassLoader());
-				mUser = (User) b.getParcelable(FIELD_USER);
-				if (mUser.supportsAudio()) {
+				user = (User) b.getParcelable(FIELD_USER);
+				if (user.supportsAudio()) {
 					mMenu.findItem(R.id.menu_call).setVisible(true);
 				} else {
 					mMenu.findItem(R.id.menu_call).setVisible(false);
 				}
-				mActionBar.setTitle(mUser.getDisplayName());
-				mActionBar.setSubtitle(mUser.getStatusTextSpannable(this));
-				mChatProvider = new ChatProvider(
-						mContactProvider.getMeContact(), mSession, this,
-						mMessageHandler);
-				mChatAdapter = new ChatAdapter(this, mChatProvider,
-						mContactProvider);
-				mMessageHolder.setAdapter(mChatAdapter);
+				actionBar.setTitle(user.getDisplayName());
+				actionBar.setSubtitle(user.getStatusTextSpannable(this));
+				chatProvider = new ChatProvider(contactProvider.getMeContact(),
+						session, this, messageHandler);
+				chatAdapter = new ChatAdapter(this, chatProvider,
+						contactProvider);
+				messageHolder.setAdapter(chatAdapter);
 				break;
 			case Constants.SIG_OPEN_MUC_CHATSESSION:
 				b.setClassLoader(ChatSession.class.getClassLoader());
-				mSession = b.getParcelable(FIELD_CHAT_SESSION);
+				session = b.getParcelable(FIELD_CHAT_SESSION);
 				mMenu.findItem(R.id.menu_call).setVisible(false);
-				mActionBar.setTitle(mSession.getSessionID());
-				mActionBar.setSubtitle(b.getString(FIELD_SUBJECT));
-				mChatProvider = new ChatProvider(
-						mContactProvider.getMeContact(), mSession, this,
-						mMessageHandler);
-				mChatAdapter = new ChatAdapter(this, mChatProvider,
-						mContactProvider);
-				mMessageHolder.setAdapter(mChatAdapter);
+				actionBar.setTitle(session.getSessionID());
+				actionBar.setSubtitle(b.getString(FIELD_SUBJECT));
+				chatProvider = new ChatProvider(contactProvider.getMeContact(),
+						session, this, messageHandler);
+				chatAdapter = new ChatAdapter(this, chatProvider,
+						contactProvider);
+				messageHolder.setAdapter(chatAdapter);
 				break;
 			case Constants.SIG_CHAT_SESSION_UPDATE:
 				b.setClassLoader(ChatSession.class.getClassLoader());
 				final ChatSession session1 = b
 						.getParcelable(FIELD_CHAT_SESSION);
-				if (session1.equals(mSession)) {
-					mSession = session1;
-					mChatProvider.setSession(mSession);
+				if (session1.equals(session)) {
+					session = session1;
+					chatProvider.setSession(session);
 				}
-				if (mSession instanceof MultiChatSession) {
-					mActionBar.setSubtitle(((MultiChatSession) mSession)
+				if (session instanceof MultiChatSession) {
+					actionBar.setSubtitle(((MultiChatSession) session)
 							.getSubject());
 				}
 				break;
@@ -502,7 +494,7 @@ public class AppActivity extends Activity implements
 
 	@Override
 	public void onBackPressed() {
-		switch (mCurrentView) {
+		switch (currentView) {
 		case VIEW_CHAT:
 			sendDisableChatSession();
 			openRoster(null);
@@ -527,23 +519,25 @@ public class AppActivity extends Activity implements
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		mMessageHandler = new SimpleMessageHandler(this);
-		mMessenger = new Messenger(mMessageHandler);
+		fragmentManager = getFragmentManager();
+		setContentView(R.layout.main);
+		messageHandler = new SimpleMessageHandler(this);
+		messenger = new Messenger(messageHandler);
 		doBindService();
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		if (mMenuView != mCurrentView) {
+		if (menuView != currentView) {
 			menu.clear();
 		}
 		final MenuInflater inflater = getMenuInflater();
-		switch (mCurrentView) {
+		switch (currentView) {
 		case VIEW_ROSTER:
-			if (mMenuView != mCurrentView) {
+			if (menuView != currentView) {
 				inflater.inflate(R.menu.roster, menu);
 			}
-			if (mCurrentNavigation == 3) {
+			if (currentNavigation == 3) {
 				menu.findItem(R.id.menu_add_user).setVisible(false);
 				menu.findItem(R.id.menu_add_conference).setVisible(true);
 			} else {
@@ -552,11 +546,11 @@ public class AppActivity extends Activity implements
 			}
 			break;
 		case VIEW_CHAT:
-			if (mMenuView != mCurrentView) {
+			if (menuView != currentView) {
 				inflater.inflate(R.menu.chat, menu);
 			}
-			if (mUser != null) {
-				if (mUser.supportsAudio()) {
+			if (user != null) {
+				if (user.supportsAudio()) {
 					menu.findItem(R.id.menu_call).setVisible(true);
 				} else {
 					menu.findItem(R.id.menu_call).setVisible(false);
@@ -564,27 +558,27 @@ public class AppActivity extends Activity implements
 			}
 			break;
 		case VIEW_ACCOUNTS:
-			if (mMenuView != mCurrentView) {
+			if (menuView != currentView) {
 				inflater.inflate(R.menu.accounts, menu);
 			}
 			break;
 		case VIEW_SETTINGS:
-			if (mMenuView != mCurrentView) {
+			if (menuView != currentView) {
 				inflater.inflate(R.menu.settings, menu);
 			}
 			break;
 		case VIEW_ACCOUNT_SETTINGS:
-			if (mMenuView != mCurrentView) {
+			if (menuView != currentView) {
 				inflater.inflate(R.menu.account_settings, menu);
 			}
 			break;
 		default:
-			if (mMenuView != mCurrentView) {
+			if (menuView != currentView) {
 				inflater.inflate(R.menu.nomenu, menu);
 			}
 			break;
 		}
-		mMenuView = mCurrentView;
+		menuView = currentView;
 		mMenu = menu;
 		return true;
 	}
@@ -637,18 +631,18 @@ public class AppActivity extends Activity implements
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		outState.putInt("tab", mCurrentNavigation);
+		outState.putInt("tab", currentNavigation);
 	}
 
 	public void openAddConference() {
 		setContentView(R.layout.add_conference);
 		Log.i(TAG, "openAddConference");
-		mCurrentView = VIEW_ADD_CONFERENCE;
+		currentView = VIEW_ADD_CONFERENCE;
 		if (mMenu != null) {
 			onCreateOptionsMenu(mMenu);
 		}
 		setActionBarCancelDone();
-		mActionBar.getCustomView().findViewById(R.id.action_cancel)
+		actionBar.getCustomView().findViewById(R.id.action_cancel)
 				.setOnClickListener(new OnClickListener() {
 
 					@Override
@@ -656,7 +650,7 @@ public class AppActivity extends Activity implements
 						openRoster(null);
 					}
 				});
-		mActionBar.getCustomView().findViewById(R.id.action_done)
+		actionBar.getCustomView().findViewById(R.id.action_done)
 				.setOnClickListener(new OnClickListener() {
 
 					@Override
@@ -671,6 +665,10 @@ public class AppActivity extends Activity implements
 								.getText().toString();
 						if (jid != null && !jid.isEmpty()) {
 							// userAdd(uid, nick);
+							final Toast toast = Toast.makeText(
+									AppActivity.this, "Not yet implemented...",
+									Toast.LENGTH_SHORT);
+							toast.show();
 							openRoster(null);
 						} else {
 							final Toast toast = Toast.makeText(
@@ -685,12 +683,12 @@ public class AppActivity extends Activity implements
 	public void openAddContact() {
 		setContentView(R.layout.add_user);
 		Log.i(TAG, "openAddContact");
-		mCurrentView = VIEW_ADD_CONTACT;
+		currentView = VIEW_ADD_CONTACT;
 		if (mMenu != null) {
 			onCreateOptionsMenu(mMenu);
 		}
 		setActionBarCancelDone();
-		mActionBar.getCustomView().findViewById(R.id.action_cancel)
+		actionBar.getCustomView().findViewById(R.id.action_cancel)
 				.setOnClickListener(new OnClickListener() {
 
 					@Override
@@ -698,7 +696,7 @@ public class AppActivity extends Activity implements
 						openRoster(null);
 					}
 				});
-		mActionBar.getCustomView().findViewById(R.id.action_done)
+		actionBar.getCustomView().findViewById(R.id.action_done)
 				.setOnClickListener(new OnClickListener() {
 
 					@Override
@@ -723,7 +721,7 @@ public class AppActivity extends Activity implements
 	public void openChangeStatus() {
 		setContentView(R.layout.status_changer);
 		Log.i(TAG, "openChangeStatus");
-		mCurrentView = VIEW_STATUS;
+		currentView = VIEW_STATUS;
 		if (mMenu != null) {
 			onCreateOptionsMenu(mMenu);
 		}
@@ -749,27 +747,27 @@ public class AppActivity extends Activity implements
 					}
 				});
 		((Spinner) findViewById(R.id.status_spinner))
-				.setSelection(StatusAdapter.statusToPosition(mContactProvider
+				.setSelection(StatusAdapter.statusToPosition(contactProvider
 						.getMeContact().getUserState().getStatus()));
-		((EditText) findViewById(R.id.status_edit)).setText(mContactProvider
+		((EditText) findViewById(R.id.status_edit)).setText(contactProvider
 				.getMeContact().getUserState().getCustomStatusText());
 		setActionBarSimpleWithBack();
-		mActionBar.setTitle(R.string.status);
-		mActionBar.setSubtitle(mContactProvider.getMeUserLogin());
+		actionBar.setTitle(R.string.status);
+		actionBar.setSubtitle(contactProvider.getMeUserLogin());
 	}
 
 	public void openChat() {
 		setContentView(R.layout.chat);
 		Log.i(TAG, "openChat");
-		mCurrentView = VIEW_CHAT;
+		currentView = VIEW_CHAT;
 		if (mMenu != null) {
 			onCreateOptionsMenu(mMenu);
 		}
 		final ImageButton btn_send = (ImageButton) findViewById(R.id.btn_send);
 		btn_send.setOnClickListener(sendClickListener);
-		mMessageHolder = (ListView) findViewById(R.id.message_container);
-		mSendText = (EditText) findViewById(R.id.text_send);
-		mSendText.setOnEditorActionListener(new OnEditorActionListener() {
+		messageHolder = (ListView) findViewById(R.id.message_container);
+		sendText = (EditText) findViewById(R.id.text_send);
+		sendText.setOnEditorActionListener(new OnEditorActionListener() {
 
 			@Override
 			public boolean onEditorAction(TextView v, int actionId,
@@ -785,7 +783,7 @@ public class AppActivity extends Activity implements
 		});
 
 		setActionBarSimpleWithBack();
-		mActionBar.setTitle(getText(R.string.process_loading));
+		actionBar.setTitle(getText(R.string.process_loading));
 	}
 
 	public void openRoster(Bundle savedInstanceState) {
@@ -794,40 +792,48 @@ public class AppActivity extends Activity implements
 			final InputMethodManager mgr = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 			mgr.hideSoftInputFromWindow(view.getWindowToken(), 0);
 		}
-		setContentView(R.layout.roster);
+		setContentView(R.layout.main);
+		ContactListFragment fragment = new ContactListFragment();
+		FragmentTransaction t = fragmentManager.beginTransaction();
+		t.replace(R.id.main, fragment);
+		t.commit();
+		fragmentManager.executePendingTransactions();
 		Log.i(TAG, "openRoster");
-		mCurrentView = VIEW_ROSTER;
+		currentView = VIEW_ROSTER;
 		if (mMenu != null) {
 			onCreateOptionsMenu(mMenu);
 		}
-		mListView = (ListView) findViewById(R.id.list_roster);
-		mListView.setOnItemClickListener(itemClickListener);
+		/*
+		 * listView = (ListView) findViewById(android.R.id.list);
+		 * listView.setOnItemClickListener(itemClickListener);
+		 */
 		setActionBarSimpleWithoutBack();
-		mActionBar.setTitle(getText(R.string.process_loading));
+		actionBar.setTitle(getText(R.string.process_loading));
 
-		if (mConferenceProvider == null) {
-			mConferenceProvider = new ConferenceProvider(mMessenger, mService,
-					mMessageHandler);
+		if (conferenceProvider == null) {
+			conferenceProvider = new ConferenceProvider(messenger, mService,
+					messageHandler);
 		}
-		if (mContactProvider == null) {
-			mContactProvider = new ContactProvider(mMessenger, mService, this,
-					this, mMessageHandler);
+		if (contactProvider == null) {
+			contactProvider = new ContactProvider(messenger, mService, this,
+					this, messageHandler);
 		}
-		if (mRosterAdapter == null) {
-			mRosterAdapter = new RosterAdapter(mListView.getContext(),
-					mContactProvider, mConferenceProvider);
+		if (rosterAdapter == null) {
+			rosterAdapter = new RosterAdapter(this,
+					contactProvider, conferenceProvider);
 		}
-		mListView.setAdapter(mRosterAdapter);
+		((ContactListFragment) fragmentManager
+				.findFragmentById(R.id.main)).setListAdapter(rosterAdapter);
 
 		if (savedInstanceState != null && savedInstanceState.containsKey("tab")) {
-			mCurrentNavigation = savedInstanceState.getInt("tab");
+			currentNavigation = savedInstanceState.getInt("tab");
 		}
 
-		if (mGroupAdapter != null) {
+		if (groupAdapter != null) {
 			setActionBarListNavigationWithoutBack();
-			mActionBar.setListNavigationCallbacks(mGroupAdapter,
-					mNavigationListener);
-			mActionBar.setSelectedNavigationItem(mCurrentNavigation);
+			actionBar.setListNavigationCallbacks(groupAdapter,
+					navigationListener);
+			actionBar.setSelectedNavigationItem(currentNavigation);
 		}
 	}
 
@@ -835,7 +841,7 @@ public class AppActivity extends Activity implements
 		if (mService != null) {
 			final Message msg = Message.obtain(null,
 					Constants.SIG_OPEN_MUC_CHATSESSION);
-			msg.replyTo = mMessenger;
+			msg.replyTo = messenger;
 			final Bundle b = new Bundle();
 			b.putString(FIELD_JID, mMUC);
 			msg.setData(b);
@@ -852,7 +858,7 @@ public class AppActivity extends Activity implements
 		if (mService != null) {
 			final Message msg = Message.obtain(null,
 					Constants.SIG_OPEN_CHATSESSION);
-			msg.replyTo = mMessenger;
+			msg.replyTo = messenger;
 			final Bundle b = new Bundle();
 			b.putString(FIELD_JID, mUID);
 			msg.setData(b);
@@ -869,9 +875,9 @@ public class AppActivity extends Activity implements
 		final Message msg = Message.obtain(null,
 				Constants.SIG_CLOSE_CHATSESSION);
 		final Bundle b = new Bundle();
-		b.putParcelable(FIELD_CHAT_SESSION, mSession);
+		b.putParcelable(FIELD_CHAT_SESSION, session);
 		msg.setData(b);
-		msg.replyTo = mMessenger;
+		msg.replyTo = messenger;
 		try {
 			mService.send(msg);
 		} catch (final RemoteException e) {
@@ -883,9 +889,9 @@ public class AppActivity extends Activity implements
 		final Message msg = Message.obtain(null,
 				Constants.SIG_DISABLE_CHATSESSION);
 		final Bundle b = new Bundle();
-		b.putParcelable(FIELD_CHAT_SESSION, mSession);
+		b.putParcelable(FIELD_CHAT_SESSION, session);
 		msg.setData(b);
-		msg.replyTo = mMessenger;
+		msg.replyTo = messenger;
 		try {
 			mService.send(msg);
 		} catch (final RemoteException e) {
@@ -894,51 +900,51 @@ public class AppActivity extends Activity implements
 	}
 
 	private void setActionBarCancelDone() {
-		mActionBar = getActionBar();
-		mActionBar.setDisplayHomeAsUpEnabled(false);
-		mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-		mActionBar.setDisplayShowTitleEnabled(false);
-		mActionBar.setDisplayShowCustomEnabled(true);
-		mActionBar.setDisplayShowHomeEnabled(false);
-		mActionBar.setTitle(null);
-		mActionBar.setSubtitle(null);
-		mActionBar.setCustomView(R.layout.actionbar_cancel_done);
+		actionBar = getActionBar();
+		actionBar.setDisplayHomeAsUpEnabled(false);
+		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+		actionBar.setDisplayShowTitleEnabled(false);
+		actionBar.setDisplayShowCustomEnabled(true);
+		actionBar.setDisplayShowHomeEnabled(false);
+		actionBar.setTitle(null);
+		actionBar.setSubtitle(null);
+		actionBar.setCustomView(R.layout.actionbar_cancel_done);
 	}
 
 	private void setActionBarListNavigationWithoutBack() {
-		mActionBar = getActionBar();
-		mActionBar.setDisplayHomeAsUpEnabled(false);
-		mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
-		mActionBar.setDisplayShowTitleEnabled(false);
-		mActionBar.setDisplayShowCustomEnabled(false);
-		mActionBar.setDisplayShowHomeEnabled(true);
-		mActionBar.setTitle(null);
-		mActionBar.setSubtitle(null);
-		mActionBar.setCustomView(null);
+		actionBar = getActionBar();
+		actionBar.setDisplayHomeAsUpEnabled(false);
+		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+		actionBar.setDisplayShowTitleEnabled(false);
+		actionBar.setDisplayShowCustomEnabled(false);
+		actionBar.setDisplayShowHomeEnabled(true);
+		actionBar.setTitle(null);
+		actionBar.setSubtitle(null);
+		actionBar.setCustomView(null);
 	}
 
 	private void setActionBarSimpleWithBack() {
-		mActionBar = getActionBar();
-		mActionBar.setDisplayHomeAsUpEnabled(true);
-		mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-		mActionBar.setDisplayShowTitleEnabled(true);
-		mActionBar.setDisplayShowCustomEnabled(false);
-		mActionBar.setDisplayShowHomeEnabled(true);
-		mActionBar.setTitle(null);
-		mActionBar.setSubtitle(null);
-		mActionBar.setCustomView(null);
+		actionBar = getActionBar();
+		actionBar.setDisplayHomeAsUpEnabled(true);
+		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+		actionBar.setDisplayShowTitleEnabled(true);
+		actionBar.setDisplayShowCustomEnabled(false);
+		actionBar.setDisplayShowHomeEnabled(true);
+		actionBar.setTitle(null);
+		actionBar.setSubtitle(null);
+		actionBar.setCustomView(null);
 	}
 
 	private void setActionBarSimpleWithoutBack() {
-		mActionBar = getActionBar();
-		mActionBar.setDisplayHomeAsUpEnabled(false);
-		mActionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-		mActionBar.setDisplayShowTitleEnabled(true);
-		mActionBar.setDisplayShowCustomEnabled(false);
-		mActionBar.setDisplayShowHomeEnabled(true);
-		mActionBar.setTitle(null);
-		mActionBar.setSubtitle(null);
-		mActionBar.setCustomView(null);
+		actionBar = getActionBar();
+		actionBar.setDisplayHomeAsUpEnabled(false);
+		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+		actionBar.setDisplayShowTitleEnabled(true);
+		actionBar.setDisplayShowCustomEnabled(false);
+		actionBar.setDisplayShowHomeEnabled(true);
+		actionBar.setTitle(null);
+		actionBar.setSubtitle(null);
+		actionBar.setCustomView(null);
 	}
 
 	private void updateStatus(int status) {
@@ -946,12 +952,12 @@ public class AppActivity extends Activity implements
 	}
 
 	private void updateStatus(UserState userState) {
-		mContactProvider.getMeContact().getUser().setUserState(userState);
-		mRosterAdapter.notifyDataSetChanged();
+		contactProvider.getMeContact().getUser().setUserState(userState);
+		rosterAdapter.notifyDataSetChanged();
 		final Bundle b = new Bundle();
 		b.putParcelable(FIELD_STATE, userState);
 		final Message msg = Message.obtain(null, Constants.SIG_SET_STATUS);
-		msg.replyTo = mMessenger;
+		msg.replyTo = messenger;
 		msg.setData(b);
 		try {
 			mService.send(msg);
@@ -965,7 +971,7 @@ public class AppActivity extends Activity implements
 		b.putString(FIELD_JID, uid);
 		b.putString(FIELD_NICKNAME, nick);
 		final Message msg = Message.obtain(null, Constants.SIG_ROSTER_ADD);
-		msg.replyTo = mMessenger;
+		msg.replyTo = messenger;
 		msg.setData(b);
 		try {
 			mService.send(msg);

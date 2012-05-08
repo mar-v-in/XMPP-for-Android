@@ -6,12 +6,18 @@
     android:orientation="vertical" >
 
     <ListView
-        android:id="@+id/list_roster"
+        android:id="@id/android:list"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="match_parent" >
 
         <!-- Preview: listitem=@layout/roster_item -->
 
     </ListView>
+    
+    <TextView
+        android:id="@id/android:empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="@string/process_loading" />
 
 </LinearLayout>
