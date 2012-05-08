@@ -6,8 +6,8 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.bookmark.BookmarkManager;
 import org.jivesoftware.smackx.bookmark.BookmarkedConference;
 
-import xmpp.client.service.chat.multi.MultiUserChatInfo;
-import xmpp.client.service.chat.multi.MultiUserChatInfoList;
+import xmpp.client.service.chat.multi.MultiChatInfo;
+import xmpp.client.service.chat.multi.MultiChatInfoList;
 
 public class ConferenceBookmarkHandler {
 
@@ -17,7 +17,7 @@ public class ConferenceBookmarkHandler {
 		mBookmarkManager = bm;
 	}
 
-	public void addConference(MultiUserChatInfo mucinfo) {
+	public void addConference(MultiChatInfo mucinfo) {
 		try {
 			mBookmarkManager.addBookmarkedConference(mucinfo.getName(),
 					mucinfo.getJid(), mucinfo.isAutoJoin(),
@@ -27,8 +27,8 @@ public class ConferenceBookmarkHandler {
 		}
 	}
 
-	public MultiUserChatInfo getMultiUserChatInfo(String id) {
-		for (final MultiUserChatInfo mucinfo : getMultiUserChatInfoList()) {
+	public MultiChatInfo getMultiUserChatInfo(String id) {
+		for (final MultiChatInfo mucinfo : getMultiUserChatInfoList()) {
 			if (mucinfo.getJid().equalsIgnoreCase(id)) {
 				return mucinfo;
 			}
@@ -36,13 +36,13 @@ public class ConferenceBookmarkHandler {
 		return null;
 	}
 
-	public MultiUserChatInfoList getMultiUserChatInfoList() {
+	public MultiChatInfoList getMultiUserChatInfoList() {
 		try {
 			final Collection<BookmarkedConference> bcc = mBookmarkManager
 					.getBookmarkedConferences();
-			final MultiUserChatInfoList list = new MultiUserChatInfoList();
+			final MultiChatInfoList list = new MultiChatInfoList();
 			for (final BookmarkedConference bc : bcc) {
-				list.add(new MultiUserChatInfo(bc));
+				list.add(new MultiChatInfo(bc));
 			}
 			return list;
 		} catch (final XMPPException e) {

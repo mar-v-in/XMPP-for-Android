@@ -8,6 +8,6 @@ public interface ChatListener {
 
 	void chatUpdated(Chat chat);
 
-	void processMessage(Chat chat, ChatMessage message);
+	void processMessage(Chat chat, ChatMessage chatMessage);
 
 }

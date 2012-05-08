@@ -1,7 +1,7 @@
 package xmpp.client.ui.provider;
 
 import xmpp.client.Constants;
-import xmpp.client.service.chat.multi.MultiUserChatInfoList;
+import xmpp.client.service.chat.multi.MultiChatInfoList;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
 import android.os.Bundle;
@@ -15,13 +15,13 @@ public class ConferenceProvider implements SimpleMessageHandlerClient,
 	private static final String TAG = ConferenceProvider.class.getName();
 	private final Messenger mMessenger;
 	private final Messenger mService;
-	private MultiUserChatInfoList mMultiUserChatInfoList;
+	private MultiChatInfoList mMultiUserChatInfoList;
 
 	public ConferenceProvider(Messenger localMessenger,
 			Messenger serviceMessenger) {
 		mMessenger = localMessenger;
 		mService = serviceMessenger;
-		mMultiUserChatInfoList = new MultiUserChatInfoList();
+		mMultiUserChatInfoList = new MultiChatInfoList();
 	}
 
 	public ConferenceProvider(Messenger localMessenger,
@@ -30,7 +30,7 @@ public class ConferenceProvider implements SimpleMessageHandlerClient,
 		handler.addClient(this);
 	}
 
-	public MultiUserChatInfoList getList() {
+	public MultiChatInfoList getList() {
 		return mMultiUserChatInfoList;
 	}
 
@@ -45,7 +45,7 @@ public class ConferenceProvider implements SimpleMessageHandlerClient,
 				mService.send(msg);
 				break;
 			case SIG_GET_MUCS:
-				b.setClassLoader(MultiUserChatInfoList.class.getClassLoader());
+				b.setClassLoader(MultiChatInfoList.class.getClassLoader());
 				mMultiUserChatInfoList = b
 						.getParcelable(FIELD_MULTI_USER_CHAT_INFO_LIST);
 				break;

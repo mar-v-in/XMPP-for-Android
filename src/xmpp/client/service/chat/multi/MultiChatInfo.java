@@ -5,7 +5,7 @@ import org.jivesoftware.smackx.bookmark.BookmarkedConference;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class MultiUserChatInfo implements Parcelable {
+public class MultiChatInfo implements Parcelable {
 
 	private final String mMUCName;
 	private final String mJid;
@@ -13,19 +13,19 @@ public class MultiUserChatInfo implements Parcelable {
 	private final String mNickName;
 	private final String mPassword;
 
-	public static final Parcelable.Creator<MultiUserChatInfo> CREATOR = new Parcelable.Creator<MultiUserChatInfo>() {
+	public static final Parcelable.Creator<MultiChatInfo> CREATOR = new Parcelable.Creator<MultiChatInfo>() {
 		@Override
-		public MultiUserChatInfo createFromParcel(Parcel in) {
-			return new MultiUserChatInfo(in);
+		public MultiChatInfo createFromParcel(Parcel in) {
+			return new MultiChatInfo(in);
 		}
 
 		@Override
-		public MultiUserChatInfo[] newArray(int size) {
-			return new MultiUserChatInfo[size];
+		public MultiChatInfo[] newArray(int size) {
+			return new MultiChatInfo[size];
 		}
 	};
 
-	public MultiUserChatInfo(BookmarkedConference bc) {
+	public MultiChatInfo(BookmarkedConference bc) {
 		mAutoJoin = bc.isAutoJoin();
 		mJid = bc.getJid();
 		mMUCName = bc.getName();
@@ -33,7 +33,7 @@ public class MultiUserChatInfo implements Parcelable {
 		mPassword = bc.getPassword();
 	}
 
-	public MultiUserChatInfo(Parcel in) {
+	public MultiChatInfo(Parcel in) {
 		mMUCName = in.readString();
 		mJid = in.readString();
 		mNickName = in.readString();
@@ -43,7 +43,7 @@ public class MultiUserChatInfo implements Parcelable {
 		mAutoJoin = b[0];
 	}
 
-	public MultiUserChatInfo(String name, String jid, String nick, String pass,
+	public MultiChatInfo(String name, String jid, String nick, String pass,
 			boolean autojoin) {
 		mAutoJoin = autojoin;
 		mJid = jid;

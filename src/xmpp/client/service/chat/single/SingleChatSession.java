@@ -5,31 +5,31 @@ import xmpp.client.service.user.User;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class SingleUserChatSession extends ChatSession {
+public class SingleChatSession extends ChatSession {
 	@SuppressWarnings("unused")
-	private static final String TAG = SingleUserChatSession.class.getName();
+	private static final String TAG = SingleChatSession.class.getName();
 
 	User mUser;
 
-	public static final Parcelable.Creator<SingleUserChatSession> CREATOR = new Parcelable.Creator<SingleUserChatSession>() {
+	public static final Parcelable.Creator<SingleChatSession> CREATOR = new Parcelable.Creator<SingleChatSession>() {
 		@Override
-		public SingleUserChatSession createFromParcel(Parcel in) {
+		public SingleChatSession createFromParcel(Parcel in) {
 			final boolean[] bl = in.createBooleanArray();
-			return new SingleUserChatSession(bl, in);
+			return new SingleChatSession(bl, in);
 		}
 
 		@Override
-		public SingleUserChatSession[] newArray(int size) {
-			return new SingleUserChatSession[size];
+		public SingleChatSession[] newArray(int size) {
+			return new SingleChatSession[size];
 		}
 	};
 
-	public SingleUserChatSession(boolean[] bl, Parcel in) {
+	public SingleChatSession(boolean[] bl, Parcel in) {
 		super(bl, in);
 		mUser = in.readParcelable(User.class.getClassLoader());
 	}
 
-	public SingleUserChatSession(User user, String sessionID) {
+	public SingleChatSession(User user, String sessionID) {
 		super(sessionID);
 		mUser = user;
 	}

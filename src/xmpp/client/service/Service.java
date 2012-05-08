@@ -21,6 +21,8 @@ import xmpp.client.service.chat.ChatMessage;
 import xmpp.client.service.chat.ChatService;
 import xmpp.client.service.chat.ChatServiceProvider;
 import xmpp.client.service.chat.ChatSession;
+import xmpp.client.service.chat.MessageType;
+import xmpp.client.service.chat.ParcelableMessage;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
 import xmpp.client.service.jingle.JingleService;
@@ -490,22 +492,25 @@ public class Service extends android.app.Service implements
 		}
 	}
 
-	public void processMessage(ChatSession session, ChatMessage message) {
+	public void processMessage(ChatSession session,
+			xmpp.client.service.chat.ChatMessage chatMessage) {
 		if (session.equals(mActiveChatSession)) {
 			final Bundle b = new Bundle();
 			b.putParcelable(FIELD_CHAT_SESSION, session);
-			b.putParcelable(FIELD_MESSAGE, message);
+			if (chatMessage instanceof ParcelableMessage) {
+				b.putParcelable(FIELD_MESSAGE, (ParcelableMessage) chatMessage);
+			} else {
+				b.putParcelable(FIELD_MESSAGE, (ParcelableMessage) null);
+			}
 			sendToActive(SIG_MESSAGE_GOT, b);
 		} else {
-			if (session.isMUC()) {
-				showChatNotification(message);
-			} else {
-				final User user = mUserService.getUser(message.getUser()
-						.getUserLogin(), true);
+			if (chatMessage.getType() == MessageType.SingleUserChat) {
+				xmpp.client.service.chat.single.SingleChatMessage m = (xmpp.client.service.chat.single.SingleChatMessage) chatMessage;
+				final User user = mUserService.getUser(m.getFrom(), true);
 				final Contact contact = mUserService.getContact(user, true);
 				contact.increaseUnreadMessages();
 				sendRosterUpdated(user);
-				showChatNotification(message);
+				showChatNotification(m);
 			}
 		}
 	}
@@ -609,43 +614,35 @@ public class Service extends android.app.Service implements
 		}
 	}
 
-	private void showChatNotification(ChatMessage message) {
+	private void showChatNotification(
+			xmpp.client.service.chat.single.SingleChatMessage singleChatMessage) {
 
 		final Notification.Builder builder = new Notification.Builder(this);
+		User u = getUserService().getUser(singleChatMessage.getFrom(), false);
 
-		builder.setTicker(message.getUser().getDisplayName() + ": "
-				+ shortenCharSequence(message.getMessage(), 250));
+		builder.setTicker(u.getDisplayName() + ": "
+				+ shortenCharSequence(singleChatMessage.getText(), 250));
 		builder.setSmallIcon(R.drawable.stat_notify_xmpp);
-		builder.setLargeIcon(message.getUser().getBitmap(this, false));
+		builder.setLargeIcon(u.getBitmap(this, false));
 
 		builder.setDefaults(Notification.DEFAULT_ALL);
 		builder.setAutoCancel(true);
-		if (message.isMUC()) {
-
-		} else {
-			builder.setNumber(mUserService.getContact(message.getUser(), false)
-					.getUnreadMessages());
-		}
+		builder.setNumber(mUserService.getContact(u, true).getUnreadMessages());
 
 		final Intent i = new Intent(this, AppActivity.class);
-		if (message.isMUC()) {
-			i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
-					+ URI_HOST_JABBER_MUC + URI_PATH_DIVIDER
-					+ Uri.encode(message.getUser().getUserLogin())));
-		} else {
-			i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
-					+ URI_HOST_JABBER + URI_PATH_DIVIDER
-					+ Uri.encode(message.getUser().getUserLogin())));
-		}
+		i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
+				+ URI_HOST_JABBER + URI_PATH_DIVIDER
+				+ Uri.encode(u.getUserLogin())));
+
 		final PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
 				i, 0);
 
 		builder.setContentIntent(contentIntent);
-		builder.setContentTitle(message.getUser().getDisplayName());
-		builder.setContentText(message.getMessage());
+		builder.setContentTitle(u.getDisplayName());
+		builder.setContentText(singleChatMessage.getText());
 
 		mNM.notify(R.string.app_name
-				+ message.getUser().getFullUserLogin().hashCode(),
+				+ u.getFullUserLogin().hashCode(),
 				builder.getNotification());
 
 	}

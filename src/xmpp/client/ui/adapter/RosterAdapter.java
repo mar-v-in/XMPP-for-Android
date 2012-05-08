@@ -2,7 +2,7 @@ package xmpp.client.ui.adapter;
 
 import xmpp.client.Constants;
 import xmpp.client.R;
-import xmpp.client.service.chat.multi.MultiUserChatInfo;
+import xmpp.client.service.chat.multi.MultiChatInfo;
 import xmpp.client.service.user.User;
 import xmpp.client.service.user.UserState;
 import xmpp.client.service.user.contact.Contact;
@@ -201,7 +201,7 @@ public class RosterAdapter extends BaseAdapter implements Constants {
 	}
 
 	private void handleConference(int position, View view) {
-		final MultiUserChatInfo mucinfo = (MultiUserChatInfo) getItem(position);
+		final MultiChatInfo mucinfo = (MultiChatInfo) getItem(position);
 		final TextView name = (TextView) view.findViewById(R.id.name_text);
 		name.setText(mucinfo.getName());
 		final TextView status = (TextView) view.findViewById(R.id.status_text);

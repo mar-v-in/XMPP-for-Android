@@ -6,6 +6,10 @@ import java.util.HashMap;
 
 import xmpp.client.R;
 import xmpp.client.service.chat.ChatMessage;
+import xmpp.client.service.chat.ChatMessage;
+import xmpp.client.service.chat.MessageType;
+import xmpp.client.service.chat.multi.MultiChatMessage;
+import xmpp.client.service.chat.single.SingleChatMessage;
 import xmpp.client.service.user.User;
 import xmpp.client.service.user.contact.Contact;
 import xmpp.client.ui.extras.SmileyHandler;
@@ -56,20 +60,32 @@ public class ChatAdapter extends BaseAdapter {
 		return getGroupedMessages().size() + 1;
 	}
 
-	private ArrayList<ArrayList<ChatMessage>> getGroupedMessages() {
-		final ArrayList<ArrayList<ChatMessage>> list = new ArrayList<ArrayList<ChatMessage>>();
-		User lastUser = null;
+	private ArrayList<ArrayList<xmpp.client.service.chat.ChatMessage>> getGroupedMessages() {
+		final ArrayList<ArrayList<xmpp.client.service.chat.ChatMessage>> list = new ArrayList<ArrayList<xmpp.client.service.chat.ChatMessage>>();
+		String lastUser = null;
 		Date lastDate = null;
 		for (int i = 0; i < mChatProvider.size(); i++) {
-			final ChatMessage msg = mChatProvider.getMessage(i);
-			if (lastUser == null || !lastUser.equals(msg.getUser())
-					|| !sameDay(lastDate, msg.getDate())
-					|| (msg.isMUC() && msg.getUser().getRessource().isEmpty())) {
-				lastUser = msg.getUser();
-				lastDate = msg.getDate();
-				list.add(new ArrayList<ChatMessage>());
+			final xmpp.client.service.chat.ChatMessage msg = mChatProvider
+					.getMessage(i);
+			if (mChatProvider.isMUC()) {
+				MultiChatMessage m = (MultiChatMessage) msg;
+				if (lastUser == null || !lastUser.equals(m.getFrom())
+						|| !sameDay(lastDate, m.getDate())) {
+					lastUser = m.getFrom();
+					lastDate = m.getDate();
+					list.add(new ArrayList<xmpp.client.service.chat.ChatMessage>());
+				}
+				list.get(list.size() - 1).add(msg);
+			} else {
+				SingleChatMessage m = (SingleChatMessage) msg;
+				if (lastUser == null || !lastUser.equals(m.getFrom())
+						|| !sameDay(lastDate, m.getDate())) {
+					lastUser = m.getFrom();
+					lastDate = m.getDate();
+					list.add(new ArrayList<xmpp.client.service.chat.ChatMessage>());
+				}
+				list.get(list.size() - 1).add(msg);
 			}
-			list.get(list.size() - 1).add(msg);
 		}
 		return list;
 	}
@@ -92,14 +108,13 @@ public class ChatAdapter extends BaseAdapter {
 		final ArrayList<ArrayList<ChatMessage>> msgss = getGroupedMessages();
 		final boolean itsLastChat = position == msgss.size() - 1;
 		final boolean itsLast = (position == msgss.size());
-		final ArrayList<ChatMessage> msgs = itsLast ? null
-				: msgss.get(position);
-		final boolean itsMe = itsLast ? false : mChatProvider.getMeContact().contains(
-				msgs.get(0).getUser());
+		final ArrayList<ChatMessage> msgs = itsLast ? null : msgss
+				.get(position);
+		final boolean itsMe = itsLast ? false : mContactProvider
+				.getMeUserLogin().equals(msgs.get(0).getFrom());
 		final boolean itsStatus = itsLast
-				|| (!itsMe && (mChatProvider.isMUC() && msgs.get(0).getUser()
-						.getRessource().isEmpty()));
-		Contact contact = itsLast ? null : mContactProvider.getContact(msgs.get(0).getUser());
+				|| (msgs.get(0).getType() == MessageType.BasicInfo || msgs.get(
+						0).getType() == MessageType.UserState);
 		if (viewCache.containsKey(position)
 				&& !(itsLastChat && cachedSize != mChatProvider.size())) {
 			view = viewCache.get(position);
@@ -131,27 +146,29 @@ public class ChatAdapter extends BaseAdapter {
 			final QuickContactBadge q = (QuickContactBadge) view
 					.findViewById(R.id.contact_badge);
 			String userContact = null;
+			Contact contact = null; // Only because it does not work!
 			if (contact != null) {
 				userContact = contact.getUserContact();
 			}
 			if (userContact != null) {
 				q.assignContactUri(Uri.parse(userContact));
 			}
-			contact = null; // Only because it does not work!
+			
 			if (contact != null) {
 				user.setText(contact.getUserName());
 				q.setImageBitmap(contact.getBitmap(mContext,
 						(mChatProvider.isMUC() && !itsMe)));
 			} else {
-				user.setText(msgs.get(0).getUser().getDisplayName());
-				q.setImageBitmap(msgs.get(0).getUser()
-						.getBitmap(mContext, (mChatProvider.isMUC() && !itsMe)));
+				user.setText(msgs.get(0).getFrom());
+				/*q.setImageBitmap(msgs.get(0).getUser()
+						.getBitmap(mContext, (mChatProvider.isMUC() && !itsMe)));*/
+				
 			}
 		} else if (!itsLast) {
 			final TextView status = (TextView) view
 					.findViewById(R.id.status_text);
 			status.setVisibility(View.VISIBLE);
-			status.setText(msgs.get(0).getMessage());
+			status.setText(msgs.get(0).getText());
 		}
 		if (itsLast) {
 			if (lastView == null) {
@@ -174,9 +191,9 @@ public class ChatAdapter extends BaseAdapter {
 	private void drawMessages(ViewGroup parent,
 			final ArrayList<ChatMessage> msgs, final boolean itsMe,
 			final LayoutInflater layoutInflater, final LinearLayout container) {
-		for (final ChatMessage message : msgs) {
+		for (final ChatMessage chatMessage : msgs) {
 			final CharSequence seq = SmileyHandler.getSmiledText(
-					message.getMessage(), mContext);
+					chatMessage.getText(), mContext);
 			View temp = null;
 			if (itsMe) {
 				((SpannableStringBuilder) seq).setSpan(new AlignmentSpan() {
@@ -195,7 +212,7 @@ public class ChatAdapter extends BaseAdapter {
 			}
 			final TextView time = (TextView) temp.findViewById(R.id.msg_time);
 			time.setText(DateFormat.getTimeFormat(mContext).format(
-					message.getDate()));
+					chatMessage.getDate()));
 			final TextView text = (TextView) temp.findViewById(R.id.msg_text);
 
 			text.setText(seq);

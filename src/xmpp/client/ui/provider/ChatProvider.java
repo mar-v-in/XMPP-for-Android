@@ -1,9 +1,8 @@
 package xmpp.client.ui.provider;
 
 import xmpp.client.Constants;
-import xmpp.client.service.chat.ChatMessage;
 import xmpp.client.service.chat.ChatSession;
-import xmpp.client.service.chat.multi.MultiUserChatSession;
+import xmpp.client.service.chat.multi.MultiChatSession;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
 import xmpp.client.service.user.UserList;
@@ -27,8 +26,8 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants {
 		messageHandler.addClient(this);
 	}
 
-	public void addMessage(ChatMessage message) {
-		mChatSession.addMessage(message);
+	public void addMessage(xmpp.client.service.chat.ChatMessage chatMessage) {
+		mChatSession.addMessage(chatMessage);
 
 	}
 
@@ -36,14 +35,14 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants {
 		return mMeContact;
 	}
 
-	public ChatMessage getMessage(int position) {
+	public xmpp.client.service.chat.ChatMessage getMessage(int position) {
 		return mChatSession.getMessageList().get(position);
 	}
 
 	public UserList getUsers() {
 		if (mChatSession.isMUC()
-				&& (mChatSession instanceof MultiUserChatSession)) {
-			return ((MultiUserChatSession) mChatSession).getUsers();
+				&& (mChatSession instanceof MultiChatSession)) {
+			return ((MultiChatSession) mChatSession).getUsers();
 		}
 		return null;
 	}
@@ -55,9 +54,9 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants {
 			switch (msg.what) {
 			case SIG_MESSAGE_SENT:
 			case SIG_MESSAGE_GOT:
-				b.setClassLoader(ChatMessage.class.getClassLoader());
-				final ChatMessage message = b.getParcelable(FIELD_MESSAGE);
-				addMessage(message);
+				b.setClassLoader(xmpp.client.service.chat.ChatMessage.class.getClassLoader());
+				final xmpp.client.service.chat.ChatMessage chatMessage = b.getParcelable(FIELD_MESSAGE);
+				addMessage(chatMessage);
 				if (mListener.isReady()) {
 					mListener.chatProviderChanged(this);
 				}

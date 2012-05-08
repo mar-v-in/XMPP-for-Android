@@ -5,10 +5,10 @@ import java.util.HashMap;
 import org.jivesoftware.smack.util.StringUtils;
 
 import xmpp.client.service.Service;
-import xmpp.client.service.chat.multi.MultiUserChat;
-import xmpp.client.service.chat.multi.MultiUserChatSession;
-import xmpp.client.service.chat.single.SingleUserChat;
-import xmpp.client.service.chat.single.SingleUserChatSession;
+import xmpp.client.service.chat.multi.MultiChat;
+import xmpp.client.service.chat.multi.MultiChatSession;
+import xmpp.client.service.chat.single.SingleChat;
+import xmpp.client.service.chat.single.SingleChatSession;
 import xmpp.client.service.user.User;
 import android.util.Log;
 
@@ -44,9 +44,9 @@ public class ChatService implements ChatListener, ChatCodes,
 	public void chatUpdated(Chat chat) {
 		final ChatSession session = getChatSessionFromIdentifier(chat
 				.getIdentifier());
-		if (chat instanceof MultiUserChat
-				&& session instanceof MultiUserChatSession) {
-			((MultiUserChatSession) session).setSubject(chat.getSubject());
+		if (chat instanceof MultiChat
+				&& session instanceof MultiChatSession) {
+			((MultiChatSession) session).setSubject(chat.getSubject());
 		}
 		mService.sendSessionUpdated(session);
 	}
@@ -111,32 +111,32 @@ public class ChatService implements ChatListener, ChatCodes,
 	}
 
 	@Override
-	public void processMessage(Chat chat, ChatMessage message) {
+	public void processMessage(Chat chat, ChatMessage chatMessage) {
 		final ChatSession session = mChats.get(chat);
 		if (session != null) {
-			session.addMessage(message);
-			mService.processMessage(session, message);
+			session.addMessage(chatMessage);
+			mService.processMessage(session, chatMessage);
 		}
 	}
 
 	private ChatSession putChatInMap(Chat chat) {
-		if (chat instanceof SingleUserChat) {
-			return putChatInMap((SingleUserChat) chat);
-		} else if (chat instanceof MultiUserChat) {
-			return putChatInMap((MultiUserChat) chat);
+		if (chat instanceof SingleChat) {
+			return putChatInMap((SingleChat) chat);
+		} else if (chat instanceof MultiChat) {
+			return putChatInMap((MultiChat) chat);
 		}
 		return null;
 	}
 
-	private ChatSession putChatInMap(MultiUserChat chat) {
-		final ChatSession session = new MultiUserChatSession(
+	private ChatSession putChatInMap(MultiChat chat) {
+		final ChatSession session = new MultiChatSession(
 				chat.getIdentifier());
 		mChats.put(chat, session);
 		return session;
 	}
 
-	private ChatSession putChatInMap(SingleUserChat chat) {
-		final ChatSession session = new SingleUserChatSession(mService
+	private ChatSession putChatInMap(SingleChat chat) {
+		final ChatSession session = new SingleChatSession(mService
 				.getUserService().getUser(chat.getIdentifier(), true),
 				chat.getThreadID());
 		mChats.put(chat, session);
@@ -166,11 +166,11 @@ public class ChatService implements ChatListener, ChatCodes,
 	public void updateMUCUser(User user) {
 		final ChatSession session = getChatSessionFromIdentifier(user
 				.getUserLogin());
-		if (session instanceof MultiUserChatSession) {
-			((MultiUserChatSession) session).updateUser(user);
-			final MultiUserChat chat = (MultiUserChat) getChatFromSession(session);
+		if (session instanceof MultiChatSession) {
+			((MultiChatSession) session).updateUser(user);
+			final MultiChat chat = (MultiChat) getChatFromSession(session);
 			for (final String u : chat.getUsers()) {
-				((MultiUserChatSession) session).updateUser(mService
+				((MultiChatSession) session).updateUser(mService
 						.getUserService().getUser(u, false));
 			}
 			mService.sendSessionUpdated(session);

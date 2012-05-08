@@ -2,13 +2,13 @@ package xmpp.client.service.chat.multi;
 
 import org.jivesoftware.smackx.muc.ParticipantStatusListener;
 
-public class MultiUserChatParticipantStatusListener implements
+public class MultiChatParticipantStatusListener implements
 		ParticipantStatusListener {
 
-	private final MultiUserChat mChat;
+	private final MultiChat mChat;
 
-	public MultiUserChatParticipantStatusListener(MultiUserChat multiUserChat) {
-		mChat = multiUserChat;
+	public MultiChatParticipantStatusListener(MultiChat multiChat) {
+		mChat = multiChat;
 	}
 
 	@Override

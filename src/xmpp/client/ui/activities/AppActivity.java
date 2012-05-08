@@ -5,8 +5,8 @@ import xmpp.client.R;
 import xmpp.client.account.AccountInfo;
 import xmpp.client.service.Service;
 import xmpp.client.service.chat.ChatSession;
-import xmpp.client.service.chat.multi.MultiUserChatInfo;
-import xmpp.client.service.chat.multi.MultiUserChatSession;
+import xmpp.client.service.chat.multi.MultiChatInfo;
+import xmpp.client.service.chat.multi.MultiChatSession;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
 import xmpp.client.service.user.User;
@@ -78,7 +78,7 @@ public class AppActivity extends Activity implements
 			if (item == 0) {
 				goStatusChange();
 			} else if (mCurrentNavigation == 3) {
-				goConference(((MultiUserChatInfo) mRosterAdapter.getItem(item))
+				goConference(((MultiChatInfo) mRosterAdapter.getItem(item))
 						.getJid());
 			} else {
 				goChat(((Contact) mRosterAdapter.getItem(item)).getUserLogin());
@@ -461,8 +461,8 @@ public class AppActivity extends Activity implements
 					mSession = session1;
 					mChatProvider.setSession(mSession);
 				}
-				if (mSession instanceof MultiUserChatSession) {
-					mActionBar.setSubtitle(((MultiUserChatSession) mSession)
+				if (mSession instanceof MultiChatSession) {
+					mActionBar.setSubtitle(((MultiChatSession) mSession)
 							.getSubject());
 				}
 				break;

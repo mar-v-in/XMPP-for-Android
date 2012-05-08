@@ -6,32 +6,32 @@ import xmpp.client.service.user.UserList;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class MultiUserChatSession extends ChatSession {
+public class MultiChatSession extends ChatSession {
 	@SuppressWarnings("unused")
-	private static final String TAG = MultiUserChatSession.class.getName();
+	private static final String TAG = MultiChatSession.class.getName();
 	UserList mUserList;
 	String mSubject;
 
-	public static final Parcelable.Creator<MultiUserChatSession> CREATOR = new Parcelable.Creator<MultiUserChatSession>() {
+	public static final Parcelable.Creator<MultiChatSession> CREATOR = new Parcelable.Creator<MultiChatSession>() {
 		@Override
-		public MultiUserChatSession createFromParcel(Parcel in) {
+		public MultiChatSession createFromParcel(Parcel in) {
 			final boolean[] bl = in.createBooleanArray();
-			return new MultiUserChatSession(bl, in);
+			return new MultiChatSession(bl, in);
 		}
 
 		@Override
-		public MultiUserChatSession[] newArray(int size) {
-			return new MultiUserChatSession[size];
+		public MultiChatSession[] newArray(int size) {
+			return new MultiChatSession[size];
 		}
 	};
 
-	public MultiUserChatSession(boolean[] bl, Parcel in) {
+	public MultiChatSession(boolean[] bl, Parcel in) {
 		super(bl, in);
 		mUserList = in.readParcelable(UserList.class.getClassLoader());
 		mSubject = in.readString();
 	}
 
-	public MultiUserChatSession(String muc) {
+	public MultiChatSession(String muc) {
 		super(muc);
 		mUserList = new UserList();
 	}

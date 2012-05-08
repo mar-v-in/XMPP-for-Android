@@ -5,33 +5,33 @@ import java.util.ArrayList;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class MultiUserChatInfoList extends ArrayList<MultiUserChatInfo>
+public class MultiChatInfoList extends ArrayList<MultiChatInfo>
 		implements Parcelable {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -2526760037520428210L;
-	public static final Parcelable.Creator<MultiUserChatInfoList> CREATOR = new Parcelable.Creator<MultiUserChatInfoList>() {
+	public static final Parcelable.Creator<MultiChatInfoList> CREATOR = new Parcelable.Creator<MultiChatInfoList>() {
 		@Override
-		public MultiUserChatInfoList createFromParcel(Parcel in) {
-			return new MultiUserChatInfoList(in);
+		public MultiChatInfoList createFromParcel(Parcel in) {
+			return new MultiChatInfoList(in);
 		}
 
 		@Override
-		public MultiUserChatInfoList[] newArray(int size) {
-			return new MultiUserChatInfoList[size];
+		public MultiChatInfoList[] newArray(int size) {
+			return new MultiChatInfoList[size];
 		}
 	};
 
-	public MultiUserChatInfoList() {
+	public MultiChatInfoList() {
 		super();
 	}
 
-	public MultiUserChatInfoList(Parcel in) {
+	public MultiChatInfoList(Parcel in) {
 		final int n = in.readInt();
 		for (int i = 0; i < n; i++) {
-			add((MultiUserChatInfo) in.readParcelable(MultiUserChatInfo.class
+			add((MultiChatInfo) in.readParcelable(MultiChatInfo.class
 					.getClassLoader()));
 		}
 	}
@@ -43,14 +43,14 @@ public class MultiUserChatInfoList extends ArrayList<MultiUserChatInfo>
 	}
 
 	@Override
-	public MultiUserChatInfo get(int index) {
+	public MultiChatInfo get(int index) {
 		return super.get(index);
 	}
 
 	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(size());
-		for (final MultiUserChatInfo i : this) {
+		for (final MultiChatInfo i : this) {
 			dest.writeParcelable(i, flags);
 		}
 	}

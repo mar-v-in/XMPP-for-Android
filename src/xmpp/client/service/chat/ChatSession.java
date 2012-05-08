@@ -1,7 +1,7 @@
 package xmpp.client.service.chat;
 
-import xmpp.client.service.chat.multi.MultiUserChatSession;
-import xmpp.client.service.chat.single.SingleUserChatSession;
+import xmpp.client.service.chat.multi.MultiChatSession;
+import xmpp.client.service.chat.single.SingleChatSession;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -10,7 +10,7 @@ public abstract class ChatSession implements Parcelable, ChatCodes {
 	private static final String TAG = ChatSession.class.getName();
 
 	protected String mSessionID;
-	protected ChatMessageList mMessageList;
+	protected MessageList mMessageList;
 	protected boolean mIsClosed;
 
 	public static final Parcelable.Creator<ChatSession> CREATOR = new Parcelable.Creator<ChatSession>() {
@@ -18,9 +18,9 @@ public abstract class ChatSession implements Parcelable, ChatCodes {
 		public ChatSession createFromParcel(Parcel in) {
 			final boolean[] bl = in.createBooleanArray();
 			if (bl.length > 0 && bl[0]) {
-				return new MultiUserChatSession(bl, in);
+				return new MultiChatSession(bl, in);
 			} else {
-				return new SingleUserChatSession(bl, in);
+				return new SingleChatSession(bl, in);
 			}
 		}
 
@@ -34,8 +34,8 @@ public abstract class ChatSession implements Parcelable, ChatCodes {
 	}
 
 	protected ChatSession(boolean[] bl, Parcel in) {
-		mMessageList = (ChatMessageList) in
-				.readParcelable(ChatMessageList.class.getClassLoader());
+		mMessageList = (MessageList) in
+				.readParcelable(MessageList.class.getClassLoader());
 		mSessionID = in.readString();
 		mIsClosed = bl[1];
 	}
@@ -43,11 +43,11 @@ public abstract class ChatSession implements Parcelable, ChatCodes {
 	protected ChatSession(String sessionID) {
 		mSessionID = sessionID;
 		mIsClosed = false;
-		mMessageList = new ChatMessageList();
+		mMessageList = new MessageList();
 	}
 
-	public void addMessage(ChatMessage message) {
-		mMessageList.add(message);
+	public void addMessage(ChatMessage chatMessage) {
+		mMessageList.add(chatMessage);
 	}
 
 	public void close() {
@@ -74,7 +74,7 @@ public abstract class ChatSession implements Parcelable, ChatCodes {
 
 	public abstract String getIdentifier();
 
-	public ChatMessageList getMessageList() {
+	public MessageList getMessageList() {
 		return mMessageList;
 	}
 
@@ -94,7 +94,7 @@ public abstract class ChatSession implements Parcelable, ChatCodes {
 	}
 
 	public boolean isMUC() {
-		return (this instanceof MultiUserChatSession);
+		return (this instanceof MultiChatSession);
 	}
 
 	@Override

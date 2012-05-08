@@ -24,30 +24,30 @@ import xmpp.client.service.user.UserService;
 import xmpp.client.service.user.UserServiceProvider;
 import android.util.Log;
 
-public class MultiUserChat extends Chat implements SubjectUpdatedListener,
+public class MultiChat extends Chat implements SubjectUpdatedListener,
 		UserServiceProvider, ConnectionProvider {
-	private static final String TAG = MultiUserChat.class.getName();
+	private static final String TAG = MultiChat.class.getName();
 
 	private org.jivesoftware.smackx.muc.MultiUserChat mMUC;
-	private final MultiUserChatMessageListener mMessageListener;
-	private final MultiUserChatParticipantListener mParticipantListener;
+	private final MultiChatMessageListener mMessageListener;
+	private final MultiChatParticipantListener mParticipantListener;
 	private final InternalChatManager mInternalChatManager;
-	private final MultiUserChatParticipantStatusListener mParticipantStatusListener;
+	private final MultiChatParticipantStatusListener mParticipantStatusListener;
 	private final UserServiceProvider mUserServiceProvider;
-	private final MultiUserChatInfo mMUCInfo;
+	private final MultiChatInfo mMUCInfo;
 	private final ConnectionProvider mConnectionProvider;
 	private boolean mInitDone;
 
-	public MultiUserChat(ConnectionProvider connectionProvider,
-			MultiUserChatInfo mucinfo, InternalChatManager internalChatManager,
+	public MultiChat(ConnectionProvider connectionProvider,
+			MultiChatInfo mucinfo, InternalChatManager internalChatManager,
 			UserServiceProvider userServiceProvider) {
 		mConnectionProvider = connectionProvider;
 		mMUCInfo = mucinfo;
 		mUserServiceProvider = userServiceProvider;
 		mInternalChatManager = internalChatManager;
-		mMessageListener = new MultiUserChatMessageListener(this);
-		mParticipantListener = new MultiUserChatParticipantListener(this);
-		mParticipantStatusListener = new MultiUserChatParticipantStatusListener(
+		mMessageListener = new MultiChatMessageListener(this);
+		mParticipantListener = new MultiChatParticipantListener(this);
+		mParticipantStatusListener = new MultiChatParticipantStatusListener(
 				this);
 		mInitDone = false;
 	}
@@ -144,7 +144,7 @@ public class MultiUserChat extends Chat implements SubjectUpdatedListener,
 		return false;
 	}
 
-	public void processMessage(MultiUserChat mChat, Message msg) {
+	public void processMessage(MultiChat mChat, Message msg) {
 		try {
 			setupUser(msg.getFrom(), null);
 		} catch (final Exception e) {

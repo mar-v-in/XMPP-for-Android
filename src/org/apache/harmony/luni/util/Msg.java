@@ -36,7 +36,7 @@ import org.apache.harmony.luni.internal.nls.Messages;
  * <em>KEY</em> should a reasonable human-readable (english) string.
  * 
  * @deprecated use module specific message class such as
- *             {@link org.apache.harmony.luni.internal.nls.Message} for luni.
+ *             {@link org.apache.harmony.luni.internal.nls.SingleChatMessage} for luni.
  */
 @Deprecated
 public class Msg {

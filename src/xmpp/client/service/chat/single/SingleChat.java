@@ -11,21 +11,21 @@ import org.jivesoftware.smackx.ChatStateListener;
 import xmpp.client.service.chat.InternalChatManager;
 import xmpp.client.service.user.User;
 
-public class SingleUserChat extends xmpp.client.service.chat.Chat implements
+public class SingleChat extends xmpp.client.service.chat.Chat implements
 		MessageListener, ChatStateListener {
 	@SuppressWarnings("unused")
-	private static final String TAG = SingleUserChat.class.getName();
+	private static final String TAG = SingleChat.class.getName();
 
 	Chat mChat;
 	InternalChatManager mInternalManager;
 	User mUser;
 
-	public SingleUserChat(ChatManager chatManager, String jid,
+	public SingleChat(ChatManager chatManager, String jid,
 			InternalChatManager internalManager, User user) {
 		this(chatManager.createChat(jid, null), internalManager, user);
 	}
 
-	public SingleUserChat(org.jivesoftware.smack.Chat smackChat,
+	public SingleChat(org.jivesoftware.smack.Chat smackChat,
 			InternalChatManager internalManager, User user) {
 		mChat = smackChat;
 		mInternalManager = internalManager;
@@ -45,7 +45,7 @@ public class SingleUserChat extends xmpp.client.service.chat.Chat implements
 		return false;
 	}
 
-	public boolean equals(SingleUserChat o) {
+	public boolean equals(SingleChat o) {
 		return o.contains(mChat);
 	}
 
@@ -83,7 +83,7 @@ public class SingleUserChat extends xmpp.client.service.chat.Chat implements
 		return false;
 	}
 
-	public boolean nearly(SingleUserChat chat) {
+	public boolean nearly(SingleChat chat) {
 		return chat.nearly(mChat);
 	}
 

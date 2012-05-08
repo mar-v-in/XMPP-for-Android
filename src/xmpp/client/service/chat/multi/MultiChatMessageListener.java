@@ -4,12 +4,12 @@ import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 
-public class MultiUserChatMessageListener implements PacketListener {
+public class MultiChatMessageListener implements PacketListener {
 
-	MultiUserChat mChat;
+	MultiChat mChat;
 
-	public MultiUserChatMessageListener(MultiUserChat multiUserChat) {
-		mChat = multiUserChat;
+	public MultiChatMessageListener(MultiChat multiChat) {
+		mChat = multiChat;
 	}
 
 	@Override
