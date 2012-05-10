@@ -56,5 +56,6 @@
 	<string name="auto_join">Auto Join</string>
 	<string name="status">Status</string>
 	<string name="contactpicture_desc">The User\'s contact picture</string>
+	<string name="chat_offline">$(name) is offline. Messages will be delivered when $(name) returns.</string>
 
 </resources>

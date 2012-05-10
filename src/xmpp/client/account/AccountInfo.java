@@ -82,6 +82,19 @@ public class AccountInfo implements Parcelable {
 		return mUsername;
 	}
 
+	public boolean equals(AccountInfo ai) {
+		return (ai.getHostname().equals(getHostname())
+				&& ai.getPassword().equals(getPassword())
+				&& ai.getPort() == getPort()
+				&& ai.getSecurity() == getSecurity() 
+				&& ai.getUsername().equals(getUsername()));
+
+	}
+	
+	public String getFullUsername() {
+		return getUsername() + "@" + getHostname();
+	}
+
 	@Override
 	public void writeToParcel(Parcel out, int flags) {
 		out.writeString(mHostname);

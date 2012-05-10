@@ -15,12 +15,15 @@ import xmpp.client.service.user.contact.Contact;
 import xmpp.client.ui.extras.SmileyHandler;
 import xmpp.client.ui.provider.ChatProvider;
 import xmpp.client.ui.provider.ContactProvider;
+import android.R.color;
 import android.content.Context;
+import android.graphics.Color;
 import android.net.Uri;
 import android.text.Layout.Alignment;
 import android.text.SpannableStringBuilder;
 import android.text.format.DateFormat;
 import android.text.style.AlignmentSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -177,6 +180,22 @@ public class ChatAdapter extends BaseAdapter {
 						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				lastView = layoutInflater.inflate(R.layout.chat_entry_status,
 						parent, false);
+			}
+			Log.d("ChatAdapter", "Render lastView");
+			if (!mChatProvider.isMUC() && mChatProvider.getUsers().size() > 0) {
+				Log.d("ChatAdapter", "Render lastView[isSingle!]");
+				User u = mChatProvider.getUsers().get(0);
+				if (!mContactProvider.getContact(mChatProvider.getUsers().get(0)).getUserState().isOnline()) {
+					Log.d("ChatAdapter", "Render lastView[isOffline!]");
+					TextView v = (TextView) lastView.findViewById(R.id.status_text);
+					v.setText(mContext.getText(R.string.chat_offline).toString().replace("$(name)", u.getDisplayName()));
+					v.setTextColor(Color.parseColor(mContext.getString(android.R.color.holo_red_dark)));
+					v.setVisibility(View.VISIBLE);
+				} else {
+					Log.d("ChatAdapter", "Render lastView[isOnline!]");
+					TextView v = (TextView) lastView.findViewById(R.id.status_text);
+					v.setVisibility(View.GONE);
+				}
 			}
 
 			view = lastView;

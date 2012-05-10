@@ -9,6 +9,7 @@ import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
 
+import xmpp.client.service.MainService;
 import xmpp.client.service.Service;
 import xmpp.client.service.user.contact.Contact;
 import xmpp.client.service.user.contact.ContactList;
@@ -20,13 +21,13 @@ public class UserService implements RosterListener, UserServiceProvider {
 	private UserList mUserList;
 	private ContactList mContactList;
 	private Roster mRoster;
-	private final Service mService;
+	private final MainService service;
 	private User mUserMe;
 
-	public UserService(Service service, User userMe) {
-		mService = service;
+	public UserService(MainService service, User userMe) {
+		this.service = service;
 		mUserMe = userMe;
-		mRoster = mService.getConnection().getRoster();
+		mRoster = service.getConnection().getRoster();
 		mRoster.addRosterListener(this);
 		mUserList = new UserList();
 		mContactList = new ContactList();
@@ -90,7 +91,7 @@ public class UserService implements RosterListener, UserServiceProvider {
 			final User user = getUser(uid, false);
 			mUserList.remove(user);
 			mContactList.removeUser(uid);
-			mService.sendRosterDeleted(uid);
+			service.sendRosterDeleted(uid);
 		}
 	}
 
@@ -101,7 +102,7 @@ public class UserService implements RosterListener, UserServiceProvider {
 			final RosterEntry re = mRoster.getEntry(uid);
 			user.setUserName(re.getName());
 			user.setGroups(new GroupList(re.getGroups()));
-			mService.sendRosterUpdated(user);
+			service.sendRosterUpdated(user);
 		}
 	}
 
@@ -188,9 +189,9 @@ public class UserService implements RosterListener, UserServiceProvider {
 			return;
 		}
 		user.setUserState(new UserState(presence));
-		user.setAvatar(mService.getAvatarService().getAvatar(user));
+		user.setAvatar(service.getAvatarService().getAvatar(user));
 		user.setRessource(StringUtils.parseResource(presence.getFrom()));
-		mService.sendRosterUpdated(user);
+		service.sendRosterUpdated(user);
 	}
 
 	public User setupUser(String uid, boolean addIfNotExists) {
@@ -198,7 +199,7 @@ public class UserService implements RosterListener, UserServiceProvider {
 				.parseBareAddress(uid));
 		if (re != null) {
 			final User user = new User(re, mRoster.getPresence(re.getUser()));
-			user.setAvatar(mService.getAvatarService().getAvatar(user));
+			user.setAvatar(service.getAvatarService().getAvatar(user));
 			if (addIfNotExists) {
 				setupUser(user);
 			}
@@ -217,11 +218,11 @@ public class UserService implements RosterListener, UserServiceProvider {
 		if (user2 == null) {
 			mUserList.add(user);
 			mContactList.add(user);
-			mService.sendRosterAdded(user);
+			service.sendRosterAdded(user);
 			return user;
 		} else {
 			user2.setUserState(user.getUserState());
-			mService.sendRosterUpdated(user2);
+			service.sendRosterUpdated(user2);
 			return user2;
 		}
 	}

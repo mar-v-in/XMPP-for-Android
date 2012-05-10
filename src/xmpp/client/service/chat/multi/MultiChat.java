@@ -193,7 +193,6 @@ public class MultiChat extends Chat implements SubjectUpdatedListener,
 			if (isMe(participant))
 				return getUserService().getUserMe();
 			participant = StringUtils.parseResource(participant);
-			Log.d(TAG, participant);
 			if (presence == null) {
 				presence = mMUC.getOccupantPresence(participant);
 			}

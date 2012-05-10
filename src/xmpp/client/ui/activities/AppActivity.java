@@ -327,29 +327,8 @@ public class AppActivity extends Activity implements
 		handleIntent(i);
 	}
 
-	public void goChat(String userLogin) {
-		final Intent i = new Intent(AppActivity.this, AppActivity.class);
-		i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
-				+ URI_HOST_JABBER + URI_PATH_DIVIDER + Uri.encode(userLogin)));
-		handleIntent(i);
-	}
-
-	public void goConference(String muc) {
-		final Intent i = new Intent(AppActivity.this, AppActivity.class);
-		i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
-				+ URI_HOST_JABBER_MUC + URI_PATH_DIVIDER + Uri.encode(muc)));
-		handleIntent(i);
-	}
-
 	private void goLogin() {
 		startActivity(new Intent(AppActivity.this, AccountLogin.class));
-	}
-
-	public void goStatusChange() {
-		final Intent i = new Intent(AppActivity.this, AppActivity.class);
-		i.setData(Uri.parse(URI_SCHEME_XMPP_FOR_ANDROID
-				+ URI_SCHEME_HOST_DIVIDER + URI_HOST_CHANGE_STATUS));
-		handleIntent(i);
 	}
 
 	public void handleIntent(Intent intent) {

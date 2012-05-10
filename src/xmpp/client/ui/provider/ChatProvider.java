@@ -6,6 +6,7 @@ import xmpp.client.service.chat.ChatCodes;
 import xmpp.client.service.chat.ChatMessage;
 import xmpp.client.service.chat.ChatSession;
 import xmpp.client.service.chat.multi.MultiChatSession;
+import xmpp.client.service.chat.single.SingleChatSession;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
 import xmpp.client.service.user.UserList;
@@ -42,7 +43,11 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants,
 		if (mChatSession.isMUC() && (mChatSession instanceof MultiChatSession)) {
 			return ((MultiChatSession) mChatSession).getUsers();
 		}
-		return null;
+		UserList u = new UserList();
+		if (mChatSession instanceof SingleChatSession) {
+			u.add(((SingleChatSession)mChatSession).getUser());
+		}
+		return u;
 	}
 
 	@Override
