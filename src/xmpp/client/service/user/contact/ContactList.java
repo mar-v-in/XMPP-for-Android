@@ -49,11 +49,14 @@ public class ContactList extends ArrayList<Contact> implements Parcelable {
 	}
 
 	public synchronized void add(User user) {
-		Log.d("ContactProvider", user.getFullUserLogin() + ":" + user.getDisplayName());
+		Log.d("ContactProvider",
+				user.getFullUserLogin() + ":" + user.getDisplayName());
 		for (final Contact contact : this) {
 			if (contact.getUserName().equalsIgnoreCase(user.getDisplayName())) {
-				if (user.isMUCUser()) Log.d("ContactProvider", user.getDisplayName() + "="
-						+ contact.getUserName());
+				if (user.isMUCUser()) {
+					Log.d("ContactProvider", user.getDisplayName() + "="
+							+ contact.getUserName());
+				}
 				contact.add(user);
 				return;
 			}
@@ -61,8 +64,10 @@ public class ContactList extends ArrayList<Contact> implements Parcelable {
 				final String jid = user.getAdditionalInformation(0);
 				if (jid != null && contact.contains(jid, false)) {
 
-					if (user.isMUCUser()) Log.d("ContactProvider", user.getDisplayName() + "="
-							+ contact.getUserName());
+					if (user.isMUCUser()) {
+						Log.d("ContactProvider", user.getDisplayName() + "="
+								+ contact.getUserName());
+					}
 					contact.add(user);
 					return;
 				}

@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class MultiChatInfoList extends ArrayList<MultiChatInfo>
-		implements Parcelable {
+public class MultiChatInfoList extends ArrayList<MultiChatInfo> implements
+		Parcelable {
 
 	/**
 	 * 

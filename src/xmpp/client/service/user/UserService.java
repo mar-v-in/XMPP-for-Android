@@ -1,6 +1,5 @@
 package xmpp.client.service.user;
 
-import java.io.ObjectInputStream.GetField;
 import java.util.Collection;
 
 import org.jivesoftware.smack.Roster;
@@ -10,7 +9,6 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.util.StringUtils;
 
 import xmpp.client.service.MainService;
-import xmpp.client.service.Service;
 import xmpp.client.service.user.contact.Contact;
 import xmpp.client.service.user.contact.ContactList;
 import xmpp.client.service.user.group.GroupList;
@@ -136,11 +134,13 @@ public class UserService implements RosterListener, UserServiceProvider {
 			return mUserMe;
 		}
 		User u = getUserByFullUserLogin(uid);
-		if (u != null)
+		if (u != null) {
 			return u;
+		}
 		u = getUserByLogin(uid);
-		if (u != null)
+		if (u != null) {
 			return u;
+		}
 		if (setupIfNotExists) {
 			return setupUser(uid, addIfNotExists);
 		} else {
@@ -148,21 +148,21 @@ public class UserService implements RosterListener, UserServiceProvider {
 		}
 	}
 
-	private User getUserByLogin(String userLogin) {
+	public User getUserByFullUserLogin(String fullUserLogin) {
 		for (int i = 0; i < mUserList.size(); i++) {
 			final User user = mUserList.get(i);
-			if (user.getUserLogin().equalsIgnoreCase(
-					StringUtils.parseBareAddress(userLogin))) {
+			if (user.getFullUserLogin().equalsIgnoreCase(fullUserLogin)) {
 				return user;
 			}
 		}
 		return null;
 	}
 
-	public User getUserByFullUserLogin(String fullUserLogin) {
+	private User getUserByLogin(String userLogin) {
 		for (int i = 0; i < mUserList.size(); i++) {
 			final User user = mUserList.get(i);
-			if (user.getFullUserLogin().equalsIgnoreCase(fullUserLogin)) {
+			if (user.getUserLogin().equalsIgnoreCase(
+					StringUtils.parseBareAddress(userLogin))) {
 				return user;
 			}
 		}
@@ -214,7 +214,7 @@ public class UserService implements RosterListener, UserServiceProvider {
 	}
 
 	public User setupUser(User user) {
-		User user2 = getUserByFullUserLogin(user.getFullUserLogin());
+		final User user2 = getUserByFullUserLogin(user.getFullUserLogin());
 		if (user2 == null) {
 			mUserList.add(user);
 			mContactList.add(user);

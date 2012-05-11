@@ -5,13 +5,11 @@ import xmpp.client.R;
 import xmpp.client.account.AccountInfo;
 import xmpp.client.service.Service;
 import xmpp.client.service.chat.ChatSession;
-import xmpp.client.service.chat.multi.MultiChatInfo;
 import xmpp.client.service.chat.multi.MultiChatSession;
 import xmpp.client.service.handlers.SimpleMessageHandler;
 import xmpp.client.service.handlers.SimpleMessageHandlerClient;
 import xmpp.client.service.user.User;
 import xmpp.client.service.user.UserState;
-import xmpp.client.service.user.contact.Contact;
 import xmpp.client.ui.account.AccountLogin;
 import xmpp.client.ui.adapter.ChatAdapter;
 import xmpp.client.ui.adapter.GroupAdapter;
@@ -51,7 +49,6 @@ import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -157,8 +154,7 @@ public class AppActivity extends Activity implements
 			actionBar.setSelectedNavigationItem(currentNavigation);
 			rosterAdapter = new RosterAdapter(this, contactProvider,
 					conferenceProvider);
-			((ContactListFragment) fragmentManager
-					.findFragmentById(R.id.main))
+			((ContactListFragment) fragmentManager.findFragmentById(R.id.main))
 					.setListAdapter(rosterAdapter);
 			rosterAdapter.notifyDataSetChanged();
 		} else if (currentView == VIEW_CHAT) {
@@ -247,10 +243,6 @@ public class AppActivity extends Activity implements
 				Context.BIND_ABOVE_CLIENT);
 		isBound = true;
 	}
-	
-	public int getCurrentNavigation() {
-		return currentNavigation;
-	}
 
 	public void doLogin() {
 		final AccountManager am = AccountManager.get(this);
@@ -311,6 +303,10 @@ public class AppActivity extends Activity implements
 			unbindService(connection);
 			isBound = false;
 		}
+	}
+
+	public int getCurrentNavigation() {
+		return currentNavigation;
 	}
 
 	private void goAddConference() {
@@ -772,8 +768,8 @@ public class AppActivity extends Activity implements
 			mgr.hideSoftInputFromWindow(view.getWindowToken(), 0);
 		}
 		setContentView(R.layout.main);
-		ContactListFragment fragment = new ContactListFragment();
-		FragmentTransaction t = fragmentManager.beginTransaction();
+		final ContactListFragment fragment = new ContactListFragment();
+		final FragmentTransaction t = fragmentManager.beginTransaction();
 		t.replace(R.id.main, fragment);
 		t.commit();
 		fragmentManager.executePendingTransactions();
@@ -798,11 +794,11 @@ public class AppActivity extends Activity implements
 					this, messageHandler);
 		}
 		if (rosterAdapter == null) {
-			rosterAdapter = new RosterAdapter(this,
-					contactProvider, conferenceProvider);
+			rosterAdapter = new RosterAdapter(this, contactProvider,
+					conferenceProvider);
 		}
-		((ContactListFragment) fragmentManager
-				.findFragmentById(R.id.main)).setListAdapter(rosterAdapter);
+		((ContactListFragment) fragmentManager.findFragmentById(R.id.main))
+				.setListAdapter(rosterAdapter);
 
 		if (savedInstanceState != null && savedInstanceState.containsKey("tab")) {
 			currentNavigation = savedInstanceState.getInt("tab");

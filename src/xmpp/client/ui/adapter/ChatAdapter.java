@@ -6,16 +6,12 @@ import java.util.HashMap;
 
 import xmpp.client.R;
 import xmpp.client.service.chat.ChatMessage;
-import xmpp.client.service.chat.ChatMessage;
 import xmpp.client.service.chat.MessageType;
-import xmpp.client.service.chat.multi.MultiChatMessage;
-import xmpp.client.service.chat.single.SingleChatMessage;
 import xmpp.client.service.user.User;
 import xmpp.client.service.user.contact.Contact;
 import xmpp.client.ui.extras.SmileyHandler;
 import xmpp.client.ui.provider.ChatProvider;
 import xmpp.client.ui.provider.ContactProvider;
-import android.R.color;
 import android.content.Context;
 import android.graphics.Color;
 import android.net.Uri;
@@ -34,20 +30,21 @@ import android.widget.TextView;
 
 public class ChatAdapter extends BaseAdapter {
 
-	private HashMap<Integer, View> viewCache;
-	private View lastView;
-	private int cachedSize;
-
 	private static boolean sameDay(Date date1, Date date2) {
 		// TODO Do it without deprecated functions and also compare month and
 		// year
 		return date1.getDate() == date2.getDate();
 	}
 
-	private Context mContext;
-	private ChatProvider mChatProvider;
+	private final HashMap<Integer, View> viewCache;
+	private View lastView;
 
-	private ContactProvider mContactProvider;
+	private int cachedSize;
+
+	private final Context mContext;
+	private final ChatProvider mChatProvider;
+
+	private final ContactProvider mContactProvider;
 
 	public ChatAdapter(Context context, ChatProvider chatProvider,
 			ContactProvider contactProvider) {
@@ -56,6 +53,38 @@ public class ChatAdapter extends BaseAdapter {
 		mContactProvider = contactProvider;
 		viewCache = new HashMap<Integer, View>();
 		cachedSize = -1;
+	}
+
+	private void drawMessages(ViewGroup parent,
+			final ArrayList<ChatMessage> msgs, final boolean itsMe,
+			final LayoutInflater layoutInflater, final LinearLayout container) {
+		for (final ChatMessage chatMessage : msgs) {
+			final CharSequence seq = SmileyHandler.getSmiledText(
+					chatMessage.getText(), mContext);
+			View temp = null;
+			if (itsMe) {
+				((SpannableStringBuilder) seq).setSpan(new AlignmentSpan() {
+
+					@Override
+					public Alignment getAlignment() {
+						return Alignment.ALIGN_OPPOSITE;
+					}
+
+				}, 0, seq.length(), 0);
+				temp = layoutInflater.inflate(
+						R.layout.chat_entry_outgoing_message, parent, false);
+			} else {
+				temp = layoutInflater.inflate(
+						R.layout.chat_entry_incoming_message, parent, false);
+			}
+			final TextView time = (TextView) temp.findViewById(R.id.msg_time);
+			time.setText(DateFormat.getTimeFormat(mContext).format(
+					chatMessage.getDate()));
+			final TextView text = (TextView) temp.findViewById(R.id.msg_text);
+
+			text.setText(seq);
+			container.addView(temp);
+		}
 	}
 
 	@Override
@@ -148,7 +177,7 @@ public class ChatAdapter extends BaseAdapter {
 			final QuickContactBadge q = (QuickContactBadge) view
 					.findViewById(R.id.contact_badge);
 			String userContact = null;
-			Contact contact = null; // Only because it does not work!
+			final Contact contact = null; // Only because it does not work!
 			if (contact != null) {
 				userContact = contact.getUserContact();
 			}
@@ -184,16 +213,22 @@ public class ChatAdapter extends BaseAdapter {
 			Log.d("ChatAdapter", "Render lastView");
 			if (!mChatProvider.isMUC() && mChatProvider.getUsers().size() > 0) {
 				Log.d("ChatAdapter", "Render lastView[isSingle!]");
-				User u = mChatProvider.getUsers().get(0);
-				if (!mContactProvider.getContact(mChatProvider.getUsers().get(0)).getUserState().isOnline()) {
+				final User u = mChatProvider.getUsers().get(0);
+				if (!mContactProvider
+						.getContact(mChatProvider.getUsers().get(0))
+						.getUserState().isOnline()) {
 					Log.d("ChatAdapter", "Render lastView[isOffline!]");
-					TextView v = (TextView) lastView.findViewById(R.id.status_text);
-					v.setText(mContext.getText(R.string.chat_offline).toString().replace("$(name)", u.getDisplayName()));
-					v.setTextColor(Color.parseColor(mContext.getString(android.R.color.holo_red_dark)));
+					final TextView v = (TextView) lastView
+							.findViewById(R.id.status_text);
+					v.setText(mContext.getText(R.string.chat_offline)
+							.toString().replace("$(name)", u.getDisplayName()));
+					v.setTextColor(Color.parseColor(mContext
+							.getString(android.R.color.holo_red_dark)));
 					v.setVisibility(View.VISIBLE);
 				} else {
 					Log.d("ChatAdapter", "Render lastView[isOnline!]");
-					TextView v = (TextView) lastView.findViewById(R.id.status_text);
+					final TextView v = (TextView) lastView
+							.findViewById(R.id.status_text);
 					v.setVisibility(View.GONE);
 				}
 			}
@@ -206,37 +241,5 @@ public class ChatAdapter extends BaseAdapter {
 			}
 		}
 		return view;
-	}
-
-	private void drawMessages(ViewGroup parent,
-			final ArrayList<ChatMessage> msgs, final boolean itsMe,
-			final LayoutInflater layoutInflater, final LinearLayout container) {
-		for (final ChatMessage chatMessage : msgs) {
-			final CharSequence seq = SmileyHandler.getSmiledText(
-					chatMessage.getText(), mContext);
-			View temp = null;
-			if (itsMe) {
-				((SpannableStringBuilder) seq).setSpan(new AlignmentSpan() {
-
-					@Override
-					public Alignment getAlignment() {
-						return Alignment.ALIGN_OPPOSITE;
-					}
-
-				}, 0, seq.length(), 0);
-				temp = layoutInflater.inflate(
-						R.layout.chat_entry_outgoing_message, parent, false);
-			} else {
-				temp = layoutInflater.inflate(
-						R.layout.chat_entry_incoming_message, parent, false);
-			}
-			final TextView time = (TextView) temp.findViewById(R.id.msg_time);
-			time.setText(DateFormat.getTimeFormat(mContext).format(
-					chatMessage.getDate()));
-			final TextView text = (TextView) temp.findViewById(R.id.msg_text);
-
-			text.setText(seq);
-			container.addView(temp);
-		}
 	}
 }

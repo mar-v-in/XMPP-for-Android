@@ -19,12 +19,33 @@ public class ContactListFragment extends ListFragment implements Constants {
 
 	AppActivity activity;
 
+	public void goChat(String userLogin) {
+		final Intent i = new Intent(activity, AppActivity.class);
+		i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
+				+ URI_HOST_JABBER + URI_PATH_DIVIDER + Uri.encode(userLogin)));
+		activity.handleIntent(i);
+	}
+
+	public void goConference(String muc) {
+		final Intent i = new Intent(activity, AppActivity.class);
+		i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
+				+ URI_HOST_JABBER_MUC + URI_PATH_DIVIDER + Uri.encode(muc)));
+		activity.handleIntent(i);
+	}
+
+	public void goStatusChange() {
+		final Intent i = new Intent(activity, AppActivity.class);
+		i.setData(Uri.parse(URI_SCHEME_XMPP_FOR_ANDROID
+				+ URI_SCHEME_HOST_DIVIDER + URI_HOST_CHANGE_STATUS));
+		activity.handleIntent(i);
+	}
+
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
 		try {
 			this.activity = (AppActivity) activity;
-		} catch (ClassCastException ex) {
+		} catch (final ClassCastException ex) {
 			throw new RuntimeException(ContactListFragment.class.getName()
 					+ " is only available in " + AppActivity.class.getName(),
 					ex);
@@ -47,27 +68,6 @@ public class ContactListFragment extends ListFragment implements Constants {
 		} else {
 			goChat(((Contact) getListAdapter().getItem(item)).getUserLogin());
 		}
-	}
-
-	public void goChat(String userLogin) {
-		final Intent i = new Intent(activity, AppActivity.class);
-		i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
-				+ URI_HOST_JABBER + URI_PATH_DIVIDER + Uri.encode(userLogin)));
-		activity.handleIntent(i);
-	}
-
-	public void goConference(String muc) {
-		final Intent i = new Intent(activity, AppActivity.class);
-		i.setData(Uri.parse(URI_SCHEME_IMTO + URI_SCHEME_HOST_DIVIDER
-				+ URI_HOST_JABBER_MUC + URI_PATH_DIVIDER + Uri.encode(muc)));
-		activity.handleIntent(i);
-	}
-
-	public void goStatusChange() {
-		final Intent i = new Intent(activity, AppActivity.class);
-		i.setData(Uri.parse(URI_SCHEME_XMPP_FOR_ANDROID
-				+ URI_SCHEME_HOST_DIVIDER + URI_HOST_CHANGE_STATUS));
-		activity.handleIntent(i);
 	}
 
 }

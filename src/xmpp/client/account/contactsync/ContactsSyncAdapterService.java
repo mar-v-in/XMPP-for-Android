@@ -1,6 +1,5 @@
 package xmpp.client.account.contactsync;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -33,7 +32,6 @@ import android.os.Parcelable;
 import android.os.RemoteException;
 import android.provider.BaseColumns;
 import android.provider.ContactsContract;
-import android.provider.ContactsContract.Contacts;
 import android.provider.ContactsContract.Data;
 import android.provider.ContactsContract.RawContacts;
 import android.provider.ContactsContract.RawContacts.Entity;
@@ -136,28 +134,28 @@ public class ContactsSyncAdapterService extends Service implements
 	}
 
 	public void doSync(ContactList p) {
-		HashMap<String, Long> localContacts = new HashMap<String, Long>();
-		Uri rawContactUri = RawContacts.CONTENT_URI
+		final HashMap<String, Long> localContacts = new HashMap<String, Long>();
+		final Uri rawContactUri = RawContacts.CONTENT_URI
 				.buildUpon()
 				.appendQueryParameter(RawContacts.ACCOUNT_NAME,
 						mContactMe.getUserLogin())
 				.appendQueryParameter(RawContacts.ACCOUNT_TYPE, ACCOUNT_TYPE)
 				.build();
-		Cursor c1 = getContentResolver().query(rawContactUri,
+		final Cursor c1 = getContentResolver().query(rawContactUri,
 				new String[] { BaseColumns._ID, RawContacts.SOURCE_ID }, null,
 				null, null);
 		while (c1.moveToNext()) {
 			localContacts.put(c1.getString(1), c1.getLong(0));
 		}
 		c1.close();
-		ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
+		final ArrayList<ContentProviderOperation> ops = new ArrayList<ContentProviderOperation>();
 		for (final Contact contact : p) {
 			for (final User user : contact.getUsers()) {
 				if (user.isInvisible()) {
 					break;
 				}
 				if (!localContacts.containsKey(user.getUserLogin())) {
-					int back = insertDatabaseUser(ops, user);
+					final int back = insertDatabaseUser(ops, user);
 				} else {
 					updateDatabaseUser(ops,
 							localContacts.get(user.getUserLogin()), user);
@@ -166,9 +164,9 @@ public class ContactsSyncAdapterService extends Service implements
 		}
 		try {
 			getContentResolver().applyBatch(ContactsContract.AUTHORITY, ops);
-		} catch (RemoteException e) {
+		} catch (final RemoteException e) {
 			Log.e(TAG, "sync", e);
-		} catch (OperationApplicationException e) {
+		} catch (final OperationApplicationException e) {
 			Log.e(TAG, "sync", e);
 		}
 	}
@@ -320,29 +318,33 @@ public class ContactsSyncAdapterService extends Service implements
 
 	private void updateDatabaseUser(ArrayList<ContentProviderOperation> ops,
 			long rawContactID, User user) {
-		Uri rawContactUri = ContentUris.withAppendedId(RawContacts.CONTENT_URI,
-				rawContactID);
-		Uri entityUri = Uri.withAppendedPath(rawContactUri,
+		final Uri rawContactUri = ContentUris.withAppendedId(
+				RawContacts.CONTENT_URI, rawContactID);
+		final Uri entityUri = Uri.withAppendedPath(rawContactUri,
 				Entity.CONTENT_DIRECTORY);
-		Cursor c = getContentResolver().query(entityUri, new String[] {
-				RawContacts.SOURCE_ID, Entity.DATA_ID, Entity.MIMETYPE,
-				Entity.DATA1 }, null, null, null);
+		final Cursor c = getContentResolver().query(
+				entityUri,
+				new String[] { RawContacts.SOURCE_ID, Entity.DATA_ID,
+						Entity.MIMETYPE, Entity.DATA1 }, null, null, null);
 		while (c.moveToNext()) {
 			if (!c.isNull(1) && c.getString(2).equals(ACCOUNT_MIME)) {
 				ops.add(ContentProviderOperation
 						.newInsert(ContactsContract.StatusUpdates.CONTENT_URI)
-						.withValue(ContactsContract.StatusUpdates.DATA_ID, c.getLong(1))
+						.withValue(ContactsContract.StatusUpdates.DATA_ID,
+								c.getLong(1))
 						.withValue(ContactsContract.StatusUpdates.IM_HANDLE,
 								user.getUserLogin())
 						.withValue(ContactsContract.StatusUpdates.IM_ACCOUNT,
 								mContactMe.getUserLogin())
-						.withValue(ContactsContract.StatusUpdates.PROTOCOL,
+						.withValue(
+								ContactsContract.StatusUpdates.PROTOCOL,
 								ContactsContract.CommonDataKinds.Im.PROTOCOL_JABBER)
 						.withValue(ContactsContract.StatusUpdates.PRESENCE,
 								user.getUserState().getStatus())
 						.withValue(ContactsContract.StatusUpdates.STATUS,
 								user.getUserState().getStatusText(this))
-						.withValue(ContactsContract.StatusUpdates.STATUS_RES_PACKAGE,
+						.withValue(
+								ContactsContract.StatusUpdates.STATUS_RES_PACKAGE,
 								"xmpp.client")
 						.withValue(ContactsContract.StatusUpdates.STATUS_ICON,
 								R.drawable.ic_launcher)

@@ -64,8 +64,8 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes,
 	public Chat createChat(String id, int chatType) {
 		switch (chatType) {
 		case CHAT_SINGLE:
-			final SingleChat singleChat = new SingleChat(
-					mChatManager, id, this, getUserService().getUserMe());
+			final SingleChat singleChat = new SingleChat(mChatManager, id,
+					this, getUserService().getUserMe());
 			insertEntry(singleChat);
 			return singleChat;
 		case CHAT_MULTI:
@@ -143,7 +143,7 @@ public class InternalChatManager implements ChatManagerListener, ChatCodes,
 		try {
 			if (smackMessage.getBody() != null) {
 
-				xmpp.client.service.chat.ChatMessage chatMessage = MessageCreator
+				final xmpp.client.service.chat.ChatMessage chatMessage = MessageCreator
 						.getInstance(getUserService()).createMessage(chat,
 								smackMessage);
 

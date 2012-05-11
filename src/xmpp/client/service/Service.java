@@ -36,15 +36,6 @@ public class Service extends android.app.Service implements
 	private HashMap<String, MainService> services;
 	private HandlerThread thread;
 
-	private MainService getActiveService() {
-		return getServiceByAccountInfo(activeAccount);
-	}
-
-	private MainService getServiceByAccountInfo(AccountInfo info) {
-		if (info == null) return null;
-		return services.get(info.getFullUsername());
-	}
-
 	private void addUser(Message msg) {
 		Bundle b = msg.getData();
 		final String uid = b.getString(FIELD_JID);
@@ -66,7 +57,7 @@ public class Service extends android.app.Service implements
 	}
 
 	private void closeChatSession(Message msg) {
-		AccountInfo accountInfo = getAccountInfo(msg);
+		final AccountInfo accountInfo = getAccountInfo(msg);
 		Bundle b = msg.getData();
 		b.setClassLoader(ChatSession.class.getClassLoader());
 		final ChatSession session = b.getParcelable(FIELD_CHAT_SESSION);
@@ -76,21 +67,21 @@ public class Service extends android.app.Service implements
 		sendMsg(msg.replyTo, SIG_CLOSE_CHATSESSION, b);
 	}
 
-	private boolean connectXMPP(AccountInfo accountInfo) {
-		return getServiceByAccountInfo(accountInfo).connectXMPP();
-	}
-
 	private void connect(Message msg) {
-		AccountInfo accountInfo = getAccountInfo(msg);
+		final AccountInfo accountInfo = getAccountInfo(msg);
 		boolean res;
 		res = connectXMPP(accountInfo);
 		if (res) {
-			Bundle b = new Bundle();
+			final Bundle b = new Bundle();
 			b.putParcelable(FIELD_ACCOUNTINFO, accountInfo);
 			sendMsg(msg.replyTo, SIG_CONNECT);
 		} else {
 			sendMsg(msg.replyTo, SIG_CONNECT_ERROR);
 		}
+	}
+
+	private boolean connectXMPP(AccountInfo accountInfo) {
+		return getServiceByAccountInfo(accountInfo).connectXMPP();
 	}
 
 	private void disableChatSession(ChatSession session) {
@@ -109,12 +100,26 @@ public class Service extends android.app.Service implements
 		sendMsg(msg.replyTo, SIG_DISABLE_CHATSESSION);
 	}
 
+	private AccountInfo getAccountInfo(Message msg) {
+		final Bundle b = msg.getData();
+		b.setClassLoader(AccountInfo.class.getClassLoader());
+		AccountInfo accountInfo = b.getParcelable(FIELD_ACCOUNTINFO);
+		if (accountInfo == null) {
+			accountInfo = activeAccount;
+		}
+		return accountInfo;
+	}
+
+	private MainService getActiveService() {
+		return getServiceByAccountInfo(activeAccount);
+	}
+
 	private ContactList getContactList(AccountInfo accountInfo) {
 		return getServiceByAccountInfo(accountInfo).getContactList();
 	}
 
 	private void getContacts(Message msg) {
-		AccountInfo accountInfo = getAccountInfo(msg);
+		final AccountInfo accountInfo = getAccountInfo(msg);
 		final ContactList contactList = getContactList(accountInfo);
 		if (contactList != null) {
 			final Bundle b = new Bundle();
@@ -125,17 +130,34 @@ public class Service extends android.app.Service implements
 		}
 	}
 
+	@Override
+	public Context getContext() {
+		return this;
+	}
+
 	private MultiChatInfoList getMUCs(AccountInfo accountInfo) {
 		return getServiceByAccountInfo(accountInfo).getBookmarkService()
 				.getConferenceHandler().getMultiUserChatInfoList();
 	}
 
 	private void getMUCs(Message msg) {
-		AccountInfo accountInfo = getAccountInfo(msg);
+		final AccountInfo accountInfo = getAccountInfo(msg);
 		final Bundle b = new Bundle();
 		b.putParcelable(FIELD_ACCOUNTINFO, accountInfo);
 		b.putParcelable(FIELD_MULTI_USER_CHAT_INFO_LIST, getMUCs(accountInfo));
 		sendMsg(msg.replyTo, SIG_GET_MUCS, b);
+	}
+
+	private MainService getServiceByAccountInfo(AccountInfo info) {
+		if (info == null) {
+			return null;
+		}
+		return services.get(info.getFullUsername());
+	}
+
+	private User getUserMe(AccountInfo accountInfo) {
+		return getServiceByAccountInfo(accountInfo).getUserService()
+				.getUserMe();
 	}
 
 	@Override
@@ -209,7 +231,7 @@ public class Service extends android.app.Service implements
 	}
 
 	private boolean initXMPP(AccountInfo accountInfo) {
-		MainService service = new MainService(this, this, accountInfo);
+		final MainService service = new MainService(this, this, accountInfo);
 		if (service.initXMPP()) {
 			services.put(accountInfo.getFullUsername(), service);
 			activeAccount = accountInfo;
@@ -218,12 +240,31 @@ public class Service extends android.app.Service implements
 		return false;
 	}
 
+	@Override
+	public boolean isActiveAccount(AccountInfo accountInfo) {
+		return (activeAccount.equals(accountInfo));
+	}
+
+	@Override
+	public boolean isActiveChatSession(AccountInfo accountInfo,
+			ChatSession session) {
+		return (isActiveAccount(accountInfo) && session
+				.equals(activeChatSession));
+	}
+
+	private boolean isOnline(AccountInfo accountInfo) {
+		if (getServiceByAccountInfo(accountInfo) == null) {
+			return false;
+		}
+		return getServiceByAccountInfo(accountInfo).isOnline();
+	}
+
 	private void isOnline(Message msg) {
-		AccountInfo accountInfo = getAccountInfo(msg);
+		final AccountInfo accountInfo = getAccountInfo(msg);
 		boolean res;
 		res = isOnline(accountInfo);
 		if (res) {
-			Bundle b = new Bundle();
+			final Bundle b = new Bundle();
 			b.putParcelable(FIELD_ACCOUNTINFO, accountInfo);
 			b.putParcelable(FIELD_USER, getUserMe(accountInfo));
 			b.putParcelable(FIELD_CONTACT, new Contact(getUserMe(accountInfo)));
@@ -233,37 +274,17 @@ public class Service extends android.app.Service implements
 		}
 	}
 
-	private AccountInfo getAccountInfo(Message msg) {
-		Bundle b = msg.getData();
-		b.setClassLoader(AccountInfo.class.getClassLoader());
-		AccountInfo accountInfo = b.getParcelable(FIELD_ACCOUNTINFO);
-		if (accountInfo == null) {
-			accountInfo = activeAccount;
-		}
-		return accountInfo;
-	}
-
-	private User getUserMe(AccountInfo accountInfo) {
-		return getServiceByAccountInfo(accountInfo).getUserService()
-				.getUserMe();
-	}
-
-	private boolean isOnline(AccountInfo accountInfo) {
-		if (getServiceByAccountInfo(accountInfo) == null) return false;
-		return getServiceByAccountInfo(accountInfo).isOnline();
-	}
-
 	@Override
 	public boolean isReady() {
 		return true;
 	}
 
 	private void login(Message msg) {
-		AccountInfo accountInfo = getAccountInfo(msg);
+		final AccountInfo accountInfo = getAccountInfo(msg);
 		boolean res;
 		res = loginXMPP(accountInfo);
 		if (res) {
-			Bundle b = new Bundle();
+			final Bundle b = new Bundle();
 			b.putParcelable(FIELD_ACCOUNTINFO, accountInfo);
 			sendMsg(msg.replyTo, SIG_LOGIN);
 		} else {
@@ -309,8 +330,12 @@ public class Service extends android.app.Service implements
 		messenger = null;
 	}
 
+	private Bundle openChatSession(AccountInfo accountInfo, String uid) {
+		return getServiceByAccountInfo(accountInfo).openChatSession(uid);
+	}
+
 	private void openChatSession(Message msg) {
-		AccountInfo accountInfo = getAccountInfo(msg);
+		final AccountInfo accountInfo = getAccountInfo(msg);
 		Bundle b = msg.getData();
 		final String uid = b.getString(FIELD_JID);
 		b = openChatSession(accountInfo, uid);
@@ -322,12 +347,12 @@ public class Service extends android.app.Service implements
 		sendMsg(msg.replyTo, SIG_OPEN_CHATSESSION, b);
 	}
 
-	private Bundle openChatSession(AccountInfo accountInfo, String uid) {
-		return getServiceByAccountInfo(accountInfo).openChatSession(uid);
+	private Bundle openMucSession(AccountInfo accountInfo, String muc) {
+		return getServiceByAccountInfo(accountInfo).openMucSession(muc);
 	}
 
 	private void openMucSession(Message msg) {
-		AccountInfo accountInfo = getAccountInfo(msg);
+		final AccountInfo accountInfo = getAccountInfo(msg);
 		Bundle b = msg.getData();
 		final String muc = b.getString(FIELD_JID);
 		b = openMucSession(accountInfo, muc);
@@ -343,8 +368,15 @@ public class Service extends android.app.Service implements
 		}
 	}
 
-	private Bundle openMucSession(AccountInfo accountInfo, String muc) {
-		return getServiceByAccountInfo(accountInfo).openMucSession(muc);
+	@Override
+	public void processMessage(AccountInfo accountInfo, ChatSession session,
+			ParcelableMessage chatMessage) {
+		if (isActiveChatSession(accountInfo, session)) {
+			final Bundle b = new Bundle();
+			b.putParcelable(FIELD_CHAT_SESSION, session);
+			b.putParcelable(FIELD_MESSAGE, chatMessage);
+			sendToActive(SIG_MESSAGE_GOT, b);
+		}
 	}
 
 	public void register(Message msg) {
@@ -357,8 +389,14 @@ public class Service extends android.app.Service implements
 		}
 	}
 
+	private boolean sendChatMessage(AccountInfo accountInfo,
+			ChatSession session, String text) {
+		return getServiceByAccountInfo(accountInfo).sendChatMessage(session,
+				text);
+	}
+
 	private void sendChatMessage(Message msg) {
-		AccountInfo accountInfo = getAccountInfo(msg);
+		final AccountInfo accountInfo = getAccountInfo(msg);
 		final Bundle b = msg.getData();
 		b.setClassLoader(ChatSession.class.getClassLoader());
 		final String text = b.getString(FIELD_TEXT);
@@ -366,12 +404,6 @@ public class Service extends android.app.Service implements
 		if (!sendChatMessage(accountInfo, session, text)) {
 			sendToActive(SIG_SEND_MESSAGE_ERROR);
 		}
-	}
-
-	private boolean sendChatMessage(AccountInfo accountInfo,
-			ChatSession session, String text) {
-		return getServiceByAccountInfo(accountInfo).sendChatMessage(session,
-				text);
 	}
 
 	private void sendMsg(Messenger m, int msg) {
@@ -395,67 +427,15 @@ public class Service extends android.app.Service implements
 		}
 	}
 
-	private void sendToActive(int msg) {
-		sendToActive(Message.obtain(null, msg));
-	}
-
-	private void sendToActive(int msg, Bundle b) {
-		final Message m = Message.obtain(null, msg);
-		m.setData(b);
-		sendToActive(m);
-	}
-
-	private void sendToActive(Message msg) {
-		sendMsg(activeClient, msg);
-	}
-
-	private void unregister(Message msg) {
-		activeClient = null;
-		disableChatSession(activeChatSession);
-	}
-
-	private void updateContact(Message msg) {
-		AccountInfo accountInfo = getAccountInfo(msg);
-		final Bundle b = msg.getData();
-		b.setClassLoader(Contact.class.getClassLoader());
-		final Contact contact = b.getParcelable(FIELD_CONTACT);
-		updateContact(accountInfo, contact);
-		sendMsg(msg.replyTo, SIG_UPDATE_CONTACT);
-	}
-
-	private void updateContact(AccountInfo accountInfo, Contact contact) {
-		getServiceByAccountInfo(accountInfo).updateContact(contact);
-	}
-
-	private void updateMeStatus(Message msg) {
-		AccountInfo accountInfo = getAccountInfo(msg);
-		final Bundle b = msg.getData();
-		b.setClassLoader(UserState.class.getClassLoader());
-		final UserState state = (UserState) b.getParcelable(FIELD_STATE);
-		updateMeStatus(accountInfo, state);
-	}
-
-	private void updateMeStatus(AccountInfo accountInfo, UserState state) {
-		if (getServiceByAccountInfo(accountInfo) == null) return;
-		getServiceByAccountInfo(accountInfo).updateMeStatus(state);
-	}
-
-	private void updateUser(Message msg) {
-		AccountInfo accountInfo = getAccountInfo(msg);
-		final Bundle b = msg.getData();
-		b.setClassLoader(User.class.getClassLoader());
-		final User user = b.getParcelable(FIELD_USER);
-		updateUser(accountInfo, user);
-		sendMsg(msg.replyTo, SIG_UPDATE_USER);
-	}
-
-	private void updateUser(AccountInfo accountInfo, User user) {
-		getServiceByAccountInfo(accountInfo).updateUser(user);
-	}
-
 	@Override
-	public Context getContext() {
-		return this;
+	public void sendRosterAdded(AccountInfo accountInfo, User user) {
+		if (isActiveAccount(accountInfo)) {
+			final Bundle b = new Bundle();
+			b.putInt(FIELD_TYPE, ROSTER_ADDED);
+			b.putString(FIELD_JID, user.getUserLogin());
+			b.putParcelable(FIELD_USER, user);
+			sendToActive(SIG_ROSTER_UPDATE, b);
+		}
 	}
 
 	@Override
@@ -480,28 +460,6 @@ public class Service extends android.app.Service implements
 	}
 
 	@Override
-	public void sendRosterAdded(AccountInfo accountInfo, User user) {
-		if (isActiveAccount(accountInfo)) {
-			final Bundle b = new Bundle();
-			b.putInt(FIELD_TYPE, ROSTER_ADDED);
-			b.putString(FIELD_JID, user.getUserLogin());
-			b.putParcelable(FIELD_USER, user);
-			sendToActive(SIG_ROSTER_UPDATE, b);
-		}
-	}
-
-	@Override
-	public void processMessage(AccountInfo accountInfo, ChatSession session,
-			ParcelableMessage chatMessage) {
-		if (isActiveChatSession(accountInfo, session)) {
-			final Bundle b = new Bundle();
-			b.putParcelable(FIELD_CHAT_SESSION, session);
-			b.putParcelable(FIELD_MESSAGE, chatMessage);
-			sendToActive(SIG_MESSAGE_GOT, b);
-		}
-	}
-
-	@Override
 	public void sendSessionUpdated(AccountInfo accountInfo, ChatSession session) {
 		if (isActiveChatSession(accountInfo, session)) {
 			final Bundle b = new Bundle();
@@ -510,15 +468,63 @@ public class Service extends android.app.Service implements
 		}
 	}
 
-	@Override
-	public boolean isActiveChatSession(AccountInfo accountInfo,
-			ChatSession session) {
-		return (isActiveAccount(accountInfo) && session
-				.equals(activeChatSession));
+	private void sendToActive(int msg) {
+		sendToActive(Message.obtain(null, msg));
 	}
 
-	@Override
-	public boolean isActiveAccount(AccountInfo accountInfo) {
-		return (activeAccount.equals(accountInfo));
+	private void sendToActive(int msg, Bundle b) {
+		final Message m = Message.obtain(null, msg);
+		m.setData(b);
+		sendToActive(m);
+	}
+
+	private void sendToActive(Message msg) {
+		sendMsg(activeClient, msg);
+	}
+
+	private void unregister(Message msg) {
+		activeClient = null;
+		disableChatSession(activeChatSession);
+	}
+
+	private void updateContact(AccountInfo accountInfo, Contact contact) {
+		getServiceByAccountInfo(accountInfo).updateContact(contact);
+	}
+
+	private void updateContact(Message msg) {
+		final AccountInfo accountInfo = getAccountInfo(msg);
+		final Bundle b = msg.getData();
+		b.setClassLoader(Contact.class.getClassLoader());
+		final Contact contact = b.getParcelable(FIELD_CONTACT);
+		updateContact(accountInfo, contact);
+		sendMsg(msg.replyTo, SIG_UPDATE_CONTACT);
+	}
+
+	private void updateMeStatus(AccountInfo accountInfo, UserState state) {
+		if (getServiceByAccountInfo(accountInfo) == null) {
+			return;
+		}
+		getServiceByAccountInfo(accountInfo).updateMeStatus(state);
+	}
+
+	private void updateMeStatus(Message msg) {
+		final AccountInfo accountInfo = getAccountInfo(msg);
+		final Bundle b = msg.getData();
+		b.setClassLoader(UserState.class.getClassLoader());
+		final UserState state = (UserState) b.getParcelable(FIELD_STATE);
+		updateMeStatus(accountInfo, state);
+	}
+
+	private void updateUser(AccountInfo accountInfo, User user) {
+		getServiceByAccountInfo(accountInfo).updateUser(user);
+	}
+
+	private void updateUser(Message msg) {
+		final AccountInfo accountInfo = getAccountInfo(msg);
+		final Bundle b = msg.getData();
+		b.setClassLoader(User.class.getClassLoader());
+		final User user = b.getParcelable(FIELD_USER);
+		updateUser(accountInfo, user);
+		sendMsg(msg.replyTo, SIG_UPDATE_USER);
 	}
 }

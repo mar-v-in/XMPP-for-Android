@@ -153,89 +153,14 @@ public class MultiChat extends Chat implements SubjectUpdatedListener,
 		mInternalChatManager.processMessage(mChat, msg);
 	}
 
-	public void processParticipantJoined(String participant) {
-		processStatusMessage(StringUtils.parseResource(participant) + " joined.");
-		final Presence presence = new Presence(Presence.Type.available, null,
-				0, null);
-		presence.setFrom(getIdentifier() + "/" + participant);
-		processParticipantPresence(presence);
-	}
-
-	public void processParticipantLeft(String participant) {
-		processStatusMessage(StringUtils.parseResource(participant) + " left.");
-		final Presence presence = new Presence(Presence.Type.unavailable, null,
-				0, null);
-		presence.setFrom(getIdentifier() + "/" + participant);
-		processParticipantPresence(presence);
-	}
-
-	public void processParticipantPresence(Presence presence) {
-		if (getUserService().getUserByFullUserLogin(presence.getFrom()) == null) {
-			setupUser(presence.getFrom(), presence);
-		} else {
-			getUserService().presenceChanged(presence);
-		}
-	}
-
-	@Override
-	public void sendMessage(String participant, String text) {
-		if (participant.equals(getIdentifier())) {
-			try {
-				mMUC.sendMessage(text);
-			} catch (final XMPPException e) {
-				throw new RuntimeException(e);
-			}
-		}
-	}
-
-	private User setupUser(String participant, Presence presence) {
-		try {
-			if (isMe(participant))
-				return getUserService().getUserMe();
-			participant = StringUtils.parseResource(participant);
-			if (presence == null) {
-				presence = mMUC.getOccupantPresence(participant);
-			}
-			final Occupant occupant = mMUC.getOccupant(participant);
-			final ArrayList<String> info = new ArrayList<String>();
-			if (occupant != null) {
-				info.add(0, occupant.getJid());
-				info.add(1, occupant.getAffiliation());
-				info.add(2, occupant.getRole());
-			}
-			if (presence != null) {
-				return getUserService().setupUser(
-						new User(getIdentifier(), participant, info, presence));
-			} else {
-				return getUserService().setupUser(
-						new User(getIdentifier(), participant, info,
-								new Presence(Presence.Type.unavailable)));
-			}
-		} catch (Exception e) {
-			Log.d(TAG, "setupUser", e);
-		}
-		return null;
-	}
-
-	@Override
-	public void subjectUpdated(String subject, String from) {
-		mInternalChatManager.chatUpdated(this);
-	}
-
-	private void processStatusMessage(String msg) {
-		Message message = new Message();
-		message.setFrom(getIdentifier());
-		message.setBody(msg);
-		processMessage(this, message);
-	}
-
-	public void processParticipantKicked(String participant, String actor,
-			String reason) {
+	public void processParticipantAdminGranted(String participant) {
 		processStatusMessage(StringUtils.parseResource(participant)
-				+ " kicked "
-				+ StringUtils.parseResource(participant)
-				+ ((reason != null && !reason.isEmpty()) ? (" (Reason: "
-						+ reason + ")") : "") + ".");
+				+ " got Admin.");
+	}
+
+	public void processParticipantAdminRevoked(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant)
+				+ " lost Admin.");
 	}
 
 	public void processParticipantBanned(String participant, String actor,
@@ -247,14 +172,30 @@ public class MultiChat extends Chat implements SubjectUpdatedListener,
 						+ reason + ")") : "") + ".");
 	}
 
-	public void processParticipantAdminRevoked(String participant) {
+	public void processParticipantJoined(String participant) {
 		processStatusMessage(StringUtils.parseResource(participant)
-				+ " lost Admin.");
+				+ " joined.");
+		final Presence presence = new Presence(Presence.Type.available, null,
+				0, null);
+		presence.setFrom(getIdentifier() + "/" + participant);
+		processParticipantPresence(presence);
 	}
 
-	public void processParticipantAdminGranted(String participant) {
+	public void processParticipantKicked(String participant, String actor,
+			String reason) {
 		processStatusMessage(StringUtils.parseResource(participant)
-				+ " got Admin.");
+				+ " kicked "
+				+ StringUtils.parseResource(participant)
+				+ ((reason != null && !reason.isEmpty()) ? (" (Reason: "
+						+ reason + ")") : "") + ".");
+	}
+
+	public void processParticipantLeft(String participant) {
+		processStatusMessage(StringUtils.parseResource(participant) + " left.");
+		final Presence presence = new Presence(Presence.Type.unavailable, null,
+				0, null);
+		presence.setFrom(getIdentifier() + "/" + participant);
+		processParticipantPresence(presence);
 	}
 
 	public void processParticipantMembershipGranted(String participant) {
@@ -293,6 +234,14 @@ public class MultiChat extends Chat implements SubjectUpdatedListener,
 				+ " lost Ownership.");
 	}
 
+	public void processParticipantPresence(Presence presence) {
+		if (getUserService().getUserByFullUserLogin(presence.getFrom()) == null) {
+			setupUser(presence.getFrom(), presence);
+		} else {
+			getUserService().presenceChanged(presence);
+		}
+	}
+
 	public void processParticipantVoiceGranted(String participant) {
 		processStatusMessage(StringUtils.parseResource(participant)
 				+ " got Voice.");
@@ -301,6 +250,59 @@ public class MultiChat extends Chat implements SubjectUpdatedListener,
 	public void processParticipantVoiceRevoked(String participant) {
 		processStatusMessage(StringUtils.parseResource(participant)
 				+ " lost Voice.");
+	}
+
+	private void processStatusMessage(String msg) {
+		final Message message = new Message();
+		message.setFrom(getIdentifier());
+		message.setBody(msg);
+		processMessage(this, message);
+	}
+
+	@Override
+	public void sendMessage(String participant, String text) {
+		if (participant.equals(getIdentifier())) {
+			try {
+				mMUC.sendMessage(text);
+			} catch (final XMPPException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
+	private User setupUser(String participant, Presence presence) {
+		try {
+			if (isMe(participant)) {
+				return getUserService().getUserMe();
+			}
+			participant = StringUtils.parseResource(participant);
+			if (presence == null) {
+				presence = mMUC.getOccupantPresence(participant);
+			}
+			final Occupant occupant = mMUC.getOccupant(participant);
+			final ArrayList<String> info = new ArrayList<String>();
+			if (occupant != null) {
+				info.add(0, occupant.getJid());
+				info.add(1, occupant.getAffiliation());
+				info.add(2, occupant.getRole());
+			}
+			if (presence != null) {
+				return getUserService().setupUser(
+						new User(getIdentifier(), participant, info, presence));
+			} else {
+				return getUserService().setupUser(
+						new User(getIdentifier(), participant, info,
+								new Presence(Presence.Type.unavailable)));
+			}
+		} catch (final Exception e) {
+			Log.d(TAG, "setupUser", e);
+		}
+		return null;
+	}
+
+	@Override
+	public void subjectUpdated(String subject, String from) {
+		mInternalChatManager.chatUpdated(this);
 	}
 
 }

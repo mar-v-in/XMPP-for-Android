@@ -34,8 +34,8 @@ public abstract class ChatSession implements Parcelable, ChatCodes {
 	}
 
 	protected ChatSession(boolean[] bl, Parcel in) {
-		mMessageList = (MessageList) in
-				.readParcelable(MessageList.class.getClassLoader());
+		mMessageList = (MessageList) in.readParcelable(MessageList.class
+				.getClassLoader());
 		mSessionID = in.readString();
 		mIsClosed = bl[1];
 	}

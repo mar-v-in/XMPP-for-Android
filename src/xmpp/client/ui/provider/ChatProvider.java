@@ -31,6 +31,12 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants,
 		messageHandler.addClient(this);
 	}
 
+	public void chatSessionUpdated(ChatSession newSession) {
+		if (newSession.getIdentifier().equals(mChatSession.getIdentifier())) {
+			mChatSession = newSession;
+		}
+	}
+
 	public Contact getMeContact() {
 		return mMeContact;
 	}
@@ -43,9 +49,9 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants,
 		if (mChatSession.isMUC() && (mChatSession instanceof MultiChatSession)) {
 			return ((MultiChatSession) mChatSession).getUsers();
 		}
-		UserList u = new UserList();
+		final UserList u = new UserList();
 		if (mChatSession instanceof SingleChatSession) {
-			u.add(((SingleChatSession)mChatSession).getUser());
+			u.add(((SingleChatSession) mChatSession).getUser());
 		}
 		return u;
 	}
@@ -68,7 +74,8 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants,
 				break;
 			case SIG_CHAT_SESSION_UPDATE:
 				b.setClassLoader(ChatSession.class.getClassLoader());
-				ChatSession newSession = b.getParcelable(FIELD_CHAT_SESSION);
+				final ChatSession newSession = b
+						.getParcelable(FIELD_CHAT_SESSION);
 				chatSessionUpdated(newSession);
 				if (mListener.isReady()) {
 					mListener.chatProviderChanged(this);
@@ -77,12 +84,6 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants,
 			}
 		} catch (final Exception e) {
 			Log.e(TAG, "handleMessage", e);
-		}
-	}
-
-	public void chatSessionUpdated(ChatSession newSession) {
-		if (newSession.getIdentifier().equals(mChatSession.getIdentifier())) {
-			mChatSession = newSession;
 		}
 	}
 
@@ -95,6 +96,10 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants,
 		return true;
 	}
 
+	public void processMessage(Chat chat, ChatMessage chatMessage) {
+		mChatSession.addMessage(chatMessage);
+	}
+
 	public void setMeContact(Contact contact) {
 		mMeContact = contact;
 	}
@@ -105,10 +110,6 @@ public class ChatProvider implements SimpleMessageHandlerClient, Constants,
 
 	public int size() {
 		return mChatSession.getMessageList().size();
-	}
-
-	public void processMessage(Chat chat, ChatMessage chatMessage) {
-		mChatSession.addMessage(chatMessage);
 	}
 
 }

@@ -6,7 +6,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 public class InfoMessage extends ParcelableMessage {
-	
+
 	public static final Parcelable.Creator<InfoMessage> CREATOR = new Parcelable.Creator<InfoMessage>() {
 		@Override
 		public InfoMessage createFromParcel(Parcel in) {
@@ -18,13 +18,13 @@ public class InfoMessage extends ParcelableMessage {
 			return new InfoMessage[size];
 		}
 	};
-	
-	public InfoMessage(Parcel in) {
-		super(in);
-	}
 
 	public InfoMessage(Date date, String text, String from) {
 		super(date, text, from);
+	}
+
+	public InfoMessage(Parcel in) {
+		super(in);
 	}
 
 	@Override

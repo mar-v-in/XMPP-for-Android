@@ -32,7 +32,8 @@ public class MessageList extends ArrayList<ChatMessage> implements Parcelable {
 		this();
 		final int size = in.readInt();
 		for (int i = 0; i < size; i++) {
-			add((ChatMessage) in.readParcelable(ChatMessage.class.getClassLoader()));
+			add((ChatMessage) in.readParcelable(ChatMessage.class
+					.getClassLoader()));
 		}
 	}
 
@@ -46,7 +47,7 @@ public class MessageList extends ArrayList<ChatMessage> implements Parcelable {
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(size());
 		for (int i = 0; i < size(); i++) {
-			ChatMessage m = get(i);
+			final ChatMessage m = get(i);
 			if (m instanceof ParcelableMessage) {
 				dest.writeParcelable((ParcelableMessage) get(i), flags);
 			} else {

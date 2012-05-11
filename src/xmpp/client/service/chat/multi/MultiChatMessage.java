@@ -4,11 +4,10 @@ import java.util.Date;
 
 import org.jivesoftware.smack.util.StringUtils;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 import xmpp.client.service.chat.MessageType;
 import xmpp.client.service.chat.ParcelableMessage;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 public class MultiChatMessage extends ParcelableMessage {
 
@@ -26,11 +25,6 @@ public class MultiChatMessage extends ParcelableMessage {
 		}
 	};
 
-	public MultiChatMessage(Parcel in) {
-		super(in);
-		chat = in.readString();
-	}
-
 	public MultiChatMessage(Date date, String text, String fullFrom) {
 		this(date, text, StringUtils.parseResource(fullFrom), StringUtils
 				.parseBareAddress(fullFrom));
@@ -41,14 +35,19 @@ public class MultiChatMessage extends ParcelableMessage {
 		this.chat = chat;
 	}
 
-	public String getChat() {
-		return chat;
+	public MultiChatMessage(Parcel in) {
+		super(in);
+		chat = in.readString();
 	}
 
 	@Override
 	public int describeContents() {
 		// TODO Auto-generated method stub
 		return 0;
+	}
+
+	public String getChat() {
+		return chat;
 	}
 
 	@Override

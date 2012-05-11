@@ -22,8 +22,8 @@ public class ChatService implements ChatListener, ChatCodes,
 
 	public ChatService(MainService service) {
 		this.service = service;
-		mInternalChatManager = new InternalChatManager(service, service,
-				this, service);
+		mInternalChatManager = new InternalChatManager(service, service, this,
+				service);
 		mChats = new HashMap<Chat, ChatSession>();
 	}
 
@@ -44,8 +44,7 @@ public class ChatService implements ChatListener, ChatCodes,
 	public void chatUpdated(Chat chat) {
 		final ChatSession session = getChatSessionFromIdentifier(chat
 				.getIdentifier());
-		if (chat instanceof MultiChat
-				&& session instanceof MultiChatSession) {
+		if (chat instanceof MultiChat && session instanceof MultiChatSession) {
 			((MultiChatSession) session).setSubject(chat.getSubject());
 		}
 		service.sendSessionUpdated(session);
@@ -129,8 +128,7 @@ public class ChatService implements ChatListener, ChatCodes,
 	}
 
 	private ChatSession putChatInMap(MultiChat chat) {
-		final ChatSession session = new MultiChatSession(
-				chat.getIdentifier());
+		final ChatSession session = new MultiChatSession(chat.getIdentifier());
 		mChats.put(chat, session);
 		return session;
 	}

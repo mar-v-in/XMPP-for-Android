@@ -72,7 +72,10 @@ public class Contact implements Parcelable, Comparable<Contact> {
 	public boolean contains(User user) {
 		for (final User user2 : getUsers()) {
 			if (user2.equals(user)) {
-				Log.d("ContactProvider", user.getFullUserLogin() + "==" + user2.getFullUserLogin() + ":" + getUserName());
+				Log.d("ContactProvider",
+						user.getFullUserLogin() + "=="
+								+ user2.getFullUserLogin() + ":"
+								+ getUserName());
 				return true;
 			}
 		}

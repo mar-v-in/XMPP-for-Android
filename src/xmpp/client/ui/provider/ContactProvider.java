@@ -103,6 +103,10 @@ public class ContactProvider implements SimpleMessageHandlerClient, Constants {
 		return null;
 	}
 
+	public Contact getContact(User user) {
+		return mContactList.get(user);
+	}
+
 	public Contact getContactInGroup(CharSequence activeGroup, int position) {
 		return mContactList.getInGroup(activeGroup, position);
 	}
@@ -155,7 +159,7 @@ public class ContactProvider implements SimpleMessageHandlerClient, Constants {
 				if (b.containsKey(FIELD_TYPE)) {
 					switch (b.getInt(FIELD_TYPE)) {
 					case ROSTER_ADDED:
-						User u = b.getParcelable(FIELD_USER);
+						final User u = b.getParcelable(FIELD_USER);
 						add(u);
 						break;
 					case ROSTER_UPDATED:
@@ -229,9 +233,5 @@ public class ContactProvider implements SimpleMessageHandlerClient, Constants {
 
 	public int userSize() {
 		return mContactList.sizeVisible();
-	}
-
-	public Contact getContact(User user) {
-		return mContactList.get(user);
 	}
 }

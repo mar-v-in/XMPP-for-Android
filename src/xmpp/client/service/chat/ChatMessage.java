@@ -6,10 +6,10 @@ public interface ChatMessage {
 
 	public Date getDate();
 
-	public String getText();
-	
-	public MessageType getType();
-	
 	public String getFrom();
+
+	public String getText();
+
+	public MessageType getType();
 
 }
